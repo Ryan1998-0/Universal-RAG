@@ -1,0 +1,270 @@
+name: ifrs17-rag
+
+x-app-environment: &app-environment
+  RAG_ENV: production
+  RAG_SERVICE_VERSION: ${RAG_SERVICE_VERSION:-0.2.0}
+  RAG_DATABASE_URL: postgresql+psycopg://rag:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/rag
+  RAG_REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379/0
+  RAG_QDRANT_URL: http://qdrant:6333
+  RAG_QDRANT_API_KEY: ${QDRANT_API_KEY:?set QDRANT_API_KEY}
+  RAG_QDRANT_COLLECTION: rag_chunks
+  RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+  RAG_EMBEDDING_DIMENSIONS: ${RAG_EMBEDDING_DIMENSIONS:-384}
+  RAG_SPARSE_EMBEDDING_MODEL: ${RAG_SPARSE_EMBEDDING_MODEL:-Qdrant/bm25}
+  RAG_RERANKER_MODEL: ${RAG_RERANKER_MODEL:-BAAI/bge-reranker-base}
+  RAG_S3_ENDPOINT_URL: http://object-storage:8333
+  RAG_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID}
+  RAG_S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY}
+  RAG_S3_BUCKET: rag-documents
+  RAG_AUTH_MODE: oidc
+  RAG_OIDC_ISSUER: ${RAG_OIDC_ISSUER:?set RAG_OIDC_ISSUER}
+  RAG_OIDC_AUDIENCE: ${RAG_OIDC_AUDIENCE:?set RAG_OIDC_AUDIENCE}
+  RAG_OIDC_JWKS_URL: ${RAG_OIDC_JWKS_URL:?set RAG_OIDC_JWKS_URL}
+  RAG_OIDC_AUTHORIZATION_URL: ${RAG_OIDC_AUTHORIZATION_URL:?set RAG_OIDC_AUTHORIZATION_URL}
+  RAG_OIDC_TOKEN_URL: ${RAG_OIDC_TOKEN_URL:?set RAG_OIDC_TOKEN_URL}
+  RAG_OIDC_CLIENT_ID: ${RAG_OIDC_CLIENT_ID:?set RAG_OIDC_CLIENT_ID}
+  RAG_OIDC_CLIENT_SECRET: ${RAG_OIDC_CLIENT_SECRET:-}
+  RAG_OIDC_SCOPES: ${RAG_OIDC_SCOPES:-openid profile email}
+  RAG_OIDC_TENANT_CLAIM: ${RAG_OIDC_TENANT_CLAIM:-tenant_id}
+  RAG_OIDC_ROLES_CLAIM: ${RAG_OIDC_ROLES_CLAIM:-roles}
+  RAG_PUBLIC_BASE_URL: https://${APP_DOMAIN:?set APP_DOMAIN}
+  RAG_WEB_SESSION_TTL_SECONDS: ${RAG_WEB_SESSION_TTL_SECONDS:-28800}
+  RAG_WEB_LOGIN_STATE_TTL_SECONDS: ${RAG_WEB_LOGIN_STATE_TTL_SECONDS:-600}
+  RAG_CORS_ORIGINS: ${RAG_CORS_ORIGINS:?set RAG_CORS_ORIGINS}
+  RAG_MODEL: ${RAG_MODEL:-ollama:qwen2.5:7b}
+  RAG_ALLOWED_MODELS: ${RAG_ALLOWED_MODELS:-ollama:qwen2.5:7b}
+  RAG_OLLAMA_URL: ${RAG_OLLAMA_URL:?set RAG_OLLAMA_URL}
+  RAG_ENABLE_API_DOCS: "false"
+  RAG_ENABLE_METRICS: "true"
+  RAG_MAX_CONCURRENT_GENERATIONS: ${RAG_MAX_CONCURRENT_GENERATIONS:-5}
+  RAG_REQUEST_TIMEOUT_SECONDS: ${RAG_REQUEST_TIMEOUT_SECONDS:-180}
+  RAG_GENERATION_QUEUE_TIMEOUT_SECONDS: ${RAG_GENERATION_QUEUE_TIMEOUT_SECONDS:-30}
+  RAG_MAX_UPLOAD_BYTES: ${RAG_MAX_UPLOAD_BYTES:-52428800}
+  RAG_UPLOAD_SESSION_TTL_SECONDS: ${RAG_UPLOAD_SESSION_TTL_SECONDS:-900}
+  RAG_UPLOAD_MODE: ${RAG_UPLOAD_MODE:-proxy}
+  RAG_PARSER_VERSION: ${RAG_PARSER_VERSION:-canonical-v1}
+  RAG_CHUNK_SCHEMA_VERSION: ${RAG_CHUNK_SCHEMA_VERSION:-parent-child-v1}
+  RAG_INDEX_BATCH_SIZE: ${RAG_INDEX_BATCH_SIZE:-64}
+  RAG_OCR_LANGUAGES: ${RAG_OCR_LANGUAGES:-chi_tra+eng}
+  RAG_INGESTION_LEASE_SECONDS: ${RAG_INGESTION_LEASE_SECONDS:-600}
+  RAG_INGESTION_HEARTBEAT_INTERVAL_SECONDS: ${RAG_INGESTION_HEARTBEAT_INTERVAL_SECONDS:-60}
+  RAG_CLAMAV_HOST: clamav
+  RAG_CLAMAV_PORT: 3310
+  RAG_PROMPT_INJECTION_POLICY: ${RAG_PROMPT_INJECTION_POLICY:-quarantine}
+  RAG_BACKGROUND_HEARTBEAT_TTL_SECONDS: ${RAG_BACKGROUND_HEARTBEAT_TTL_SECONDS:-90}
+  RAG_RUN_MIGRATIONS: "false"
+
+services:
+  postgres:
+    image: postgres:17.10-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rag
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8.8.0-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a '$$REDIS_PASSWORD' ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    image: qdrant/qdrant:v1.18.1
+    restart: unless-stopped
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/127.0.0.1/6333"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  object-storage:
+    image: chrislusf/seaweedfs:4.29
+    restart: unless-stopped
+    command: ["mini", "-dir=/data", "-ip.bind=0.0.0.0"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_BUCKET: rag-documents
+    volumes:
+      - object-data:/data
+
+  clamav:
+    image: clamav/clamav:1.5.3
+    restart: unless-stopped
+    volumes:
+      - clamav-data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+
+  migrate:
+    build:
+      context: .
+    image: ifrs17-rag:${RAG_SERVICE_VERSION:-0.2.0}
+    restart: "no"
+    environment: *app-environment
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  bootstrap:
+    image: ifrs17-rag:${RAG_SERVICE_VERSION:-0.2.0}
+    restart: "no"
+    environment: *app-environment
+    command: ["python", "-m", "rag_demo.production.bootstrap"]
+    volumes:
+      - model-cache:/var/lib/rag/huggingface
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_healthy
+      object-storage:
+        condition: service_started
+      clamav:
+        condition: service_healthy
+
+  provision:
+    image: ifrs17-rag:${RAG_SERVICE_VERSION:-0.2.0}
+    profiles: ["admin"]
+    restart: "no"
+    environment:
+      <<: *app-environment
+      RAG_PROVISION_TENANT_ID: ${RAG_PROVISION_TENANT_ID:-}
+      RAG_PROVISION_TENANT_NAME: ${RAG_PROVISION_TENANT_NAME:-}
+      RAG_PROVISION_SUBJECT: ${RAG_PROVISION_SUBJECT:-}
+      RAG_PROVISION_DISPLAY_NAME: ${RAG_PROVISION_DISPLAY_NAME:-}
+      RAG_PROVISION_ROLE: ${RAG_PROVISION_ROLE:-owner}
+      RAG_PROVISION_KNOWLEDGE_BASE_NAME: ${RAG_PROVISION_KNOWLEDGE_BASE_NAME:-主要知識庫}
+      RAG_PROVISION_PROFILE: ${RAG_PROVISION_PROFILE:-default}
+      RAG_PROVISION_VISIBILITY: ${RAG_PROVISION_VISIBILITY:-private}
+    command: ["python", "-m", "rag_demo.production.provision"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  api:
+    build:
+      context: .
+    image: ifrs17-rag:${RAG_SERVICE_VERSION:-0.2.0}
+    restart: unless-stopped
+    environment: *app-environment
+    volumes:
+      - model-cache:/var/lib/rag/huggingface
+    expose:
+      - "8080"
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      object-storage:
+        condition: service_started
+      clamav:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+
+  worker:
+    image: ifrs17-rag:${RAG_SERVICE_VERSION:-0.2.0}
+    restart: unless-stopped
+    environment: *app-environment
+    command:
+      [
+        "celery",
+        "-A",
+        "rag_demo.worker.celery_app:celery_app",
+        "worker",
+        "--loglevel=INFO",
+        "--concurrency=${RAG_WORKER_CONCURRENCY:-2}",
+      ]
+    volumes:
+      - model-cache:/var/lib/rag/huggingface
+    healthcheck:
+      disable: true
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  beat:
+    image: ifrs17-rag:${RAG_SERVICE_VERSION:-0.2.0}
+    restart: unless-stopped
+    environment: *app-environment
+    command:
+      [
+        "celery",
+        "-A",
+        "rag_demo.worker.celery_app:celery_app",
+        "beat",
+        "--loglevel=INFO",
+        "--schedule=/tmp/celerybeat-schedule",
+      ]
+    healthcheck:
+      disable: true
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: ifrs17-rag-web:${RAG_SERVICE_VERSION:-0.2.0}
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  qdrant-data:
+  object-data:
+  clamav-data:
+  caddy-data:
+  caddy-config:
+  model-cache:

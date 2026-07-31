@@ -1,4 +1,2 @@
-numpy
-qdrant-client
-sentence-transformers
-pypdf
+# Development convenience file. Production images install requirements.lock.
+-e .[production,test]

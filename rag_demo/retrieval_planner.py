@@ -15,12 +15,11 @@ def build_retrieval_plan(
     question: str,
     primary_query: str = "",
     rewritten_query: str = "",
-    section_titles: Sequence[str] = None,
     max_variants: int = 10,
 ) -> RetrievalPlan:
     """Build an agent-style retrieval plan without adding another model call."""
 
-    focus_terms = extract_focus_terms(question, section_titles=section_titles or [])
+    focus_terms = extract_focus_terms(question)
     intent = infer_intent_terms(question)
     intent_terms = intent["terms"]
     subject_terms = focus_terms[:5]
@@ -59,12 +58,11 @@ def build_retrieval_plan(
     )
 
 
-def extract_focus_terms(question: str, section_titles: Sequence[str] = None) -> List[str]:
+def extract_focus_terms(question: str) -> List[str]:
     text = _clean_spaces(question)
     terms = []
     terms.extend(_quoted_terms(text))
     terms.extend(_split_chinese_focus_terms(text))
-    terms.extend(_matching_section_terms(text, section_titles or []))
     terms.extend(_compound_subterms(terms))
     return _unique_terms(term for term in terms if _is_useful_term(term))
 
@@ -114,23 +112,6 @@ def _split_chinese_focus_terms(text: str) -> List[str]:
         normalized = normalized.replace(phrase, " ")
     normalized = re.sub(r"[，。！？!?、：:；;（）()\[\]【】\n\r\t]+", " ", normalized)
     return [term.strip() for term in normalized.split() if term.strip()]
-
-
-def _matching_section_terms(question: str, section_titles: Sequence[str]) -> List[str]:
-    compact_question = re.sub(r"\s+", "", question)
-    matches = []
-    for title in section_titles:
-        title_text = str(title).strip()
-        if not title_text:
-            continue
-        compact_title = re.sub(r"\s+", "", title_text)
-        if compact_title and compact_title in compact_question:
-            matches.append(title_text)
-            continue
-        for term in _split_chinese_focus_terms(title_text):
-            if len(term) >= 2 and term in compact_question:
-                matches.append(term)
-    return matches
 
 
 def _compound_subterms(terms: Iterable[str]) -> List[str]:

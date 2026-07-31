@@ -1,10 +1,18 @@
 import json
 import os
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Dict, Optional
 import urllib.request
 
 from rag_demo.ollama_client import ask_ollama
+
+
+_MODEL_REQUEST_TIMEOUT_SECONDS: ContextVar[float] = ContextVar(
+    "model_request_timeout_seconds",
+    default=120.0,
+)
 
 
 @dataclass(frozen=True)
@@ -30,12 +38,28 @@ def ask_model(
     system: Optional[str] = None,
 ) -> str:
     spec = parse_model_spec(model)
+    timeout_seconds = _MODEL_REQUEST_TIMEOUT_SECONDS.get()
     if spec.provider == "ollama":
-        return ask_ollama(prompt=prompt, model=spec.model, system=system)
+        return ask_ollama(
+            prompt=prompt,
+            model=spec.model,
+            system=system,
+            timeout_seconds=timeout_seconds,
+        )
     if spec.provider == "openai":
-        return ask_openai(prompt=prompt, model=spec.model, system=system)
+        return ask_openai(
+            prompt=prompt,
+            model=spec.model,
+            system=system,
+            timeout_seconds=timeout_seconds,
+        )
     if spec.provider == "anthropic":
-        return ask_anthropic(prompt=prompt, model=spec.model, system=system)
+        return ask_anthropic(
+            prompt=prompt,
+            model=spec.model,
+            system=system,
+            timeout_seconds=timeout_seconds,
+        )
     raise ValueError(f"Unsupported model provider: {spec.provider}")
 
 
@@ -58,6 +82,7 @@ def ask_openai(
     prompt: str,
     model: str,
     system: Optional[str] = None,
+    timeout_seconds: float = 120.0,
 ) -> str:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -71,7 +96,7 @@ def ask_openai(
             "Content-Type": "application/json",
         },
     )
-    with urllib.request.urlopen(request, timeout=120) as response:
+    with urllib.request.urlopen(request, timeout=max(1.0, float(timeout_seconds))) as response:
         body = json.loads(response.read().decode("utf-8"))
     return _extract_openai_text(body)
 
@@ -96,6 +121,7 @@ def ask_anthropic(
     prompt: str,
     model: str,
     system: Optional[str] = None,
+    timeout_seconds: float = 120.0,
 ) -> str:
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
@@ -110,7 +136,7 @@ def ask_anthropic(
             "Content-Type": "application/json",
         },
     )
-    with urllib.request.urlopen(request, timeout=120) as response:
+    with urllib.request.urlopen(request, timeout=max(1.0, float(timeout_seconds))) as response:
         body = json.loads(response.read().decode("utf-8"))
     return _extract_anthropic_text(body)
 
@@ -151,3 +177,12 @@ def _extract_anthropic_text(body: Dict[str, object]) -> str:
     if text:
         return text
     raise RuntimeError("Anthropic response did not contain text output.")
+
+
+@contextmanager
+def model_request_timeout(timeout_seconds: float):
+    token = _MODEL_REQUEST_TIMEOUT_SECONDS.set(max(1.0, float(timeout_seconds)))
+    try:
+        yield
+    finally:
+        _MODEL_REQUEST_TIMEOUT_SECONDS.reset(token)

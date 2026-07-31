@@ -3,6 +3,7 @@ from typing import Callable, List, Optional, Sequence, Set
 
 from rag_demo.chunking import Chunk
 from rag_demo.embeddings import embed_query, load_embedding_matrix
+from rag_demo.retrieval_scope import RetrievalScope
 
 
 DEFAULT_QDRANT_COLLECTION = "rag_chunks"
@@ -72,18 +73,43 @@ class QdrantVectorStore:
             embed_query_fn=embed_query_fn,
         )
 
-    def search(self, query: str, top_k: int = 5, allowed_chunk_ids: Optional[Set[str]] = None) -> List[Chunk]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        allowed_chunk_ids: Optional[Set[str]] = None,
+        retrieval_scope: Optional[RetrievalScope] = None,
+    ) -> List[Chunk]:
         _, models = _qdrant_modules()
-        query_filter = None
+        if allowed_chunk_ids is not None and not allowed_chunk_ids:
+            return []
+        must_conditions = []
+        if retrieval_scope is not None:
+            must_conditions.extend([
+                models.FieldCondition(
+                    key="tenant_id",
+                    match=models.MatchValue(value=retrieval_scope.tenant_id),
+                ),
+                models.FieldCondition(
+                    key="knowledge_base_id",
+                    match=models.MatchValue(value=retrieval_scope.knowledge_base_id),
+                ),
+            ])
+            if retrieval_scope.index_version_id:
+                must_conditions.append(models.FieldCondition(
+                    key="index_version_id",
+                    match=models.MatchValue(value=retrieval_scope.index_version_id),
+                ))
         if allowed_chunk_ids:
-            query_filter = models.Filter(
-                must=[
-                    models.FieldCondition(
-                        key="chunk_id",
-                        match=models.MatchAny(any=sorted(allowed_chunk_ids)),
-                    )
-                ]
-            )
+            must_conditions.append(models.FieldCondition(
+                key="chunk_id",
+                match=models.MatchAny(any=sorted(allowed_chunk_ids)),
+            ))
+        query_filter = (
+            models.Filter(must=must_conditions)
+            if must_conditions
+            else None
+        )
 
         response = self.client.query_points(
             collection_name=self.collection_name,
@@ -166,6 +192,10 @@ def _upsert_chunks(client, models, collection_name: str, chunks, embeddings) -> 
                 "title": chunk.get("title", ""),
                 "parent_title": chunk.get("parent_title", ""),
                 "chunk_index": int(chunk.get("chunk_index", index)),
+                "tenant_id": chunk.get("tenant_id", ""),
+                "knowledge_base_id": chunk.get("knowledge_base_id", ""),
+                "document_version_id": chunk.get("document_version_id", ""),
+                "index_version_id": chunk.get("index_version_id", ""),
             },
         )
         for index, (chunk, embedding) in enumerate(zip(chunks, embeddings))

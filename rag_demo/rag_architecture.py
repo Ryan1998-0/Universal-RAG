@@ -26,10 +26,10 @@ V2_RAG_ARCHITECTURE = RagArchitecture(
             output="original question",
         ),
         ArchitectureStep(
-            name="Query Rewrite",
-            purpose="產生輔助檢索訊號；不取代原始問題。",
+            name="Query Rewrite / Retrieval Decision",
+            purpose="先判斷問題是否需要查詢 knowledge base；需要檢索時才產生輔助檢索訊號。",
             input="original question, candidate sections",
-            output="rewritten query",
+            output="needs_retrieval, rewritten query",
         ),
         ArchitectureStep(
             name="Metadata Filter",
@@ -86,7 +86,7 @@ V2_RAG_ARCHITECTURE = RagArchitecture(
             output="expanded context",
         ),
         ArchitectureStep(
-            name="Top 8 Context",
+            name="Top-K Context",
             purpose="控制最終交給 LLM 的 context 數量。",
             input="expanded context",
             output="top context chunks",

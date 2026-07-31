@@ -2,13 +2,8 @@ from typing import Callable, List
 
 from rag_demo.chunking import Chunk
 from rag_demo.model_providers import ask_model
+from rag_demo.general_answer import build_qwen_rag_system_prompt
 from rag_demo.prompting import render_retrieved_context
-
-
-QA_AGENT_SYSTEM_PROMPT = """你是一位專業的 RAG 問答 Agent。
-請只根據使用者提供的檢索資料回答問題，直接提供精簡並準確的解答，避免與問題無關的內容。
-如果檢索資料不足以支撐答案，請明確說明資料不足，不要憑空補充。
-"""
 
 
 def build_qa_prompt(
@@ -44,5 +39,5 @@ def answer_with_qa_agent(
             extracted_evidence=extracted_evidence,
         ),
         model=model,
-        system=QA_AGENT_SYSTEM_PROMPT,
+        system=build_qwen_rag_system_prompt(),
     ).strip()

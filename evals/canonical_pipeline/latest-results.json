@@ -1,0 +1,55 @@
+{
+  "schema_version": "canonical-rag-eval-v1",
+  "started_at": "2026-07-31T06:26:57+00:00",
+  "finished_at": "2026-07-31T06:26:57+00:00",
+  "provenance": {
+    "commit": "0ff5fc5e9ad27a76c14d4613a1d3d9a2eca1cc8c",
+    "dirty": true
+  },
+  "configuration": {
+    "model": "ollama:qwen2.5:7b",
+    "profile": "ifrs17",
+    "top_k": null,
+    "question_file": "evals/canonical_pipeline/questions/smoke.json",
+    "question_count": 1
+  },
+  "results": [
+    {
+      "case_id": "system-date-weekday",
+      "question": "今天是星期幾？",
+      "expectations": {
+        "retrieval_needed": false,
+        "deterministic_system_answer": true,
+        "citations": 0
+      },
+      "result": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "6e70e8bb323144da860d33a28516c37f",
+        "profile": "ifrs17",
+        "conversation_id": "",
+        "answer": "今天是 2026 年 7 月 31 日，星期五。",
+        "confidence": "medium",
+        "citations": [],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": false,
+          "reason": "問題只詢問目前日期、星期或時間；由系統時鐘直接回答，不需要查詢 knowledge base。",
+          "query": "今天是星期幾？",
+          "contexts": [],
+          "evidence_evaluation": null
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "timings": {
+          "routeMs": 0.0,
+          "retrieveMs": 0.0,
+          "generateMs": 0.0,
+          "totalMs": 0.97
+        }
+      }
+    }
+  ]
+}

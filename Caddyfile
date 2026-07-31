@@ -1,0 +1,47 @@
+{
+  email {$ACME_EMAIL}
+  admin off
+}
+
+{$APP_DOMAIN} {
+  encode zstd gzip
+
+  request_body {
+    max_size 55MB
+  }
+
+  route {
+    @internal path /metrics
+    respond @internal 404
+
+    @backend path /auth/* /v1/* /health/*
+    reverse_proxy @backend api:8080
+
+    root * /srv
+    try_files {path} /index.html
+    file_server
+  }
+
+  header {
+    -Server
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Content-Security-Policy "default-src 'self'; base-uri 'none'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self'"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "no-referrer"
+    Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    Cross-Origin-Opener-Policy "same-origin"
+    Cross-Origin-Resource-Policy "same-origin"
+  }
+
+  @staticAssets path /assets/*
+  header @staticAssets Cache-Control "public, max-age=3600, must-revalidate"
+
+  @entry path /
+  header @entry Cache-Control "no-store"
+
+  log {
+    output stdout
+    format json
+  }
+}

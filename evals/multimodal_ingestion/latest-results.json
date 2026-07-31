@@ -1,0 +1,432 @@
+{
+  "generated_at": "2026-07-31T08:34:44.687427+00:00",
+  "base_url": "http://127.0.0.1:8765",
+  "health": {
+    "ok": true,
+    "model": "ollama:qwen2.5:7b",
+    "profile": "default",
+    "static_root": "docs",
+    "retrieval": "bm25+embedding+rrf+rerank",
+    "document_upload": [
+      ".bmp",
+      ".docx",
+      ".heic",
+      ".jpeg",
+      ".jpg",
+      ".json",
+      ".markdown",
+      ".md",
+      ".pdf",
+      ".png",
+      ".tif",
+      ".tiff",
+      ".txt",
+      ".webp"
+    ],
+    "document_folders": true
+  },
+  "summary": {
+    "passed": 10,
+    "total": 10
+  },
+  "uploads": [
+    {
+      "filename": "benefits.txt",
+      "marker": "TXT-731",
+      "source_id": "upload-74606a232b1afcbcece2",
+      "source_type": "text",
+      "chunk_count": 1,
+      "selected_by_default": false,
+      "status": "ready",
+      "extraction": {
+        "method": "text-decode",
+        "ocr_used": false,
+        "warnings": [],
+        "character_count": 65
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "duplicate": true
+    },
+    {
+      "filename": "operations.md",
+      "marker": "MD-204",
+      "source_id": "upload-05bb6e66be04c7dfa532",
+      "source_type": "markdown",
+      "chunk_count": 2,
+      "selected_by_default": false,
+      "status": "ready",
+      "extraction": {
+        "method": "markdown-headings",
+        "ocr_used": false,
+        "warnings": [],
+        "section_count": 2
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 2
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "duplicate": true
+    },
+    {
+      "filename": "customer.json",
+      "marker": "JSON-442",
+      "source_id": "upload-e0ecb380f4c453c9f808",
+      "source_type": "json",
+      "chunk_count": 1,
+      "selected_by_default": false,
+      "status": "ready",
+      "extraction": {
+        "method": "json-path-flatten",
+        "ocr_used": false,
+        "warnings": [],
+        "top_level_sections": 1
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "duplicate": true
+    },
+    {
+      "filename": "claims-guide.docx",
+      "marker": "DOCX-431",
+      "source_id": "upload-c657cdb4c50cee53290b",
+      "source_type": "word",
+      "chunk_count": 1,
+      "selected_by_default": false,
+      "status": "ready",
+      "extraction": {
+        "method": "docx-xml",
+        "ocr_used": false,
+        "warnings": [],
+        "section_count": 1
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "duplicate": false
+    },
+    {
+      "filename": "invoice.png",
+      "marker": "IMAGE-990",
+      "source_id": "upload-ceb5b0e5356bbebbd444",
+      "source_type": "image",
+      "chunk_count": 1,
+      "selected_by_default": false,
+      "status": "ready",
+      "extraction": {
+        "method": "macos-vision",
+        "ocr_used": true,
+        "warnings": [],
+        "ocr_engine": "macos-vision",
+        "ocr_confidence": 0.5,
+        "languages": [
+          "zh-Hant",
+          "zh-Hans",
+          "en-US"
+        ]
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "duplicate": true
+    },
+    {
+      "filename": "financial-policy.pdf",
+      "marker": "PDF-620",
+      "source_id": "upload-33bb93165dcf021ba66f",
+      "source_type": "pdf",
+      "chunk_count": 1,
+      "selected_by_default": false,
+      "status": "ready",
+      "extraction": {
+        "method": "pdf-text",
+        "ocr_used": false,
+        "warnings": [],
+        "page_count": 1,
+        "text_pages": 1,
+        "ocr_pages": 0
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "duplicate": false
+    },
+    {
+      "filename": "scanned-invoice.pdf",
+      "marker": "IMAGE-990",
+      "source_id": "upload-0f6ec23e9f62d0d566a6",
+      "source_type": "pdf",
+      "chunk_count": 1,
+      "selected_by_default": false,
+      "status": "ready",
+      "extraction": {
+        "method": "pdf-ocr",
+        "ocr_used": true,
+        "warnings": [],
+        "page_count": 1,
+        "text_pages": 0,
+        "ocr_pages": 1
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "duplicate": false
+    }
+  ],
+  "cases": [
+    {
+      "case": "selected:benefits.txt",
+      "passed": true,
+      "context_count": 1,
+      "sources": [
+        "upload-74606a232b1afcbcece2"
+      ],
+      "marker_found": true
+    },
+    {
+      "case": "selected:operations.md",
+      "passed": true,
+      "context_count": 2,
+      "sources": [
+        "upload-05bb6e66be04c7dfa532"
+      ],
+      "marker_found": true
+    },
+    {
+      "case": "selected:customer.json",
+      "passed": true,
+      "context_count": 1,
+      "sources": [
+        "upload-e0ecb380f4c453c9f808"
+      ],
+      "marker_found": true
+    },
+    {
+      "case": "selected:claims-guide.docx",
+      "passed": true,
+      "context_count": 1,
+      "sources": [
+        "upload-c657cdb4c50cee53290b"
+      ],
+      "marker_found": true
+    },
+    {
+      "case": "selected:invoice.png",
+      "passed": true,
+      "context_count": 1,
+      "sources": [
+        "upload-ceb5b0e5356bbebbd444"
+      ],
+      "marker_found": true
+    },
+    {
+      "case": "selected:financial-policy.pdf",
+      "passed": true,
+      "context_count": 1,
+      "sources": [
+        "upload-33bb93165dcf021ba66f"
+      ],
+      "marker_found": true
+    },
+    {
+      "case": "selected:scanned-invoice.pdf",
+      "passed": true,
+      "context_count": 1,
+      "sources": [
+        "upload-0f6ec23e9f62d0d566a6"
+      ],
+      "marker_found": true
+    },
+    {
+      "case": "explicit-empty-selection",
+      "passed": true,
+      "context_count": 0
+    },
+    {
+      "case": "cross-document-isolation",
+      "passed": true,
+      "context_count": 2
+    },
+    {
+      "case": "persisted-document-list",
+      "passed": true,
+      "listed_count": 17
+    }
+  ]
+}

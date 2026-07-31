@@ -1,0 +1,43 @@
+{
+  "label": "IFRS17",
+  "sample_queries": [
+    "IFRS17 的目的是什麼？",
+    "IFRS17 適用哪些合約？",
+    "保險合約在 IFRS17 中怎麼定義？",
+    "合約服務邊際 CSM 代表什麼？",
+    "什麼時候可以使用保費分攤法 PAA？",
+    "持有的再保險合約要怎麼處理？",
+    "舊制 IFRS 4 和新制 IFRS 17 差在哪？"
+  ],
+  "data_path": "../../docs/ifrs17-demo/data/ifrs17_demo_data.json",
+  "query_expansions": [
+    {
+      "markers": ["目的", "目標", "objective"],
+      "terms": ["objective", "IFRS 17:1", "recognition", "measurement", "presentation", "disclosure"]
+    },
+    {
+      "markers": ["適用", "範圍", "哪些合約", "scope"],
+      "terms": ["scope", "IFRS 17:3", "insurance contracts issued", "reinsurance contracts held", "investment contracts with discretionary participation features"]
+    },
+    {
+      "markers": ["合約服務邊際", "服務邊際", "csm", "contractual service margin"],
+      "terms": ["contractual service margin", "CSM", "unearned profit", "insurance contract group", "future service"]
+    },
+    {
+      "markers": ["保費分攤法", "paa", "premium allocation"],
+      "terms": ["premium allocation approach", "PAA", "coverage period", "one year or less", "simplification"]
+    },
+    {
+      "markers": ["再保險", "reinsurance"],
+      "terms": ["reinsurance contracts held", "IFRS 17:60-70", "reinsurance"]
+    },
+    {
+      "markers": ["舊制", "新制", "ifrs 4", "差異", "比較", "取代"],
+      "terms": ["IFRS 4", "IFRS 17 replaces IFRS 4", "interim Standard", "comparability", "consistent framework", "current measurement model"]
+    },
+    {
+      "markers": ["定義", "什麼是保險合約", "insurance contract definition"],
+      "terms": ["definition", "insurance contract", "significant insurance risk", "uncertain future event"]
+    }
+  ]
+}

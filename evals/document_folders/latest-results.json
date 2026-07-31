@@ -1,0 +1,698 @@
+{
+  "generated_at": "2026-07-31T08:30:34.835140+00:00",
+  "base_url": "http://127.0.0.1:8765",
+  "summary": {
+    "passed": 17,
+    "total": 17
+  },
+  "cases": [
+    {
+      "case": "upload:勞基法法條.txt",
+      "passed": true
+    },
+    {
+      "case": "retrieve:勞基法法條.txt",
+      "passed": true
+    },
+    {
+      "case": "upload:法院判決案例.pdf",
+      "passed": true
+    },
+    {
+      "case": "retrieve:法院判決案例.pdf",
+      "passed": true
+    },
+    {
+      "case": "upload:勞動檢查表.png",
+      "passed": true
+    },
+    {
+      "case": "retrieve:勞動檢查表.png",
+      "passed": true
+    },
+    {
+      "case": "upload:案件備忘.md",
+      "passed": true
+    },
+    {
+      "case": "retrieve:案件備忘.md",
+      "passed": true
+    },
+    {
+      "case": "folder-selection-isolation",
+      "passed": true
+    },
+    {
+      "case": "move-existing-document",
+      "passed": true
+    },
+    {
+      "case": "rename-folder",
+      "passed": true
+    },
+    {
+      "case": "delete-folder-without-deleting-documents",
+      "passed": true
+    },
+    {
+      "case": "folder-registry-survives-restart",
+      "passed": true
+    },
+    {
+      "case": "law-folder-membership-survives-restart",
+      "passed": true
+    },
+    {
+      "case": "deleted-folder-documents-survive-in-uncategorized",
+      "passed": true
+    },
+    {
+      "case": "profile-api-overlays-current-folder-metadata",
+      "passed": true
+    },
+    {
+      "case": "folder-level-source-selection-after-restart",
+      "passed": true
+    }
+  ],
+  "folder_snapshot": [
+    {
+      "id": "uncategorized",
+      "name": "未分類",
+      "system": true,
+      "document_count": 12
+    },
+    {
+      "id": "folder-26704beeec1b",
+      "name": "勞基法",
+      "created_at": "2026-07-31T06:26:23.150426+00:00",
+      "updated_at": "2026-07-31T06:26:23.150426+00:00",
+      "system": false,
+      "document_count": 2
+    }
+  ],
+  "document_snapshot": [
+    {
+      "source_id": "upload-90b738ca871aaf1c854b",
+      "name": "scanned-invoice.pdf",
+      "source_type": "pdf",
+      "file_extension": ".pdf",
+      "mime_type": "application/pdf",
+      "sha256": "27ca402ae237639ab62f4cc417b29d1de0349887866a66a3eb562d38eff4cc24",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T08:30:03.413736+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.pdf",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "extraction": {
+        "method": "pdf-ocr",
+        "ocr_used": true,
+        "warnings": [],
+        "page_count": 1,
+        "text_pages": 0,
+        "ocr_pages": 1
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 1893.59,
+      "url": "/api/documents/upload-90b738ca871aaf1c854b/download",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-5ab56507b2fb5f3d362c",
+      "name": "financial-policy.pdf",
+      "source_type": "pdf",
+      "file_extension": ".pdf",
+      "mime_type": "application/pdf",
+      "sha256": "f7d6ac01256dfcff8d5ffcedd8767a481e34f86b4c3428fca5e1b151c955bbc5",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T08:30:01.450647+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.pdf",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "extraction": {
+        "method": "pdf-text",
+        "ocr_used": false,
+        "warnings": [],
+        "page_count": 1,
+        "text_pages": 1,
+        "ocr_pages": 0
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 102.19,
+      "url": "/api/documents/upload-5ab56507b2fb5f3d362c/download",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-dbc344aff26d7a89fd01",
+      "name": "claims-guide.docx",
+      "source_type": "word",
+      "file_extension": ".docx",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "dbc344aff26d7a89fd014ea114029ed13cd5ddd7ed5d15fb2434cfbffae8680f",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T08:30:01.250579+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.docx",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "extraction": {
+        "method": "docx-xml",
+        "ocr_used": false,
+        "warnings": [],
+        "section_count": 1
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 32.0,
+      "url": "/api/documents/upload-dbc344aff26d7a89fd01/download",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-91d96b6ddcff02686cf0",
+      "name": "scanned-invoice.pdf",
+      "source_type": "pdf",
+      "file_extension": ".pdf",
+      "mime_type": "application/pdf",
+      "sha256": "33509de1bfa0b09f650a0506361f543ca3da8f49b77221bb2f1c13e2407838d7",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T06:26:08.826828+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.pdf",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "extraction": {
+        "method": "pdf-ocr",
+        "ocr_used": true,
+        "warnings": [],
+        "page_count": 1,
+        "text_pages": 0,
+        "ocr_pages": 1
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 7862.82,
+      "url": "/api/documents/upload-91d96b6ddcff02686cf0/download",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-6ff64a9c55a9fe4eae48",
+      "name": "financial-policy.pdf",
+      "source_type": "pdf",
+      "file_extension": ".pdf",
+      "mime_type": "application/pdf",
+      "sha256": "e23d915eedc78d8dcefc3b64ab79a2d6ef2006ad83f3acaa75e57118a4969163",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T06:26:00.895991+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.pdf",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "extraction": {
+        "method": "pdf-text",
+        "ocr_used": false,
+        "warnings": [],
+        "page_count": 1,
+        "text_pages": 1,
+        "ocr_pages": 0
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 81.41,
+      "url": "/api/documents/upload-6ff64a9c55a9fe4eae48/download",
+      "folder_updated_at": "2026-07-31T06:26:23.647579+00:00",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-ceb5b0e5356bbebbd444",
+      "name": "invoice.png",
+      "source_type": "image",
+      "file_extension": ".png",
+      "mime_type": "image/png",
+      "sha256": "879a8b99de46a15a0b224e58121f9c75522080a6376959bead709c7f6dced26f",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T06:26:00.594733+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.png",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "folder-26704beeec1b",
+      "extraction": {
+        "method": "macos-vision",
+        "ocr_used": true,
+        "warnings": [],
+        "ocr_engine": "macos-vision",
+        "ocr_confidence": 0.5,
+        "languages": [
+          "zh-Hant",
+          "zh-Hans",
+          "en-US"
+        ]
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 2090.01,
+      "url": "/api/documents/upload-ceb5b0e5356bbebbd444/download",
+      "folder_updated_at": "2026-07-31T06:26:23.608414+00:00",
+      "folder_name": "勞基法"
+    },
+    {
+      "source_id": "upload-a4a73ed66fa3a14cc71a",
+      "name": "claims-guide.docx",
+      "source_type": "word",
+      "file_extension": ".docx",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "a4a73ed66fa3a14cc71a5f48b0d658602fd0b149366129d39dd20c8c34629d29",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T06:25:58.439807+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.docx",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "extraction": {
+        "method": "docx-xml",
+        "ocr_used": false,
+        "warnings": [],
+        "section_count": 1
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 56.92,
+      "url": "/api/documents/upload-a4a73ed66fa3a14cc71a/download",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-e0ecb380f4c453c9f808",
+      "name": "customer.json",
+      "source_type": "json",
+      "file_extension": ".json",
+      "mime_type": "application/json",
+      "sha256": "1a6e6827eaa3c1d788b0652b41c0988f159dd8f0817f6d8aa10eb05fd5105482",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T06:25:58.188637+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.json",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "extraction": {
+        "method": "json-path-flatten",
+        "ocr_used": false,
+        "warnings": [],
+        "top_level_sections": 1
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 73.06,
+      "url": "/api/documents/upload-e0ecb380f4c453c9f808/download",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-05bb6e66be04c7dfa532",
+      "name": "operations.md",
+      "source_type": "markdown",
+      "file_extension": ".md",
+      "mime_type": "text/markdown",
+      "sha256": "a2009796c8e059180f9bf87363b1b84d2d43decdd753c813b532357eea40908b",
+      "chunk_count": 2,
+      "uploaded_at": "2026-07-31T06:25:58.044534+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.md",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "extraction": {
+        "method": "markdown-headings",
+        "ocr_used": false,
+        "warnings": [],
+        "section_count": 2
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 2
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 496.77,
+      "url": "/api/documents/upload-05bb6e66be04c7dfa532/download",
+      "folder_updated_at": "2026-07-31T06:26:23.647579+00:00",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-74606a232b1afcbcece2",
+      "name": "benefits.txt",
+      "source_type": "text",
+      "file_extension": ".txt",
+      "mime_type": "text/plain",
+      "sha256": "c85e6444bccc4cbc8401b335819a58fbe7fbce2cbf1ccc15b1dfeda7d6616b51",
+      "chunk_count": 1,
+      "uploaded_at": "2026-07-31T06:25:57.315370+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "stored_filename": "original.txt",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "folder-26704beeec1b",
+      "extraction": {
+        "method": "text-decode",
+        "ocr_used": false,
+        "warnings": [],
+        "character_count": 65
+      },
+      "pipeline": [
+        {
+          "stage": "detect_format",
+          "status": "completed"
+        },
+        {
+          "stage": "extract_text",
+          "status": "completed"
+        },
+        {
+          "stage": "normalize",
+          "status": "completed"
+        },
+        {
+          "stage": "chunk",
+          "status": "completed",
+          "count": 1
+        },
+        {
+          "stage": "embed",
+          "status": "completed",
+          "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        },
+        {
+          "stage": "persist",
+          "status": "completed"
+        }
+      ],
+      "processing_ms": 132.46,
+      "url": "/api/documents/upload-74606a232b1afcbcece2/download",
+      "folder_updated_at": "2026-07-31T06:26:23.153751+00:00",
+      "folder_name": "勞基法"
+    },
+    {
+      "source_id": "upload-afc4919f869015e97e7a",
+      "name": "台灣勞動法規_RAG驗收資料_V2_2026-07-26.docx",
+      "source_type": "word",
+      "sha256": "afc4919f869015e97e7a8aa76d34fd016517a7dac9b22ceb1d67d18546d90229",
+      "chunk_count": 10,
+      "uploaded_at": "2026-07-25T16:59:29.130917+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "url": "/api/documents/upload-afc4919f869015e97e7a/download",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "file_extension": ".docx",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-a41c89be4df35380ca6f",
+      "name": "台灣勞動法規_RAG驗收資料_2026-07-26.docx",
+      "source_type": "word",
+      "sha256": "a41c89be4df35380ca6f8c5a1816350508dfd455f37926ed4dc70b9f14334e76",
+      "chunk_count": 11,
+      "uploaded_at": "2026-07-25T16:48:06.849317+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "url": "/api/documents/upload-a41c89be4df35380ca6f/download",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "file_extension": ".docx",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-746d35a395bed875e898",
+      "name": "NASA_Mars_2020_Public_Data_Test.docx",
+      "source_type": "word",
+      "sha256": "746d35a395bed875e89872e0351a81592ccbe6e236175e58b8da903b03898f4a",
+      "chunk_count": 5,
+      "uploaded_at": "2026-07-23T08:08:26.182543+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "url": "/api/documents/upload-746d35a395bed875e898/download",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "file_extension": ".docx",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "folder_name": "未分類"
+    },
+    {
+      "source_id": "upload-26cd116c7f756b98716a",
+      "name": "台灣勞動基準法_公開資料測試.docx",
+      "source_type": "word",
+      "sha256": "26cd116c7f756b98716a8fc973150c93734325617e380021629cdf6e446bb48f",
+      "chunk_count": 5,
+      "uploaded_at": "2026-07-23T08:08:26.086512+00:00",
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "url": "/api/documents/upload-26cd116c7f756b98716a/download",
+      "selected_by_default": false,
+      "status": "ready",
+      "folder_id": "uncategorized",
+      "file_extension": ".docx",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "folder_name": "未分類"
+    }
+  ]
+}

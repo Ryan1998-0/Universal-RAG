@@ -1,0 +1,771 @@
+{
+  "documents": {
+    "台灣勞動基準法": {
+      "document": {
+        "source_id": "upload-26cd116c7f756b98716a",
+        "name": "台灣勞動基準法_公開資料測試.docx",
+        "source_type": "word",
+        "sha256": "26cd116c7f756b98716a8fc973150c93734325617e380021629cdf6e446bb48f",
+        "chunk_count": 5,
+        "uploaded_at": "2026-07-23T08:08:26.086512+00:00",
+        "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "url": "/api/documents/upload-26cd116c7f756b98716a/download"
+      },
+      "duplicate": false
+    },
+    "NASA Mars 2020": {
+      "document": {
+        "source_id": "upload-746d35a395bed875e898",
+        "name": "NASA_Mars_2020_Public_Data_Test.docx",
+        "source_type": "word",
+        "sha256": "746d35a395bed875e89872e0351a81592ccbe6e236175e58b8da903b03898f4a",
+        "chunk_count": 5,
+        "uploaded_at": "2026-07-23T08:08:26.182543+00:00",
+        "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "url": "/api/documents/upload-746d35a395bed875e898/download"
+      },
+      "duplicate": false
+    }
+  },
+  "results": [
+    {
+      "name": "中文法律精確問答",
+      "question": "依勞動基準法，繼續工作一年以上但未滿三年，終止契約應提前幾天預告？",
+      "source_ids": [
+        "upload-26cd116c7f756b98716a"
+      ],
+      "expectation": {
+        "type": "contains_groups",
+        "groups": [
+          [
+            "20",
+            "二十"
+          ],
+          [
+            "天",
+            "日"
+          ]
+        ]
+      },
+      "route": {
+        "needs_retrieval": true,
+        "reason": "問題明確依賴可核對的法規、文件或來源，應先檢索外部證據。",
+        "retrieval_query": "依勞動基準法，繼續工作一年以上但未滿三年，終止契約應提前幾天預告？",
+        "timing_ms": 0.81
+      },
+      "retrieval": {
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 138.371709,
+            "embedding": 0.687009,
+            "matchedTerms": 20
+          }
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 5,
+          "selectedSourceCount": 1,
+          "domainAliasesApplied": false
+        },
+        "top_contexts": [
+          {
+            "rank": 1,
+            "title": "台灣勞動基準法_公開資料測試.docx | 勞動契約終止與預告",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.934252,
+            "bm25Score": 138.371709,
+            "embeddingScore": 0.687009,
+            "matchedTerms": [
+              "勞動",
+              "動基",
+              "基準",
+              "準法",
+              "勞動基",
+              "動基準",
+              "基準法",
+              "繼續",
+              "續工",
+              "工作",
+              "作一",
+              "一年",
+              "年以",
+              "以上",
+              "未滿",
+              "三年",
+              "繼續工",
+              "續工作",
+              "工作一",
+              "作一年"
+            ],
+            "content": "第 11 條列出雇主得預告終止勞動契約的事由，包括歇業或轉讓、虧損或業務緊縮、不可抗力暫停工作一個月以上、業務性質變更且必須減少勞工而無適當工作可安置，以及勞工確不能勝任所擔任工作。\n\n第 15 條規定，不定期契約的勞工終止契約時，應準用第 16 條第一項所定期間預告雇主。\n\n第 16 條規定預告期間：繼續工作三個月以上、一年未滿者，應在十日前預告；繼續工作一年以上、三年未滿者，應在二十日前預告；繼續工作三年以上者，應在三十日前預告。\n\n勞工接到終止契約預告後，為另謀工作可在工作時間請假外出，每星期不得超過二日的工作時間，請假期間工資照給。雇主未依法定期間預告而終止契約時，應給付預告期間工資。\n\n第 17 條規定，雇主依第 16 條終止勞動契約時，應依法發給資遣費，並應於終止勞動契約後三十日內發給。"
+          },
+          {
+            "rank": 2,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工作時間",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.655079,
+            "bm25Score": 37.299441,
+            "embeddingScore": 0.688043,
+            "matchedTerms": [
+              "勞動",
+              "動基",
+              "基準",
+              "準法",
+              "勞動基",
+              "動基準",
+              "基準法",
+              "工作"
+            ],
+            "content": "第 30 條規定，勞工正常工作時間每日不得超過八小時，每週不得超過四十小時。\n\n雇主應置備勞工出勤紀錄並保存五年。出勤紀錄應逐日記載至分鐘，勞工申請副本或影本時，雇主不得拒絕。\n\n第 32 條規定，延長工作時間連同正常工作時間，一日不得超過十二小時。延長工作時間原則上一個月不得超過四十六小時；符合法定同意程序時，一個月不得超過五十四小時，且每三個月不得超過一百三十八小時。"
+          },
+          {
+            "rank": 3,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工資規定",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.619394,
+            "bm25Score": 38.789688,
+            "embeddingScore": 0.626849,
+            "matchedTerms": [
+              "勞動",
+              "動基",
+              "基準",
+              "準法",
+              "勞動基",
+              "動基準",
+              "基準法",
+              "工作",
+              "以上"
+            ],
+            "content": "第 21 條規定工資由勞雇雙方議定，但不得低於基本工資。\n\n第 22 條規定工資原則上應以法定通用貨幣給付，並應全額直接給付勞工；法律另有規定或勞雇雙方另有約定者除外。\n\n第 23 條要求雇主提供工資各項目計算方式明細，並置備工資清冊；工資清冊應保存五年。\n\n第 24 條規定延長工作時間的加班工資標準。延長工作時間在二小時以內者，按平日每小時工資額加給三分之一以上；再延長二小時以內者，加給三分之二以上。"
+          }
+        ]
+      },
+      "answer": {
+        "text": "依照勞動基準法，繼續工作一年以上但未滿三年，終止契約應提前二十天預告。\n\n來源：[3]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-26cd116c7f756b98716a::2",
+            "rank": 1,
+            "title": "台灣勞動基準法_公開資料測試.docx | 勞動契約終止與預告",
+            "page": "章節 3"
+          },
+          {
+            "id": "upload-26cd116c7f756b98716a::4",
+            "rank": 2,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工作時間",
+            "page": "章節 5"
+          },
+          {
+            "id": "upload-26cd116c7f756b98716a::3",
+            "rank": 3,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工資規定",
+            "page": "章節 4"
+          },
+          {
+            "id": "upload-26cd116c7f756b98716a::1",
+            "rank": 4,
+            "title": "台灣勞動基準法_公開資料測試.docx | 法規基本資料",
+            "page": "章節 2"
+          }
+        ],
+        "grounding_warnings": [],
+        "timings": {
+          "totalMs": 8908.62
+        }
+      },
+      "passed": true
+    },
+    {
+      "name": "中文法律多欄位問答",
+      "question": "勞工正常工作時間每日與每週上限各是多少？",
+      "source_ids": [
+        "upload-26cd116c7f756b98716a"
+      ],
+      "expectation": {
+        "type": "contains_groups",
+        "groups": [
+          [
+            "8",
+            "八"
+          ],
+          [
+            "40",
+            "四十"
+          ]
+        ]
+      },
+      "route": {
+        "needs_retrieval": true,
+        "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+        "retrieval_query": "勞工正常工作時間每日與每週上限各是多少？",
+        "timing_ms": 1.28
+      },
+      "retrieval": {
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 94.210772,
+            "embedding": 0.715698,
+            "matchedTerms": 18
+          }
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 5,
+          "selectedSourceCount": 1,
+          "domainAliasesApplied": false
+        },
+        "top_contexts": [
+          {
+            "rank": 1,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工作時間",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.931429,
+            "bm25Score": 94.210772,
+            "embeddingScore": 0.715698,
+            "matchedTerms": [
+              "勞工",
+              "工正",
+              "正常",
+              "常工",
+              "工作",
+              "作時",
+              "時間",
+              "間每",
+              "每日",
+              "每週",
+              "勞工正",
+              "工正常",
+              "正常工",
+              "常工作",
+              "工作時",
+              "作時間",
+              "時間每",
+              "間每日"
+            ],
+            "content": "第 30 條規定，勞工正常工作時間每日不得超過八小時，每週不得超過四十小時。\n\n雇主應置備勞工出勤紀錄並保存五年。出勤紀錄應逐日記載至分鐘，勞工申請副本或影本時，雇主不得拒絕。\n\n第 32 條規定，延長工作時間連同正常工作時間，一日不得超過十二小時。延長工作時間原則上一個月不得超過四十六小時；符合法定同意程序時，一個月不得超過五十四小時，且每三個月不得超過一百三十八小時。"
+          },
+          {
+            "rank": 2,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工資規定",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.586908,
+            "bm25Score": 25.896163,
+            "embeddingScore": 0.566094,
+            "matchedTerms": [
+              "勞工",
+              "工作",
+              "作時",
+              "時間",
+              "工作時",
+              "作時間"
+            ],
+            "content": "第 21 條規定工資由勞雇雙方議定，但不得低於基本工資。\n\n第 22 條規定工資原則上應以法定通用貨幣給付，並應全額直接給付勞工；法律另有規定或勞雇雙方另有約定者除外。\n\n第 23 條要求雇主提供工資各項目計算方式明細，並置備工資清冊；工資清冊應保存五年。\n\n第 24 條規定延長工作時間的加班工資標準。延長工作時間在二小時以內者，按平日每小時工資額加給三分之一以上；再延長二小時以內者，加給三分之二以上。"
+          },
+          {
+            "rank": 3,
+            "title": "台灣勞動基準法_公開資料測試.docx | 勞動契約終止與預告",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.527934,
+            "bm25Score": 26.787998,
+            "embeddingScore": 0.435473,
+            "matchedTerms": [
+              "勞工",
+              "工作",
+              "作時",
+              "時間",
+              "工作時",
+              "作時間"
+            ],
+            "content": "第 11 條列出雇主得預告終止勞動契約的事由，包括歇業或轉讓、虧損或業務緊縮、不可抗力暫停工作一個月以上、業務性質變更且必須減少勞工而無適當工作可安置，以及勞工確不能勝任所擔任工作。\n\n第 15 條規定，不定期契約的勞工終止契約時，應準用第 16 條第一項所定期間預告雇主。\n\n第 16 條規定預告期間：繼續工作三個月以上、一年未滿者，應在十日前預告；繼續工作一年以上、三年未滿者，應在二十日前預告；繼續工作三年以上者，應在三十日前預告。\n\n勞工接到終止契約預告後，為另謀工作可在工作時間請假外出，每星期不得超過二日的工作時間，請假期間工資照給。雇主未依法定期間預告而終止契約時，應給付預告期間工資。\n\n第 17 條規定，雇主依第 16 條終止勞動契約時，應依法發給資遣費，並應於終止勞動契約後三十日內發給。"
+          }
+        ]
+      },
+      "answer": {
+        "text": "勞工正常工作時間每日上限為八小時，每週上限為四十小時。\n\n來源：[1]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-26cd116c7f756b98716a::4",
+            "rank": 1,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工作時間",
+            "page": "章節 5"
+          },
+          {
+            "id": "upload-26cd116c7f756b98716a::3",
+            "rank": 2,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工資規定",
+            "page": "章節 4"
+          },
+          {
+            "id": "upload-26cd116c7f756b98716a::2",
+            "rank": 3,
+            "title": "台灣勞動基準法_公開資料測試.docx | 勞動契約終止與預告",
+            "page": "章節 3"
+          },
+          {
+            "id": "upload-26cd116c7f756b98716a::1",
+            "rank": 4,
+            "title": "台灣勞動基準法_公開資料測試.docx | 法規基本資料",
+            "page": "章節 2"
+          }
+        ],
+        "grounding_warnings": [],
+        "timings": {
+          "totalMs": 8257.24
+        }
+      },
+      "passed": true
+    },
+    {
+      "name": "中文問英文文件",
+      "question": "毅力號從地球到火星的巡航約花多少天，距離約多少公里？",
+      "source_ids": [
+        "upload-746d35a395bed875e898"
+      ],
+      "expectation": {
+        "type": "contains_all",
+        "tokens": [
+          "203",
+          "471"
+        ]
+      },
+      "route": {
+        "needs_retrieval": true,
+        "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+        "retrieval_query": "毅力號從地球到火星的巡航約花多少天，距離約多少公里？",
+        "timing_ms": 1.12
+      },
+      "retrieval": {
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 0.0,
+            "embedding": 0.790427,
+            "matchedTerms": 0
+          }
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 5,
+          "selectedSourceCount": 1,
+          "domainAliasesApplied": false
+        },
+        "top_contexts": [
+          {
+            "rank": 1,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Surface operations",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.56,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.790427,
+            "matchedTerms": [],
+            "content": "A Martian day is called a sol and lasts 24 hours, 39 minutes, and 35.244 seconds. The planned prime mission lasted one Martian year, equal to about 687 Earth days or 669 sols.\n\nPerseverance was designed to drive on average about 650 feet, or 200 meters, per Martian day. Much of its driving operation was automated to streamline navigation around rocks and sand traps.\n\nThe Ingenuity Mars Helicopter traveled to Mars attached beneath Perseverance. Its flight-test program was a technology demonstration for powered, controlled flight on another planet."
+          },
+          {
+            "rank": 2,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Launch and cruise",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.482276,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.72065,
+            "matchedTerms": [],
+            "content": "The spacecraft launched aboard a United Launch Alliance Atlas V 541 rocket at 7:50 a.m. EDT on July 30, 2020.\n\nThe interplanetary cruise required 203 days to travel about 293 million miles, or 471 million kilometers, from Earth to Mars. The final 45 days formed the approach subphase.\n\nDuring cruise, engineers checked spacecraft subsystems and instruments and prepared trajectory correction maneuvers so the vehicle would reach its target at the top of the Martian atmosphere."
+          },
+          {
+            "rank": 3,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Entry, descent, and landing",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.415898,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.661588,
+            "matchedTerms": [],
+            "content": "The entry, descent, and landing phase began at roughly 12,100 miles per hour, or 19,500 kilometers per hour, and ended about seven minutes later on the Martian surface.\n\nJezero Crater is a 28-mile-wide, or 45-kilometer-wide, impact basin containing an ancient river delta, steep cliffs, sand dunes, boulder fields, and smaller impact craters.\n\nTwo new landing technologies made the challenging Jezero target possible: Range Trigger and Terrain-Relative Navigation. Range Trigger adjusted parachute deployment timing based on the spacecraft's navigation position. Terrain-Relative Navigation used onboard imagery and computing to estimate position and choose a reachable safe landing target."
+          }
+        ]
+      },
+      "answer": {
+        "text": "毅力號從地球到火星的巡航約花了203天，距離約471百萬公里。\n\n來源：[2]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-746d35a395bed875e898::4",
+            "rank": 1,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Surface operations",
+            "page": "章節 5"
+          },
+          {
+            "id": "upload-746d35a395bed875e898::2",
+            "rank": 2,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Launch and cruise",
+            "page": "章節 3"
+          },
+          {
+            "id": "upload-746d35a395bed875e898::3",
+            "rank": 3,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Entry, descent, and landing",
+            "page": "章節 4"
+          },
+          {
+            "id": "upload-746d35a395bed875e898::1",
+            "rank": 4,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Mission overview",
+            "page": "章節 2"
+          }
+        ],
+        "grounding_warnings": [],
+        "timings": {
+          "totalMs": 7867.03
+        }
+      },
+      "passed": true
+    },
+    {
+      "name": "英文技術名稱檢索",
+      "question": "毅力號為了安全著陸在 Jezero Crater，使用了哪兩項新的著陸技術？",
+      "source_ids": [
+        "upload-746d35a395bed875e898"
+      ],
+      "expectation": {
+        "type": "contains_all",
+        "tokens": [
+          "Range Trigger",
+          "Terrain-Relative Navigation"
+        ]
+      },
+      "route": {
+        "needs_retrieval": true,
+        "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+        "retrieval_query": "毅力號為了安全著陸在 Jezero Crater，使用了哪兩項新的著陸技術？",
+        "timing_ms": 1.18
+      },
+      "retrieval": {
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 13.606856,
+            "embedding": 0.486531,
+            "matchedTerms": 2
+          }
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 5,
+          "selectedSourceCount": 1,
+          "domainAliasesApplied": false
+        },
+        "top_contexts": [
+          {
+            "rank": 1,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Entry, descent, and landing",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.887805,
+            "bm25Score": 13.606856,
+            "embeddingScore": 0.486531,
+            "matchedTerms": [
+              "jezero",
+              "crater"
+            ],
+            "content": "The entry, descent, and landing phase began at roughly 12,100 miles per hour, or 19,500 kilometers per hour, and ended about seven minutes later on the Martian surface.\n\nJezero Crater is a 28-mile-wide, or 45-kilometer-wide, impact basin containing an ancient river delta, steep cliffs, sand dunes, boulder fields, and smaller impact craters.\n\nTwo new landing technologies made the challenging Jezero target possible: Range Trigger and Terrain-Relative Navigation. Range Trigger adjusted parachute deployment timing based on the spacecraft's navigation position. Terrain-Relative Navigation used onboard imagery and computing to estimate position and choose a reachable safe landing target."
+          },
+          {
+            "rank": 2,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Mission overview",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.882707,
+            "bm25Score": 12.653489,
+            "embeddingScore": 0.49554,
+            "matchedTerms": [
+              "jezero",
+              "crater"
+            ],
+            "content": "NASA's Mars 2020 spacecraft carried the Perseverance rover. It launched from Cape Canaveral, Florida, on July 30, 2020, and arrived at Mars on February 18, 2021.\n\nThe mission phases were launch, interplanetary cruise, entry-descent-landing, and surface operations.\n\nPerseverance explores Jezero Crater. Its key astrobiology objective is to search for signs of ancient microbial life. It also studies Mars' climate and geology, supports preparation for future human exploration, and collects and caches Martian rock and regolith."
+          },
+          {
+            "rank": 3,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | NASA Mars 2020 Perseverance Mission Facts",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.305479,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.443047,
+            "matchedTerms": [],
+            "content": "公開資料 RAG 測試文件\n\n官方來源：https://www.jpl.nasa.gov/news/press_kits/mars_2020/landing/mission/\n\n擷取與整理日期：2026-07-23\n\n用途：驗證任意 Word 上傳、混合檢索、重排序、證據門檻與跨語言問答。內容依官方來源整理，測試答案應回溯到本文件。"
+          }
+        ]
+      },
+      "answer": {
+        "text": "毅力號為了安全著陸在 Jezero Crater，使用了兩項新的著陸技術：範圍觸發（Range Trigger）和地形相對導航（Terrain-Relative Navigation）。\n\n來源：[3], [1]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-746d35a395bed875e898::3",
+            "rank": 1,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Entry, descent, and landing",
+            "page": "章節 4"
+          },
+          {
+            "id": "upload-746d35a395bed875e898::1",
+            "rank": 2,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Mission overview",
+            "page": "章節 2"
+          },
+          {
+            "id": "upload-746d35a395bed875e898::0",
+            "rank": 3,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | NASA Mars 2020 Perseverance Mission Facts",
+            "page": "章節 1"
+          },
+          {
+            "id": "upload-746d35a395bed875e898::4",
+            "rank": 4,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Surface operations",
+            "page": "章節 5"
+          }
+        ],
+        "grounding_warnings": [],
+        "timings": {
+          "totalMs": 9385.04
+        }
+      },
+      "passed": true
+    },
+    {
+      "name": "錯選文件拒答：法律問 NASA",
+      "question": "依勞動基準法，工作三年以上的終止契約預告期是幾天？",
+      "source_ids": [
+        "upload-746d35a395bed875e898"
+      ],
+      "expectation": {
+        "type": "reject"
+      },
+      "route": {
+        "needs_retrieval": true,
+        "reason": "問題明確依賴可核對的法規、文件或來源，應先檢索外部證據。",
+        "retrieval_query": "依勞動基準法，工作三年以上的終止契約預告期是幾天？",
+        "timing_ms": 1.17
+      },
+      "retrieval": {
+        "confidence": "low",
+        "evidenceEvaluation": {
+          "status": "irrelevant",
+          "sufficient": false,
+          "confidence": "low",
+          "reason": "最高排名片段缺乏足夠的詞彙與語意相關性，不應交給模型引用。",
+          "signals": {
+            "bm25": 0.0,
+            "embedding": 0.271574,
+            "matchedTerms": 0
+          }
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 5,
+          "selectedSourceCount": 1,
+          "domainAliasesApplied": false
+        },
+        "top_contexts": [
+          {
+            "rank": 1,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Surface operations",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.56,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.271574,
+            "matchedTerms": [],
+            "content": "A Martian day is called a sol and lasts 24 hours, 39 minutes, and 35.244 seconds. The planned prime mission lasted one Martian year, equal to about 687 Earth days or 669 sols.\n\nPerseverance was designed to drive on average about 650 feet, or 200 meters, per Martian day. Much of its driving operation was automated to streamline navigation around rocks and sand traps.\n\nThe Ingenuity Mars Helicopter traveled to Mars attached beneath Perseverance. Its flight-test program was a technology demonstration for powered, controlled flight on another planet."
+          },
+          {
+            "rank": 2,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Launch and cruise",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.495662,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.212886,
+            "matchedTerms": [],
+            "content": "The spacecraft launched aboard a United Launch Alliance Atlas V 541 rocket at 7:50 a.m. EDT on July 30, 2020.\n\nThe interplanetary cruise required 203 days to travel about 293 million miles, or 471 million kilometers, from Earth to Mars. The final 45 days formed the approach subphase.\n\nDuring cruise, engineers checked spacecraft subsystems and instruments and prepared trajectory correction maneuvers so the vehicle would reach its target at the top of the Martian atmosphere."
+          },
+          {
+            "rank": 3,
+            "title": "NASA_Mars_2020_Public_Data_Test.docx | Entry, descent, and landing",
+            "source": "upload-746d35a395bed875e898",
+            "score": 0.372224,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.095749,
+            "matchedTerms": [],
+            "content": "The entry, descent, and landing phase began at roughly 12,100 miles per hour, or 19,500 kilometers per hour, and ended about seven minutes later on the Martian surface.\n\nJezero Crater is a 28-mile-wide, or 45-kilometer-wide, impact basin containing an ancient river delta, steep cliffs, sand dunes, boulder fields, and smaller impact craters.\n\nTwo new landing technologies made the challenging Jezero target possible: Range Trigger and Terrain-Relative Navigation. Range Trigger adjusted parachute deployment timing based on the spacecraft's navigation position. Terrain-Relative Navigation used onboard imagery and computing to estimate position and choose a reachable safe landing target."
+          }
+        ]
+      },
+      "answer": {
+        "text": "我已嘗試檢索，但目前可用資料與問題的相關性不足，無法根據知識庫可靠回答。請改寫問題或選擇其他文件後再試。",
+        "confidence": "low",
+        "citations": [],
+        "grounding_warnings": [
+          "最高排名片段缺乏足夠的詞彙與語意相關性，不應交給模型引用。"
+        ],
+        "timings": {
+          "totalMs": 6.83
+        }
+      },
+      "passed": true
+    },
+    {
+      "name": "錯選文件拒答：NASA 問法律",
+      "question": "Perseverance 的火星巡航花了多少天？",
+      "source_ids": [
+        "upload-26cd116c7f756b98716a"
+      ],
+      "expectation": {
+        "type": "reject"
+      },
+      "route": {
+        "needs_retrieval": true,
+        "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+        "retrieval_query": "Perseverance 的火星巡航花了多少天？",
+        "timing_ms": 0.5
+      },
+      "retrieval": {
+        "confidence": "low",
+        "evidenceEvaluation": {
+          "status": "irrelevant",
+          "sufficient": false,
+          "confidence": "low",
+          "reason": "最高排名片段缺乏足夠的詞彙與語意相關性，不應交給模型引用。",
+          "signals": {
+            "bm25": 0.0,
+            "embedding": 0.222117,
+            "matchedTerms": 0
+          }
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 5,
+          "selectedSourceCount": 1,
+          "domainAliasesApplied": false
+        },
+        "top_contexts": [
+          {
+            "rank": 1,
+            "title": "台灣勞動基準法_公開資料測試.docx | 工作時間",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.56,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.222117,
+            "matchedTerms": [],
+            "content": "第 30 條規定，勞工正常工作時間每日不得超過八小時，每週不得超過四十小時。\n\n雇主應置備勞工出勤紀錄並保存五年。出勤紀錄應逐日記載至分鐘，勞工申請副本或影本時，雇主不得拒絕。\n\n第 32 條規定，延長工作時間連同正常工作時間，一日不得超過十二小時。延長工作時間原則上一個月不得超過四十六小時；符合法定同意程序時，一個月不得超過五十四小時，且每三個月不得超過一百三十八小時。"
+          },
+          {
+            "rank": 2,
+            "title": "台灣勞動基準法_公開資料測試.docx | 勞動契約終止與預告",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.399625,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.093186,
+            "matchedTerms": [],
+            "content": "第 11 條列出雇主得預告終止勞動契約的事由，包括歇業或轉讓、虧損或業務緊縮、不可抗力暫停工作一個月以上、業務性質變更且必須減少勞工而無適當工作可安置，以及勞工確不能勝任所擔任工作。\n\n第 15 條規定，不定期契約的勞工終止契約時，應準用第 16 條第一項所定期間預告雇主。\n\n第 16 條規定預告期間：繼續工作三個月以上、一年未滿者，應在十日前預告；繼續工作一年以上、三年未滿者，應在二十日前預告；繼續工作三年以上者，應在三十日前預告。\n\n勞工接到終止契約預告後，為另謀工作可在工作時間請假外出，每星期不得超過二日的工作時間，請假期間工資照給。雇主未依法定期間預告而終止契約時，應給付預告期間工資。\n\n第 17 條規定，雇主依第 16 條終止勞動契約時，應依法發給資遣費，並應於終止勞動契約後三十日內發給。"
+          },
+          {
+            "rank": 3,
+            "title": "台灣勞動基準法_公開資料測試.docx | 台灣勞動基準法公開資料節錄",
+            "source": "upload-26cd116c7f756b98716a",
+            "score": 0.340805,
+            "bm25Score": 0.0,
+            "embeddingScore": 0.048311,
+            "matchedTerms": [],
+            "content": "公開資料 RAG 測試文件\n\n官方來源：https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=N0030001\n\n擷取與整理日期：2026-07-23\n\n用途：驗證任意 Word 上傳、混合檢索、重排序、證據門檻與跨語言問答。內容依官方來源整理，測試答案應回溯到本文件。"
+          }
+        ]
+      },
+      "answer": {
+        "text": "我已嘗試檢索，但目前可用資料與問題的相關性不足，無法根據知識庫可靠回答。請改寫問題或選擇其他文件後再試。",
+        "confidence": "low",
+        "citations": [],
+        "grounding_warnings": [
+          "最高排名片段缺乏足夠的詞彙與語意相關性，不應交給模型引用。"
+        ],
+        "timings": {
+          "totalMs": 9.18
+        }
+      },
+      "passed": true
+    },
+    {
+      "name": "一般常識直接回答",
+      "question": "2 + 2 等於多少？",
+      "source_ids": [
+        "upload-26cd116c7f756b98716a",
+        "upload-746d35a395bed875e898"
+      ],
+      "expectation": {
+        "type": "direct",
+        "tokens": [
+          "4"
+        ]
+      },
+      "route": {
+        "needs_retrieval": false,
+        "reason": "基本算術可由一般問答模型直接回答，不需要查詢 knowledge base。",
+        "retrieval_query": "2 + 2 等於多少？",
+        "timing_ms": 0.45
+      },
+      "retrieval": {
+        "confidence": null,
+        "evidenceEvaluation": {},
+        "diagnostics": null,
+        "top_contexts": []
+      },
+      "answer": {
+        "text": "2 + 2 等於 4。",
+        "confidence": "medium",
+        "citations": [],
+        "grounding_warnings": [],
+        "timings": {
+          "totalMs": 2810.66
+        }
+      },
+      "passed": true
+    }
+  ]
+}

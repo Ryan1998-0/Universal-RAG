@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import re
 from pathlib import Path
@@ -13,6 +14,7 @@ from rag_demo.entity_resolution import answer_entity_existence
 from rag_demo.event_list_retrieval import find_event_list_chunks, find_result_constrained_chunks, merge_event_list_chunks
 from rag_demo.evidence_policy import build_evidence_policy
 from rag_demo.evidence_extraction_agent import extract_evidence
+from rag_demo.general_answer import build_no_retrieval_answer_prompt, build_qwen_rag_system_prompt
 from rag_demo.graph_retrieval import retrieve_graph_context
 from rag_demo.index_store import load_index
 from rag_demo.knowledge_base import active_knowledge_base
@@ -21,9 +23,16 @@ from rag_demo.model_providers import ask_model
 from rag_demo.prompting import build_answer_prompt
 from rag_demo.qa_agent import answer_with_qa_agent
 from rag_demo.question_extraction import extract_real_question
-from rag_demo.retrieval_planner import build_retrieval_plan
-from rag_demo.query_rewriter import rewrite_query_for_retrieval
+from rag_demo.rag_pipeline import RagPipeline, RagPipelineRequest
+from rag_demo.query_rewriter import QueryRewriteDecision, decide_and_rewrite_query_for_retrieval
 from rag_demo.retrieval import embedding_search, hybrid_search, keyword_search
+from rag_demo.self_rag_reflection import (
+    AnswerSupportCritique,
+    critique_answer_support,
+    critique_passages,
+    score_answer_utility,
+    utility_from_answer_support_critique,
+)
 from rag_demo.vector_store import load_or_build_qdrant_vector_store
 
 
@@ -346,17 +355,42 @@ def answer_question_v2(question: str, model: str, top_k: int = 8) -> str:
         chunks = load_knowledge_base_chunks(kb_dir)
     timing["load_index"] = perf_counter() - started_at
 
-    section_titles = _section_titles(chunks)
     started_at = perf_counter()
     try:
-        rewritten_query = rewrite_query_for_retrieval(
+        rewrite_decision = decide_and_rewrite_query_for_retrieval(
             question,
             model=model,
-            section_titles=section_titles,
         )
     except Exception:
-        rewritten_query = question
+        rewrite_decision = QueryRewriteDecision(
+            needs_retrieval=True,
+            reason="Query Rewrite / Retrieval Decision 失敗，保守改走 RAG retrieval。",
+            retrieval_query=question,
+        )
+    rewritten_query = rewrite_decision.retrieval_query
     timing["query_rewrite"] = perf_counter() - started_at
+
+    if not rewrite_decision.needs_retrieval:
+        started_at = perf_counter()
+        try:
+            answer = ask_model(
+                build_no_retrieval_answer_prompt(question, rewrite_decision.reason),
+                model=model,
+                system=build_qwen_rag_system_prompt(),
+            )
+        except Exception:
+            answer = (
+                "這個問題被判斷不需要查詢 knowledge base，因此已跳過 RAG retrieval。"
+                "目前無法呼叫一般回答模型，請稍後再試。"
+            )
+        timing["general_fallback"] = perf_counter() - started_at
+        timing["total"] = perf_counter() - total_started_at
+        return _format_v2_no_retrieval_output(
+            question=question,
+            rewrite_decision=rewrite_decision,
+            answer=answer,
+            timing=timing,
+        )
 
     embedding_path = index_dir / "embeddings.npy"
     embeddings = None
@@ -405,6 +439,176 @@ def answer_question_v2(question: str, model: str, top_k: int = 8) -> str:
         answer=answer,
         timing=timing,
         vector_db_enabled=vector_store is not None,
+        rewrite_decision=rewrite_decision,
+    )
+
+
+def answer_question_self_rag(question: str, model: str, top_k: int = 8, max_attempts: int = 2) -> str:
+    total_started_at = perf_counter()
+    timing = {}
+    config = RagConfig.from_env()
+    final_context_k = max(5, min(8, int(top_k or 8)))
+    rerank_top_k = final_context_k
+    max_attempts = max(1, min(3, int(max_attempts or 2)))
+    knowledge_base = active_knowledge_base(project_root=PROJECT_ROOT)
+    kb_dir = knowledge_base.raw_dir
+    index_dir = knowledge_base.index_dir
+    index_path = index_dir / "chunks.json"
+
+    started_at = perf_counter()
+    if index_path.exists():
+        chunks = load_index(index_path)
+    else:
+        chunks = load_knowledge_base_chunks(kb_dir)
+    timing["load_index"] = perf_counter() - started_at
+
+    started_at = perf_counter()
+    try:
+        rewrite_decision = decide_and_rewrite_query_for_retrieval(
+            question,
+            model=model,
+        )
+    except Exception:
+        rewrite_decision = QueryRewriteDecision(
+            needs_retrieval=True,
+            reason="Query Rewrite / Retrieval Decision 失敗，保守改走 RAG retrieval。",
+            retrieval_query=question,
+        )
+    timing["query_rewrite"] = perf_counter() - started_at
+
+    if not rewrite_decision.needs_retrieval:
+        started_at = perf_counter()
+        try:
+            answer = ask_model(
+                build_no_retrieval_answer_prompt(question, rewrite_decision.reason),
+                model=model,
+                system=build_qwen_rag_system_prompt(),
+            )
+        except Exception:
+            answer = (
+                "這個問題被判斷不需要查詢 knowledge base，因此已跳過 RAG retrieval。"
+                "目前無法呼叫一般回答模型，請稍後再試。"
+            )
+        timing["general_fallback"] = perf_counter() - started_at
+        timing["total"] = perf_counter() - total_started_at
+        return _format_self_rag_no_retrieval_output(
+            question=question,
+            rewrite_decision=rewrite_decision,
+            answer=answer,
+            timing=timing,
+        )
+
+    embedding_path = index_dir / "embeddings.npy"
+    embeddings = None
+    vector_store = None
+    if embedding_path.exists():
+        started_at = perf_counter()
+        try:
+            embeddings = load_embedding_matrix(embedding_path)
+            timing["load_embeddings"] = perf_counter() - started_at
+            started_at = perf_counter()
+            try:
+                vector_store = load_or_build_qdrant_vector_store(index_dir=index_dir, chunks=chunks, embeddings=embeddings)
+            except Exception:
+                vector_store = None
+            timing["load_vector_db"] = perf_counter() - started_at
+        except Exception:
+            timing["load_embeddings"] = perf_counter() - started_at
+
+    attempts = []
+    current_query = rewrite_decision.retrieval_query
+    final_answer = ""
+    for attempt_index in range(1, max_attempts + 1):
+        started_at = perf_counter()
+        results = _rrf_parent_context_results(
+            question=question,
+            rewritten_query=current_query,
+            chunks=chunks,
+            embeddings=embeddings,
+            top_k=rerank_top_k,
+            candidate_k=config.retrieval_candidate_k,
+            final_context_k=final_context_k,
+            vector_store=vector_store,
+        )
+        timing[f"retrieval_attempt_{attempt_index}"] = perf_counter() - started_at
+
+        started_at = perf_counter()
+        passage_reflections = critique_passages(
+            question=question,
+            chunks=results,
+            model=model,
+        )
+        timing[f"passage_critic_attempt_{attempt_index}"] = perf_counter() - started_at
+
+        started_at = perf_counter()
+        answer = answer_with_qa_agent(
+            original_question=question,
+            refined_question=question,
+            keywords=[],
+            chunks=results,
+            model=model,
+        )
+        timing[f"qa_agent_attempt_{attempt_index}"] = perf_counter() - started_at
+        final_answer = answer
+
+        started_at = perf_counter()
+        answer_critique = critique_answer_support(
+            question=question,
+            answer=answer,
+            chunks=results,
+            passage_reflections=passage_reflections,
+            model=model,
+        )
+        answer_critique = _self_rag_enforce_passage_support(
+            question=question,
+            answer_critique=answer_critique,
+            passage_reflections=passage_reflections,
+        )
+        timing[f"answer_critic_attempt_{attempt_index}"] = perf_counter() - started_at
+
+        started_at = perf_counter()
+        utility_critique = utility_from_answer_support_critique(answer_critique)
+        timing[f"utility_from_combined_critic_attempt_{attempt_index}"] = perf_counter() - started_at
+
+        should_retry = _self_rag_should_retry(
+            attempt_index=attempt_index,
+            max_attempts=max_attempts,
+            passage_reflections=passage_reflections,
+            answer_critique=answer_critique,
+            utility_critique=utility_critique,
+        )
+        retry_query = _self_rag_retry_query(
+            question=question,
+            current_query=current_query,
+            answer_critique=answer_critique,
+            utility_critique=utility_critique,
+        )
+        attempts.append(
+            {
+                "attempt": attempt_index,
+                "query": current_query,
+                "results": results,
+                "passage_reflections": passage_reflections,
+                "answer": answer,
+                "answer_critique": answer_critique,
+                "utility_critique": utility_critique,
+                "retry_needed": should_retry,
+                "retry_query": retry_query if should_retry else "",
+            }
+        )
+        if not should_retry:
+            break
+        current_query = retry_query
+
+    timing["total"] = perf_counter() - total_started_at
+    return _format_self_rag_output(
+        question=question,
+        rewrite_decision=rewrite_decision,
+        attempts=attempts,
+        answer=final_answer,
+        timing=timing,
+        vector_db_enabled=vector_store is not None,
+        fine_tuned_self_rag=False,
     )
 
 
@@ -1527,13 +1731,36 @@ def _anchor_matches_chunk(anchor: str, chunk) -> bool:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Ask the local Qwen RAG demo.")
+    parser = argparse.ArgumentParser(description="Ask the canonical local RAG pipeline.")
     parser.add_argument("question", help="Question to ask against local raw documents.")
-    parser.add_argument("--model", default=os.getenv("RAG_MODEL", "qwen2.5:7b"))
-    parser.add_argument("--top-k", type=int, default=RagConfig.from_env().top_k)
+    parser.add_argument("--model", default=os.getenv("RAG_MODEL", "ollama:qwen2.5:7b"))
+    parser.add_argument("--profile", default=os.getenv("RAG_PROFILE", "default"))
+    parser.add_argument("--source-id", action="append", dest="source_ids")
+    parser.add_argument("--top-k", type=int, default=RagConfig.from_env().hybrid_top_k)
+    parser.add_argument("--json", action="store_true", dest="as_json")
+    parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="Run the pre-canonical query path for historical comparison only.",
+    )
     args = parser.parse_args()
 
-    print(answer_question(args.question, model=args.model, top_k=args.top_k))
+    if args.legacy:
+        print(answer_question(args.question, model=args.model, top_k=args.top_k))
+        return
+
+    result = RagPipeline().run(RagPipelineRequest(
+        question=args.question,
+        model=args.model,
+        profile=args.profile,
+        source_ids=args.source_ids,
+        top_k=args.top_k,
+        persist_conversation=False,
+    ))
+    if args.as_json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(result["answer"])
 
 
 def _format_output(
@@ -1644,6 +1871,203 @@ Final Answer:
 """
 
 
+def _self_rag_should_retry(
+    attempt_index: int,
+    max_attempts: int,
+    passage_reflections,
+    answer_critique,
+    utility_critique,
+) -> bool:
+    if attempt_index >= max_attempts:
+        return False
+    has_supporting_passage = any(item.is_supported for item in passage_reflections)
+    if not has_supporting_passage:
+        return True
+    if answer_critique.retry_needed or not answer_critique.is_supported:
+        return True
+    return bool(utility_critique.retry_needed or int(utility_critique.score) <= 2)
+
+
+def _self_rag_enforce_passage_support(
+    question: str,
+    answer_critique,
+    passage_reflections,
+):
+    if any(item.is_supported for item in passage_reflections):
+        return answer_critique
+    reason = (
+        f"沒有 supporting passage，因此不可把回答標記為 [Supported]。"
+        f"原始 critic reason：{answer_critique.reason}"
+    )
+    return AnswerSupportCritique(
+        support_label="[Unsupported]",
+        is_supported=False,
+        retry_needed=True,
+        retry_query=answer_critique.retry_query or question,
+        reason=reason,
+        raw_output=answer_critique.raw_output,
+    )
+
+
+def _self_rag_retry_query(
+    question: str,
+    current_query: str,
+    answer_critique,
+    utility_critique,
+) -> str:
+    retry_query = str(answer_critique.retry_query or utility_critique.retry_query or current_query or question).strip()
+    if not retry_query:
+        retry_query = question
+    return _combine_original_and_rewritten_query(question, retry_query)
+
+
+def _format_self_rag_output(
+    question: str,
+    rewrite_decision,
+    attempts,
+    answer: str,
+    timing=None,
+    vector_db_enabled: bool = False,
+    fine_tuned_self_rag: bool = False,
+) -> str:
+    final_attempt = attempts[-1] if attempts else {}
+    results = final_attempt.get("results", []) if final_attempt else []
+    source_lines = []
+    for index, chunk in enumerate(results, start=1):
+        detail = f"score={float(chunk.get('score', 0.0)):.4f}"
+        if chunk.get("rerank_trace"):
+            detail = f"{detail}, trace={chunk['rerank_trace']}"
+        source_lines.append(
+            f"{index}. {Path(str(chunk['source'])).name} / {chunk['title']} / {detail}"
+        )
+    sources = "\n".join(source_lines) if source_lines else "沒有找到來源"
+    timing_text = _format_timing(timing or {})
+    vector_db_text = "Qdrant Vector DB" if vector_db_enabled else "local embedding fallback"
+    attempt_text = _format_self_rag_attempts(attempts)
+    fine_tuned_text = "true" if fine_tuned_self_rag else "false (engineering controller, not fine-tuned Self-RAG LM)"
+
+    return f"""問題：{question}
+
+Workflow:
+Question
+↓
+Query Rewrite / Retrieval Decision
+↓
+[Retrieve]=true
+↓
+Metadata Filter
+↓
+BM25(original question) + Dense(original question via {vector_db_text}) + Graph
+↓
+RRF Merge
+↓
+Reranker
+↓
+Parent Chunk Expansion
+↓
+Passage Critic [Relevant]
+↓
+QA Agent
+↓
+Answer Support Critic [Supported]
+↓
+Utility Scoring [Utility]
+↓
+Iterative Retry when critique fails
+
+Engineering Self-RAG Controller:
+- fine_tuned_self_reflective_lm={fine_tuned_text}
+- [Retrieve]=true, reason={rewrite_decision.reason}
+
+Query Rewrite Output:
+{rewrite_decision.retrieval_query}
+
+Self-RAG Attempts:
+{attempt_text}
+
+檢索來源 Top {len(results)}：
+{sources}
+{timing_text}
+
+Final Answer:
+{answer}
+"""
+
+
+def _format_self_rag_no_retrieval_output(
+    question: str,
+    rewrite_decision,
+    answer: str,
+    timing=None,
+) -> str:
+    timing_text = _format_timing(timing or {})
+    return f"""問題：{question}
+
+Workflow:
+Question
+↓
+Query Rewrite / Retrieval Decision
+↓
+[Retrieve]=false
+↓
+Skip Retrieval
+↓
+General Answer
+
+Engineering Self-RAG Controller:
+- fine_tuned_self_reflective_lm=false (engineering controller, not fine-tuned Self-RAG LM)
+- [Retrieve]=false, reason={rewrite_decision.reason}
+
+Query Rewrite Output:
+{rewrite_decision.retrieval_query}
+
+檢索來源 Top 0：
+已判斷此問題不需要檢索 knowledge base，因此未執行 BM25 / Dense / Graph Retrieval。
+{timing_text}
+
+Final Answer:
+{answer}
+"""
+
+
+def _format_self_rag_attempts(attempts) -> str:
+    if not attempts:
+        return "無"
+    blocks = []
+    for attempt in attempts:
+        passage_lines = []
+        for reflection in attempt.get("passage_reflections", []):
+            passage_lines.append(
+                f"  - Source {reflection.source_index}: {reflection.relevance_label}{reflection.support_label} {reflection.reason}"
+            )
+        passage_text = "\n".join(passage_lines) if passage_lines else "  - 無 passage reflection"
+        answer_critique = attempt.get("answer_critique")
+        utility_critique = attempt.get("utility_critique")
+        retry_query = attempt.get("retry_query") or "無"
+        blocks.append(
+            "\n".join(
+                [
+                    f"Attempt {attempt.get('attempt')}:",
+                    f"- Retrieval Query: {attempt.get('query')}",
+                    "- Passage Critic:",
+                    passage_text,
+                    (
+                        "- Answer Support Critic: "
+                        f"{answer_critique.support_label}, retry_needed={str(bool(answer_critique.retry_needed)).lower()}, "
+                        f"reason={answer_critique.reason}"
+                    ),
+                    (
+                        "- Utility Critic: "
+                        f"{utility_critique.utility_label}, retry_needed={str(bool(utility_critique.retry_needed)).lower()}, "
+                        f"reason={utility_critique.reason}"
+                    ),
+                    f"- Retry Query: {retry_query}",
+                ]
+            )
+        )
+    return "\n\n".join(blocks)
+
+
 def _format_v2_output(
     question: str,
     rewritten_query: str,
@@ -1651,6 +2075,7 @@ def _format_v2_output(
     answer: str,
     timing=None,
     vector_db_enabled: bool = False,
+    rewrite_decision=None,
 ) -> str:
     source_lines = []
     for index, chunk in enumerate(results, start=1):
@@ -1663,13 +2088,19 @@ def _format_v2_output(
     sources = "\n".join(source_lines) if source_lines else "沒有找到來源"
     timing_text = _format_timing(timing or {})
     vector_db_text = "Qdrant Vector DB" if vector_db_enabled else "local embedding fallback"
+    decision_text = ""
+    if rewrite_decision is not None:
+        decision_text = f"""
+Retrieval Decision:
+needs_retrieval={str(bool(rewrite_decision.needs_retrieval)).lower()}, reason={rewrite_decision.reason}
+"""
 
     return f"""問題：{question}
 
 Workflow:
 Question
 ↓
-Query Rewrite
+Query Rewrite / Retrieval Decision
 ↓
 Metadata Filter
 ↓
@@ -1687,6 +2118,7 @@ QA Agent
 
 Query Rewrite Output:
 {rewritten_query}
+{decision_text}
 
 檢索來源 Top {len(results)}：
 {sources}
@@ -1697,14 +2129,37 @@ Final Answer:
 """
 
 
-def _section_titles(chunks):
-    titles = []
-    for chunk in chunks:
-        for title in (chunk.get("parent_title", ""), chunk.get("title", "")):
-            cleaned = str(title).strip()
-            if cleaned:
-                titles.append(cleaned)
-    return list(dict.fromkeys(titles))[:200]
+def _format_v2_no_retrieval_output(
+    question: str,
+    rewrite_decision,
+    answer: str,
+    timing=None,
+) -> str:
+    timing_text = _format_timing(timing or {})
+    return f"""問題：{question}
+
+Workflow:
+Question
+↓
+Query Rewrite / Retrieval Decision
+↓
+Skip Retrieval
+↓
+General Answer
+
+Retrieval Decision:
+needs_retrieval=false, reason={rewrite_decision.reason}
+
+Query Rewrite Output:
+{rewrite_decision.retrieval_query}
+
+檢索來源 Top 0：
+已判斷此問題不需要檢索 knowledge base，因此未執行 BM25 / Dense / Graph Retrieval。
+{timing_text}
+
+Final Answer:
+{answer}
+"""
 
 
 def _format_timing(timing) -> str:
@@ -1717,6 +2172,21 @@ def _format_timing(timing) -> str:
         "query_rewrite",
         "load_embeddings",
         "retrieval",
+        "retrieval_attempt_1",
+        "passage_critic_attempt_1",
+        "qa_agent_attempt_1",
+        "answer_critic_attempt_1",
+        "utility_scoring_attempt_1",
+        "retrieval_attempt_2",
+        "passage_critic_attempt_2",
+        "qa_agent_attempt_2",
+        "answer_critic_attempt_2",
+        "utility_scoring_attempt_2",
+        "retrieval_attempt_3",
+        "passage_critic_attempt_3",
+        "qa_agent_attempt_3",
+        "answer_critic_attempt_3",
+        "utility_scoring_attempt_3",
         "evidence_extraction_agent",
         "planned_retrieval",
         "event_list_retrieval",

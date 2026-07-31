@@ -1,97 +1,80 @@
-# IFRS17 RAG
+# IFRS17-RAG
 
-Retrieval-only RAG benchmark for IFRS 17 materials. The project compares four retrieval stacks on a 100-question mixed benchmark:
+A local-first, multimodal RAG application built around Qwen 2.5 7B. It combines adaptive routing, hybrid retrieval, reranking, citations, conversation history, and document management in a ChatGPT-style interface.
 
-中文版專案說明: [README.zh-TW.md](README.zh-TW.md)
+[Traditional Chinese](README.zh-TW.md) | [Static browser demo](https://ryan1998-0.github.io/IFRS17-RAG/ifrs17-demo/)
 
-完整中文專案整理: [docs/project_overview_zh.md](docs/project_overview_zh.md)
+> The GitHub Pages demo is a static retrieval showcase. Run the local service to use Qwen, upload documents, OCR, conversations, and persistent memory.
 
-Interview code-question submission note: [SUBMISSION.md](SUBMISSION.md)
+## Highlights
 
-- BM25-only
-- BM25 + Dense
-- BM25 + Dense + Graph
-- Full project stack
+- Self-RAG routing: direct answers for simple questions, retrieval for source-dependent questions.
+- Hybrid search: BM25 + dense embeddings + reciprocal-rank fusion + reranking.
+- Multimodal ingestion: PDF, images, DOCX, TXT, Markdown, and JSON.
+- OCR for images and scanned PDFs, with chunking and persistent indexes.
+- Folder-based knowledge management and per-query document selection.
+- SQLite conversation history, explicit long-term memory, and source citations.
+- Local inference through Ollama with `qwen2.5:7b`.
+- Production-oriented FastAPI, PostgreSQL, Qdrant, object storage, workers, OIDC, metrics, backup, and CI scaffolding.
 
-The purpose is to show a controlled RAG evaluation workflow, not to provide accounting advice or IFRS compliance evidence.
-
-## Public-data note
-
-This repository does not include IFRS Foundation PDFs, extracted full text, embeddings, Qdrant index files, raw JSONL retrieval logs, or reports with long content previews. The scripts download public IFRS Foundation PDFs into your local workspace so you can reproduce the benchmark locally. Check the IFRS Foundation terms before redistributing source documents or extracted text.
-
-## Results
-
-The latest local run used 100 mixed IFRS 17 questions and scored retrieval only. The score is the retrieval upper bound: whether the final top contexts contain the evidence required by each question's scoring criteria.
-
-| Variant | Retrieval score | Perfect questions | Avg total time | P95 total time |
-| --- | ---: | ---: | ---: | ---: |
-| BM25-only | 443/500 = 88.6% | 70/100 | 0.2719s | 0.3612s |
-| BM25 + Dense | 448/500 = 89.6% | 70/100 | 0.3659s | 0.3835s |
-| BM25 + Dense + Graph | 340/500 = 68.0% | 50/100 | 0.2954s | 0.3776s |
-| Full project stack | 245/500 = 49.0% | 31/100 | 0.7298s | 1.2930s |
-
-Graph validation for the local run:
-
-- 96 entities
-- 25 relations
-- 125 support refs
-- 0 missing support refs
-- 1,190 chunks
-
-The important finding is that Graph RAG did not help in this configuration. The graph itself validated cleanly, but the entity-overlap policy matched the generic entity `IFRS 17` too often, so graph retrieval became a broad expansion step and displaced more precise BM25/Dense chunks.
-
-## Interactive demo
-
-Static demo website:
-
-[https://ryan1998-0.github.io/IFRS17-RAG/ifrs17-demo/](https://ryan1998-0.github.io/IFRS17-RAG/ifrs17-demo/)
-
-The demo lets you type Chinese or English IFRS 17 questions, inspect the retrieved evidence chunks, switch between `BM25-only`, `BM25 + Dense`, `BM25 + Dense + Graph`, and `Full stack lab`, and view the IFRS 4 vs IFRS 17 comparison graph. It runs entirely in the browser from sanitized demo data and does not include the local Agent backend.
-
-## Supplemental study: Graph RAG suitability
-
-This repo also includes a controlled supplemental study on when Graph RAG is useful:
-
-- Report: `docs/graph_rag_suitability_report.md`
-- Reproducible script: `evals/graph_suitability/run_graph_suitability_experiment.py`
-- Summary JSON: `evals/graph_suitability/results/graph-suitability-20260704-summary.json`
-
-The short result: Graph RAG is most useful when the data has stable entities and relationships and questions need multi-hop evidence. It is not a default upgrade for flat FAQ-style knowledge bases, and it can hurt retrieval when broad hub entities are allowed to dominate graph expansion.
-
-## Reproduce
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-./scripts/download_ifrs17_sources.sh
-python3 evals/ifrs17_retrieval/build_ifrs17_benchmark.py
-RAG_PROFILE=ifrs17 python3 -m rag_demo.ingest
-python3 evals/ifrs17_retrieval/build_ifrs17_benchmark.py --skip-pdf-extraction
-
-RAG_PROFILE=ifrs17 python3 evals/ifrs17_retrieval/run_incremental_retrieval_nodes.py \
-  --benchmark-name "IFRS 17 Mixed100" \
-  --candidate-k 50 \
-  --final-context-k 8 \
-  --variants bm25_only,bm25_dense,bm25_dense_graph,full_project_stack \
-  --graph-policy entity_overlap \
-  --run-id full-ifrs17-local
-```
-
-Outputs are written to `evals/ifrs17_retrieval/runs/`, which is ignored by git because the raw records can include source-document previews.
-
-## Repository layout
+## Flow
 
 ```text
-rag_demo/                         RAG pipeline code
-evals/ifrs17_retrieval/           IFRS 17 benchmark builder, runner, questions
-evals/graph_suitability/          Supplemental Graph RAG suitability experiment
-profiles/ifrs17/                  IFRS 17 profile config, aliases, graph, manifest
-scripts/download_ifrs17_sources.sh Local PDF download helper
-docs/                             Short result notes
+Question
+  -> adaptive router
+     -> direct answer / date-time tool
+     -> query rewrite -> BM25 + embeddings -> fusion -> rerank
+        -> evidence gate -> Qwen answer with citations
+
+Document
+  -> validation -> parser or OCR -> normalized units
+  -> chunks -> embeddings -> persistent index -> selectable knowledge base
 ```
 
-## Source documents
+## Run Locally
 
-The benchmark was built from IFRS Foundation public PDFs listed in `profiles/ifrs17/corpus_manifest.json`, including the IFRS 17 standard, effects analysis, project summaries, fact sheet, and implementation examples.
+Requirements: Python 3.12 and [Ollama](https://ollama.com/).
+
+```bash
+git clone https://github.com/Ryan1998-0/IFRS17-RAG.git
+cd IFRS17-RAG
+
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.lock
+
+ollama pull qwen2.5:7b
+python -m rag_demo.web_app
+```
+
+Open [http://127.0.0.1:8765/ifrs17-demo/index.html](http://127.0.0.1:8765/ifrs17-demo/index.html), then upload and select the documents to use for RAG.
+
+## Verification
+
+```bash
+.venv/bin/python -m pytest -q
+node --test tests/ifrs17-demo/*.test.mjs tests/frontend/*.test.mjs
+```
+
+Latest local release checks:
+
+| Check | Result |
+| --- | ---: |
+| Python regression suite | 164 passed + 4 subtests |
+| Browser JavaScript suite | 21 passed |
+| Multimodal ingestion | 10/10 |
+| Folder and restart persistence | 17/17 |
+| IFRS 17 retrieval-only benchmark, best variant | 89.6% |
+
+## Production Status
+
+The local application is functional. The production service is a staging candidate, not a production-approved deployment. Real Linux, OIDC, load, cross-tenant security, backup/restore, and rollback drills are still required.
+
+- [Production target and release gates](docs/production-ready-rag-target.md)
+- [Deployment runbook](docs/production-runbook.md)
+- [Multimodal ingestion pipeline](docs/multimodal-ingestion-pipeline.md)
+- [Current completeness audit](docs/local-rag-completeness-report-2026-07-31.md)
+
+## Data Notice
+
+IFRS materials remain the property of their respective copyright holders. Do not treat this project, its demo data, or its answers as accounting advice or IFRS compliance evidence. Check source terms before redistributing documents or extracted content.

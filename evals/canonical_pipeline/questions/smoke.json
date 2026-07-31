@@ -1,0 +1,15 @@
+{
+  "schema_version": "canonical-rag-questions-v1",
+  "questions": [
+    {
+      "id": "system-date-weekday",
+      "question": "今天是星期幾？",
+      "profile": "ifrs17",
+      "expectations": {
+        "retrieval_needed": false,
+        "deterministic_system_answer": true,
+        "citations": 0
+      }
+    }
+  ]
+}

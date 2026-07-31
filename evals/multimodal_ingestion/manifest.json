@@ -1,0 +1,53 @@
+{
+  "documents": [
+    {
+      "path": "evals/multimodal_ingestion/corpus/benefits.txt",
+      "filename": "benefits.txt",
+      "marker": "TXT-731",
+      "question": "What is the unique TXT policy code?",
+      "expected_method": ""
+    },
+    {
+      "path": "evals/multimodal_ingestion/corpus/operations.md",
+      "filename": "operations.md",
+      "marker": "MD-204",
+      "question": "What is the unique Markdown runbook code?",
+      "expected_method": ""
+    },
+    {
+      "path": "evals/multimodal_ingestion/corpus/customer.json",
+      "filename": "customer.json",
+      "marker": "JSON-442",
+      "question": "What is the customer verification code?",
+      "expected_method": ""
+    },
+    {
+      "path": "evals/multimodal_ingestion/corpus/claims-guide.docx",
+      "filename": "claims-guide.docx",
+      "marker": "DOCX-431",
+      "question": "What is the unique Word claims code?",
+      "expected_method": ""
+    },
+    {
+      "path": "evals/multimodal_ingestion/corpus/invoice.png",
+      "filename": "invoice.png",
+      "marker": "IMAGE-990",
+      "question": "What is the unique image code?",
+      "expected_method": ""
+    },
+    {
+      "path": "evals/multimodal_ingestion/corpus/financial-policy.pdf",
+      "filename": "financial-policy.pdf",
+      "marker": "PDF-620",
+      "question": "What is the unique PDF policy code?",
+      "expected_method": ""
+    },
+    {
+      "path": "evals/multimodal_ingestion/corpus/scanned-invoice.pdf",
+      "filename": "scanned-invoice.pdf",
+      "marker": "IMAGE-990",
+      "question": "What is the unique code shown in the scanned invoice?",
+      "expected_method": "pdf-ocr"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+
+
+class RedisBackgroundHealth:
+    def __init__(self, redis_client, *, key: str, ttl_seconds: int):
+        self.redis_client = redis_client
+        self.key = str(key)
+        self.ttl_seconds = max(30, int(ttl_seconds))
+
+    @classmethod
+    def from_settings(cls, settings):
+        try:
+            from redis import Redis
+        except ImportError as exc:
+            raise RuntimeError("redis is required for background health checks") from exc
+        return cls(
+            Redis.from_url(
+                settings.redis_url,
+                decode_responses=True,
+                socket_connect_timeout=2,
+                socket_timeout=2,
+                health_check_interval=30,
+            ),
+            key=f"rag:health:{settings.environment}:pipeline",
+            ttl_seconds=settings.background_heartbeat_ttl_seconds,
+        )
+
+    def mark_alive(self, *, worker_id: str = "") -> None:
+        payload = json.dumps({
+            "worker_id": str(worker_id)[:160],
+            "observed_at": datetime.now(timezone.utc).isoformat(),
+        })
+        self.redis_client.set(self.key, payload, ex=self.ttl_seconds)
+
+    def ping(self) -> None:
+        payload = self.redis_client.get(self.key)
+        if not payload:
+            raise RuntimeError("Celery beat-to-worker heartbeat is stale")
+        try:
+            observed = json.loads(payload)
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise RuntimeError("Celery heartbeat payload is invalid") from exc
+        if not str(observed.get("observed_at") or ""):
+            raise RuntimeError("Celery heartbeat timestamp is missing")

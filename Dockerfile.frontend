@@ -2,4 +2,4 @@ FROM caddy:2.11.4-alpine
 
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY frontend /srv
-COPY docs/ifrs17-demo/assets/styles.css /srv/assets/base.css
+COPY docs/rag-demo/assets/styles.css /srv/assets/base.css

@@ -12,7 +12,7 @@ class CeleryTaskDispatcher:
         except ImportError as exc:
             raise RuntimeError("celery is required for background ingestion") from exc
         app = Celery(
-            "ifrs17-rag-dispatcher",
+            "universal-rag-dispatcher",
             broker=settings.redis_url,
             backend=settings.redis_url,
         )

@@ -2,6 +2,7 @@
 import argparse
 import json
 import mimetypes
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError
@@ -49,7 +50,7 @@ def upload(base_url, path: Path, filename: str, folder_id: str) -> dict:
         raise RuntimeError(f"Upload {filename} failed with HTTP {exc.code}: {body}") from exc
 
 
-def setup(base_url: str) -> dict:
+def setup(base_url: str, profile: str) -> dict:
     base_url = base_url.rstrip("/")
     required_files = {
         "law_text": CORPUS_ROOT / "benefits.txt",
@@ -97,7 +98,7 @@ def setup(base_url: str) -> dict:
             f"{base_url}/api/retrieve",
             method="POST",
             payload={
-                "profile": "ifrs17",
+                "profile": profile,
                 "question": marker,
                 "retrieval_query": marker,
                 "source_ids": [document["source_id"]],
@@ -118,7 +119,7 @@ def setup(base_url: str) -> dict:
         f"{base_url}/api/retrieve",
         method="POST",
         payload={
-            "profile": "ifrs17",
+            "profile": profile,
             "question": "TXT-731",
             "retrieval_query": "TXT-731",
             "source_ids": [documents["memo_markdown"]["source_id"]],
@@ -171,6 +172,7 @@ def setup(base_url: str) -> dict:
     )
 
     state = {
+        "profile": profile,
         "law_folder_id": law_folder["id"],
         "deleted_folder_id": case_folder["id"],
         "law_source_ids": [
@@ -192,13 +194,13 @@ def setup(base_url: str) -> dict:
     return summarize(cases)
 
 
-def verify(base_url: str) -> dict:
+def verify(base_url: str, profile: str) -> dict:
     base_url = base_url.rstrip("/")
     state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     setup_result = json.loads(SETUP_RESULTS_PATH.read_text(encoding="utf-8"))
     _, folder_body = request_json(f"{base_url}/api/folders")
     _, document_body = request_json(f"{base_url}/api/documents")
-    _, profile_body = request_json(f"{base_url}/api/profiles/ifrs17")
+    _, profile_body = request_json(f"{base_url}/api/profiles/{quote(profile)}")
     folders = folder_body.get("folders") or []
     documents = document_body.get("documents") or []
     profile_sources = profile_body.get("sources") or []
@@ -247,7 +249,7 @@ def verify(base_url: str) -> dict:
         f"{base_url}/api/retrieve",
         method="POST",
         payload={
-            "profile": "ifrs17",
+            "profile": profile,
             "question": "TXT-731",
             "retrieval_query": "TXT-731",
             "source_ids": state["law_source_ids"],
@@ -307,7 +309,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("phase", choices=["setup", "verify"])
     parser.add_argument("--base-url", default="http://127.0.0.1:8878")
+    parser.add_argument("--profile", default=os.getenv("RAG_PROFILE", "default"))
     args = parser.parse_args()
-    result = setup(args.base_url) if args.phase == "setup" else verify(args.base_url)
+    result = (
+        setup(args.base_url, args.profile)
+        if args.phase == "setup"
+        else verify(args.base_url, args.profile)
+    )
     print(json.dumps(result, ensure_ascii=False))
     raise SystemExit(0 if result["passed"] == result["total"] else 1)

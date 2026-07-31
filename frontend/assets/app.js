@@ -57,26 +57,6 @@ const copy = {
     sourceDetails: "查看檢索過程與來源",
     noEvidence: "本次沒有使用文件檢索",
   },
-  en: {
-    loading: "Loading",
-    ready: "Ready for questions",
-    noKnowledgeBase: "Create a knowledge base to begin",
-    newConversation: "New conversation",
-    noConversation: "No conversations yet",
-    uncategorized: "Uncategorized",
-    indexed: "In active index",
-    pendingIndex: "Not indexed",
-    processing: "Processing",
-    selected: "{count} documents selected",
-    uploadDone: "Parsing is complete. Select files and publish the knowledge base",
-    indexDone: "The new index was validated and published",
-    noReadyDocuments: "Select at least one parsed document",
-    noQuestion: "Enter a question first",
-    noKnowledgeForAsk: "Create or select a knowledge base first",
-    askFailed: "Answer failed",
-    sourceDetails: "View retrieval steps and sources",
-    noEvidence: "No document retrieval was used for this answer",
-  },
 };
 
 const elements = Object.fromEntries(

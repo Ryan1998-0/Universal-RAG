@@ -19,7 +19,7 @@ mkdir -p "$backup_root"
 backup_root=$(cd "$backup_root" && pwd)
 chmod 700 "$backup_root"
 
-project_name=${COMPOSE_PROJECT_NAME:-ifrs17-rag}
+project_name=${COMPOSE_PROJECT_NAME:-universal-rag}
 helper_image=${BACKUP_HELPER_IMAGE:-python:3.12.13-slim-bookworm}
 volumes=(postgres-data redis-data qdrant-data object-data)
 services=(caddy api worker beat postgres redis qdrant object-storage)

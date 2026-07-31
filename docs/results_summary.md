@@ -1,36 +1,36 @@
-# IFRS 17 Retrieval Benchmark Summary
+# IFRS 17 範例資料檢索基準摘要
 
-Run ID: `full-ifrs17-20260704`
+執行編號：`full-ifrs17-20260704`
 
-Benchmark: `IFRS 17 Mixed100`
+基準資料：`IFRS 17 Mixed100`
 
-Scope: retrieval only. The QA agent was not called.
+範圍：只評估檢索，未呼叫問答模型。
 
-| Variant | Retrieval score | Perfect questions | Avg total time | P95 total time |
+| 方案 | 檢索分數 | 完全命中題數 | 平均總耗時 | P95 總耗時 |
 | --- | ---: | ---: | ---: | ---: |
-| BM25-only | 443/500 = 88.6% | 70/100 | 0.2719s | 0.3612s |
+| 僅 BM25 | 443/500 = 88.6% | 70/100 | 0.2719s | 0.3612s |
 | BM25 + Dense | 448/500 = 89.6% | 70/100 | 0.3659s | 0.3835s |
 | BM25 + Dense + Graph | 340/500 = 68.0% | 50/100 | 0.2954s | 0.3776s |
-| Full project stack | 245/500 = 49.0% | 31/100 | 0.7298s | 1.2930s |
+| 完整專案流程 | 245/500 = 49.0% | 31/100 | 0.7298s | 1.2930s |
 
-## Node Timing
+## 節點耗時
 
-| Variant | BM25 | Dense | Graph retrieval | Rerank | Parent expansion | Total |
+| 方案 | BM25 | 向量檢索 | 圖譜檢索 | 重新排序 | 父片段展開 | 總耗時 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| BM25-only | 0.2714s | - | - | - | - | 0.2719s |
+| 僅 BM25 | 0.2714s | - | - | - | - | 0.2719s |
 | BM25 + Dense | 0.2712s | 0.0941s | - | - | - | 0.3659s |
 | BM25 + Dense + Graph | 0.2767s | 0.0171s | 0.0010s | - | - | 0.2954s |
-| Full project stack | 0.6918s | 0.0300s | 0.0010s | 0.0032s | 0.0016s | 0.7298s |
+| 完整專案流程 | 0.6918s | 0.0300s | 0.0010s | 0.0032s | 0.0016s | 0.7298s |
 
-## Graph Check
+## 圖譜檢查
 
-- Entities: 96
-- Relations: 25
-- Support refs: 125
-- Missing support refs: 0
-- Relations with valid support: 25/25
-- Chunk count: 1,190
+- 實體：96
+- 關係：25
+- 證據引用：125
+- 缺少的證據引用：0
+- 具有有效證據的關係：25/25
+- 片段數：1,190
 
-## Interpretation
+## 結果解讀
 
-BM25 + Dense was the strongest variant in this run. Graph retrieval validated structurally, but hurt ranking because the entity-overlap policy matched broad IFRS 17 entities too aggressively. This is a useful negative result: graph construction alone is not enough; the graph retrieval gate and merge policy need to be selective.
+本次測試以 BM25 + 向量檢索表現最佳。圖譜檢索雖通過結構驗證，但實體重疊策略過度命中廣泛的 IFRS 17 實體，反而傷害排序。這是一項有價值的負面結果：只有圖譜結構仍不足夠，圖譜檢索閘門與合併策略必須更具選擇性。

@@ -2,6 +2,7 @@
 import argparse
 import json
 import mimetypes
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError
@@ -48,7 +49,7 @@ def upload_document(base_url: str, item: dict) -> dict:
         raise RuntimeError(f"Upload {path.name} failed with HTTP {exc.code}: {body}") from exc
 
 
-def evaluate(base_url: str, manifest_path: Path) -> dict:
+def evaluate(base_url: str, manifest_path: Path, profile: str) -> dict:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     base_url = base_url.rstrip("/")
     _, health = request_json(f"{base_url}/api/health")
@@ -81,7 +82,7 @@ def evaluate(base_url: str, manifest_path: Path) -> dict:
             f"{base_url}/api/retrieve",
             method="POST",
             payload={
-                "profile": "ifrs17",
+                "profile": profile,
                 "question": item["question"],
                 "retrieval_query": item["marker"],
                 "source_ids": [document["source_id"]],
@@ -108,7 +109,7 @@ def evaluate(base_url: str, manifest_path: Path) -> dict:
         f"{base_url}/api/retrieve",
         method="POST",
         payload={
-            "profile": "ifrs17",
+            "profile": profile,
             "question": "What is PDF-620?",
             "source_ids": [],
             "top_k": 3,
@@ -127,7 +128,7 @@ def evaluate(base_url: str, manifest_path: Path) -> dict:
         f"{base_url}/api/retrieve",
         method="POST",
         payload={
-            "profile": "ifrs17",
+            "profile": profile,
             "question": first["marker"],
             "source_ids": [second["source_id"]],
             "top_k": 3,
@@ -214,7 +215,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="http://127.0.0.1:8877")
     parser.add_argument("--manifest", type=Path, default=EVAL_ROOT / "manifest.json")
+    parser.add_argument("--profile", default=os.getenv("RAG_PROFILE", "default"))
     args = parser.parse_args()
-    result = evaluate(args.base_url, args.manifest)
+    result = evaluate(args.base_url, args.manifest, args.profile)
     print(json.dumps(result["summary"], ensure_ascii=False))
     raise SystemExit(0 if result["summary"]["passed"] == result["summary"]["total"] else 1)

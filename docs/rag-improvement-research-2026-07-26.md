@@ -1,7 +1,7 @@
 # RAG 改善研究報告
 
 日期：2026-07-26
-專案：`IFRS17-RAG`
+專案：`Universal-RAG`
 評估環境：Apple M4、16 GB RAM、Ollama `qwen2.5:7b`
 
 ## 一、結論先講

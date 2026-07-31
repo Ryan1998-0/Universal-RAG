@@ -37,7 +37,7 @@ from rag_demo.rag_pipeline import (
 DEFAULT_MODEL = os.getenv("RAG_MODEL", "ollama:qwen2.5:7b")
 DEFAULT_PROFILE = os.getenv("RAG_PROFILE", "default")
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_STATIC_ROOT = PROJECT_ROOT / "docs" / f"{DEFAULT_PROFILE}-demo"
+DEFAULT_STATIC_ROOT = PROJECT_ROOT / "docs" / "rag-demo"
 if not DEFAULT_STATIC_ROOT.is_dir():
     DEFAULT_STATIC_ROOT = PROJECT_ROOT / "docs"
 STATIC_ROOT = Path(
@@ -86,7 +86,7 @@ def render_home(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RAG Agent Demo</title>
+  <title>泛用 RAG 工作台</title>
   <style>
     :root {{
       color-scheme: light;
@@ -274,8 +274,8 @@ def render_home(
 <body>
   <header>
     <div class="wrap top">
-      <h1>RAG Agent Demo</h1>
-      <div class="badge">Knowledge Base: {escaped_profile} / Model: {escaped_model}</div>
+      <h1>泛用 RAG 工作台</h1>
+      <div class="badge">知識庫：{escaped_profile}／模型：{escaped_model}</div>
     </div>
   </header>
   <main class="wrap">
@@ -287,17 +287,10 @@ def render_home(
           <textarea id="question" name="question" autofocus>{escaped_question}</textarea>
           <div class="field">
             <label for="model">模型</label>
-            <input id="model" name="model" list="model-options" value="{escaped_model}">
-            <datalist id="model-options">
-              <option value="ollama:qwen2.5:7b">
-              <option value="ollama:llama3.1:8b">
-              <option value="ollama:gemma3:4b">
-              <option value="openai:gpt-5.5">
-              <option value="anthropic:claude-opus-4-1-20250805">
-            </datalist>
+            <input id="model" name="model" value="{escaped_model}">
           </div>
           <div class="field">
-            <label for="top_k">Context chunks top_k</label>
+            <label for="top_k">取回片段數量（top_k）</label>
             <input id="top_k" name="top_k" type="number" min="1" max="10" value="{top_k}">
           </div>
           <button type="submit" id="submit-button" data-loading-text="處理中">
@@ -305,12 +298,7 @@ def render_home(
             <span class="submit-label">送出問題</span>
           </button>
         </form>
-        <div class="samples">
-          <button class="sample" type="button">這份文件的主要目的為何？</button>
-          <button class="sample" type="button">這份文件適用哪些情況？</button>
-          <button class="sample" type="button">請整理文件中的重要差異。</button>
-        </div>
-        <div class="warn">本機模型可能需要幾秒鐘；API 模型需要設定對應 API key。</div>
+        <div class="warn">本機模型可能需要幾秒鐘；雲端模型需要設定對應的 API 金鑰。</div>
       </section>
       <section>
         <h2>回答</h2>
@@ -319,11 +307,6 @@ def render_home(
     </div>
   </main>
   <script>
-    for (const sample of document.querySelectorAll(".sample")) {{
-      sample.addEventListener("click", () => {{
-        document.querySelector("#question").value = sample.textContent;
-      }});
-    }}
     const askForm = document.querySelector("#ask-form");
     const submitButton = document.querySelector("#submit-button");
     if (askForm && submitButton) {{

@@ -1,7 +1,7 @@
 # 本機 RAG 完整度稽核報告
 
 - 稽核日期：2026-07-31 14:33（Asia/Taipei）
-- 專案：`IFRS17-RAG`
+- 專案：`Universal-RAG`
 - 稽核範圍：本機 Demo、Canonical RAGPipeline、正式版程式面、測試、資料匯入、介面、部署與維運準備度
 - 目前定位：`STAGING CANDIDATE / PRODUCTION NO-GO`
 
@@ -28,8 +28,8 @@
 
 | 驗證項目 | 結果 | 說明 |
 |---|---|---|
-| Python 回歸測試 | PASS | `164 passed`，另有 `4 subtests passed`；有 1 個 Starlette TestClient 棄用警告 |
-| JavaScript 回歸測試 | PASS | `21 passed` |
+| Python 回歸測試 | 通過 | `167 passed`，另有 `4 subtests passed`；有 1 個 Starlette TestClient 棄用警告 |
+| JavaScript 回歸測試 | 通過 | `20 passed` |
 | Python 依賴檢查 | PASS | 修復環境後 `pip check` 無破損依賴 |
 | Python 編譯檢查 | PASS | `rag_demo` 與 `scripts` 通過 `compileall` |
 | Alembic | PASS | 單一 Head：`f8d9e0a1b2c3` |

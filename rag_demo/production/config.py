@@ -20,7 +20,7 @@ class ProductionSettings(BaseSettings):
     )
 
     environment: Environment = Field(default="development", alias="RAG_ENV")
-    service_name: str = Field(default="ifrs17-rag", alias="RAG_SERVICE_NAME")
+    service_name: str = Field(default="universal-rag", alias="RAG_SERVICE_NAME")
     service_version: str = Field(default="dev", alias="RAG_SERVICE_VERSION")
     database_url: str = Field(alias="RAG_DATABASE_URL")
     redis_url: Optional[str] = Field(default=None, alias="RAG_REDIS_URL")

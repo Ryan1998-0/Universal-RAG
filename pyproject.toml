@@ -3,9 +3,9 @@ requires = ["setuptools==83.0.0", "wheel==0.47.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ifrs17-rag"
+name = "universal-rag"
 version = "0.2.0"
-description = "Tenant-isolated hybrid RAG service with verifiable citations."
+description = "支援多格式文件、混合檢索與可驗證引用的泛用 RAG 服務。"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [

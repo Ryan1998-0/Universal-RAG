@@ -60,8 +60,8 @@ flowchart LR
 - `scripts/macos_vision_ocr.swift`：macOS Vision OCR bridge，優先繁中、簡中與英文。
 - `rag_demo/hybrid_retrieval.py`：載入持久化文件並套用 `source_ids` query-time filter。
 - `rag_demo/web_app.py`：通用上傳、清單、下載與檢索 API。
-- `docs/ifrs17-demo/agent-client.js`：瀏覽器端格式與大小驗證。
-- `docs/ifrs17-demo/assets/app.js`：上傳進度、metadata 顯示與文件勾選。
+- `docs/rag-demo/agent-client.js`：瀏覽器端格式與大小驗證。
+- `docs/rag-demo/assets/app.js`：上傳進度、metadata 顯示與文件勾選。
 
 ## 儲存內容
 

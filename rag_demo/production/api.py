@@ -331,7 +331,7 @@ def create_app(
     docs_url = "/docs" if resolved_settings.enable_docs else None
     openapi_url = "/openapi.json" if resolved_settings.enable_docs else None
     app = FastAPI(
-        title="IFRS17 RAG API",
+        title="泛用 RAG API",
         version=resolved_settings.service_version,
         docs_url=docs_url,
         redoc_url=None,

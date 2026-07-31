@@ -1,43 +1,42 @@
-# IFRS17-RAG
+# 泛用 RAG 工作台
 
-A local-first, multimodal RAG application built around Qwen 2.5 7B. It combines adaptive routing, hybrid retrieval, reranking, citations, conversation history, and document management in a ChatGPT-style interface.
+可在本機執行的多格式 RAG 系統。知識庫與模型皆可替換，不綁定特定領域；IFRS 17 只是內附的其中一組範例資料。
 
-[Traditional Chinese](README.zh-TW.md) | [Static browser demo](https://ryan1998-0.github.io/IFRS17-RAG/ifrs17-demo/)
+[線上介面展示](https://ryan1998-0.github.io/Universal-RAG/rag-demo/)
 
-> The GitHub Pages demo is a static retrieval showcase. Run the local service to use Qwen, upload documents, OCR, conversations, and persistent memory.
+> 線上版本用來展示介面。若要使用文件上傳、OCR、本機模型、對話紀錄與持久化索引，請啟動本機服務。
 
-## Highlights
+## 核心功能
 
-- Self-RAG routing: direct answers for simple questions, retrieval for source-dependent questions.
-- Hybrid search: BM25 + dense embeddings + reciprocal-rank fusion + reranking.
-- Multimodal ingestion: PDF, images, DOCX, TXT, Markdown, and JSON.
-- OCR for images and scanned PDFs, with chunking and persistent indexes.
-- Folder-based knowledge management and per-query document selection.
-- SQLite conversation history, explicit long-term memory, and source citations.
-- Local inference through Ollama with `qwen2.5:7b`.
-- Production-oriented FastAPI, PostgreSQL, Qdrant, object storage, workers, OIDC, metrics, backup, and CI scaffolding.
+- 自適應路由：簡單問題直接回答，需要文件證據時才進行檢索。
+- 混合檢索：BM25、Embedding、RRF 融合與 Rerank。
+- 多格式匯入：PDF、圖片、DOCX、TXT、Markdown、JSON。
+- OCR、父子分塊、來源引用與證據不足拒答。
+- 知識庫、資料夾與文件選取，不同領域可分開管理。
+- SQLite 對話紀錄與長期記憶。
+- 預設透過 Ollama 執行 `qwen2.5:7b`，模型可由設定替換。
 
-## Flow
+## 處理流程
 
 ```text
-Question
-  -> adaptive router
-     -> direct answer / date-time tool
-     -> query rewrite -> BM25 + embeddings -> fusion -> rerank
-        -> evidence gate -> Qwen answer with citations
+使用者問題
+  -> 判斷是否需要檢索
+     -> 直接回答或日期時間工具
+     -> 查詢改寫 -> BM25 + Embedding -> RRF -> Rerank
+        -> 證據檢查 -> 生成附來源回答
 
-Document
-  -> validation -> parser or OCR -> normalized units
-  -> chunks -> embeddings -> persistent index -> selectable knowledge base
+上傳文件
+  -> 格式驗證 -> 文字解析或 OCR -> 標準化
+  -> 分塊 -> Embedding -> 持久化索引 -> 加入可選知識庫
 ```
 
-## Run Locally
+## 本機啟動
 
-Requirements: Python 3.12 and [Ollama](https://ollama.com/).
+需要 Python 3.12 與 [Ollama](https://ollama.com/)。
 
 ```bash
-git clone https://github.com/Ryan1998-0/IFRS17-RAG.git
-cd IFRS17-RAG
+git clone https://github.com/Ryan1998-0/Universal-RAG.git
+cd Universal-RAG
 
 python3.12 -m venv .venv
 source .venv/bin/activate
@@ -47,34 +46,22 @@ ollama pull qwen2.5:7b
 python -m rag_demo.web_app
 ```
 
-Open [http://127.0.0.1:8765/ifrs17-demo/index.html](http://127.0.0.1:8765/ifrs17-demo/index.html), then upload and select the documents to use for RAG.
+開啟 [http://127.0.0.1:8765/](http://127.0.0.1:8765/)，上傳文件並勾選本次問答要使用的資料。
 
-## Verification
+## 驗證
 
 ```bash
 .venv/bin/python -m pytest -q
-node --test tests/ifrs17-demo/*.test.mjs tests/frontend/*.test.mjs
+node --test tests/rag-demo/*.test.mjs tests/frontend/*.test.mjs
 ```
 
-Latest local release checks:
+目前已驗證多格式匯入、資料夾與重啟持久化、混合檢索、對話紀錄、介面操作及容器建置。正式部署前仍需在目標環境完成真實 OIDC、負載、跨租戶安全、備份還原與回滾演練。
 
-| Check | Result |
-| --- | ---: |
-| Python regression suite | 164 passed + 4 subtests |
-| Browser JavaScript suite | 21 passed |
-| Multimodal ingestion | 10/10 |
-| Folder and restart persistence | 17/17 |
-| IFRS 17 retrieval-only benchmark, best variant | 89.6% |
+- [多格式文件處理流程](docs/multimodal-ingestion-pipeline.md)
+- [完整架構流程](docs/hybrid_rag_architecture_flow.md)
+- [正式部署目標](docs/production-ready-rag-target.md)
+- [硬編碼檢查報告](docs/runtime-hardcoding-audit-2026-07-23.md)
 
-## Production Status
+## 範例資料
 
-The local application is functional. The production service is a staging candidate, not a production-approved deployment. Real Linux, OIDC, load, cross-tenant security, backup/restore, and rollback drills are still required.
-
-- [Production target and release gates](docs/production-ready-rag-target.md)
-- [Deployment runbook](docs/production-runbook.md)
-- [Multimodal ingestion pipeline](docs/multimodal-ingestion-pipeline.md)
-- [Current completeness audit](docs/local-rag-completeness-report-2026-07-31.md)
-
-## Data Notice
-
-IFRS materials remain the property of their respective copyright holders. Do not treat this project, its demo data, or its answers as accounting advice or IFRS compliance evidence. Check source terms before redistributing documents or extracted content.
+`profiles/ifrs17` 是可選的領域 Profile，用來展示術語別名與領域查詢擴展。核心 RAG 流程預設使用 `default`，不依賴任何特定資料集。

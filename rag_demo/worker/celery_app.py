@@ -6,7 +6,7 @@ from rag_demo.production.config import get_production_settings
 def build_celery_app(settings=None) -> Celery:
     resolved = settings or get_production_settings()
     app = Celery(
-        "ifrs17-rag-worker",
+        "universal-rag-worker",
         broker=resolved.redis_url,
         backend=resolved.redis_url,
         include=["rag_demo.worker.tasks"],

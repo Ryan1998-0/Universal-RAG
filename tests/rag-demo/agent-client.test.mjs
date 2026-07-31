@@ -18,7 +18,7 @@ import {
   renameDocumentFolder,
   uploadDocument,
   uploadWordDocument,
-} from "../../docs/ifrs17-demo/agent-client.js";
+} from "../../docs/rag-demo/agent-client.js";
 
 test("Runtime config supplies profiles and models without frontend presets", async () => {
   const runtime = await loadRuntimeConfig("/api/config", {

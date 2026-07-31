@@ -27,7 +27,7 @@ class TokenVerifier(Protocol):
 
 
 class Hs256TokenVerifier:
-    def __init__(self, secret: str, audience: str = "ifrs17-rag-dev"):
+    def __init__(self, secret: str, audience: str = "universal-rag-dev"):
         if len(secret) < 32:
             raise ValueError("Development JWT secret must contain at least 32 characters.")
         self.secret = secret

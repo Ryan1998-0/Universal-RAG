@@ -27,7 +27,7 @@ export function buildAgentQueryPayload({
   sourceIds = [],
 } = {}) {
   const cleanQuestion = String(question || "").trim();
-  if (!cleanQuestion) throw new Error("Agent question is required.");
+  if (!cleanQuestion) throw new Error("請輸入問題。");
   const normalizedTopK = Number(topK) > 0 ? Number(topK) : null;
 
   const payload = {
@@ -54,13 +54,13 @@ function normalizeModel(model) {
 
 export function validateAgentResponse(rawResponse) {
   if (!rawResponse || typeof rawResponse !== "object") {
-    throw new Error("Agent response must be an object.");
+    throw new Error("模型回應格式必須是物件。");
   }
   if (rawResponse.schema_version !== AGENT_RESPONSE_SCHEMA) {
-    throw new Error(`Unsupported Agent response schema: ${rawResponse.schema_version || "missing"}`);
+    throw new Error(`不支援的模型回應格式：${rawResponse.schema_version || "缺少版本"}`);
   }
   if (!String(rawResponse.answer || "").trim()) {
-    throw new Error("Agent response answer is required.");
+    throw new Error("模型回應缺少答案。");
   }
 
   const contexts = rawResponse.retrieval?.contexts || [];
@@ -72,7 +72,7 @@ export function validateAgentResponse(rawResponse) {
     const rank = Number(citation.rank);
     const id = String(citation.id || "");
     if (!contextRanks.has(rank) && !contextIds.has(id)) {
-      throw new Error(`Agent citation does not match returned contexts: ${rank || id}`);
+      throw new Error(`引用與取回片段不一致：${rank || id}`);
     }
   }
 
@@ -99,8 +99,8 @@ export async function loadRuntimeConfig(endpoint = "/api/config", options = {}) 
   const models = Array.isArray(body.models)
     ? body.models.map(normalizeRuntimeModel).filter((model) => model.id && model.name)
     : [];
-  if (!profiles.length) throw new Error("Runtime config does not expose any knowledge base profile.");
-  if (!models.length) throw new Error("Runtime config does not expose any model.");
+  if (!profiles.length) throw new Error("執行期設定沒有提供可用的知識庫。");
+  if (!models.length) throw new Error("執行期設定沒有提供可用的模型。");
   return {
     defaultProfile: String(body.default_profile || profiles[0].id),
     defaultModel: String(body.default_model || models[0].id),
@@ -116,7 +116,7 @@ export async function loadRuntimeConfig(endpoint = "/api/config", options = {}) 
 
 export async function loadProfileData(profile, endpoint = "/api/profiles", options = {}) {
   const cleanProfile = String(profile || "").trim();
-  if (!cleanProfile) throw new Error("Knowledge base profile is required.");
+  if (!cleanProfile) throw new Error("必須指定知識庫設定。");
   const baseEndpoint = String(endpoint).replace(/\/$/, "");
   const body = await requestJson(
     `${baseEndpoint}/${encodeURIComponent(cleanProfile)}`,
@@ -154,7 +154,7 @@ function normalizeSource(source) {
   return {
     ...source,
     source_id: String(source?.source_id || ""),
-    name: String(source?.name || source?.source_id || "Untitled"),
+    name: String(source?.name || source?.source_id || "未命名文件"),
     source_type: String(source?.source_type || "document"),
     chunk_count: Number(source?.chunk_count || 0),
     folder_id: String(source?.folder_id || ""),
@@ -188,7 +188,7 @@ export async function createConversation(endpoint = "/api/conversations", profil
 
 export async function loadConversation(conversationId, endpoint = "/api/conversations", options = {}) {
   const cleanId = String(conversationId || "").trim();
-  if (!cleanId) throw new Error("Conversation ID is required.");
+  if (!cleanId) throw new Error("必須提供對話編號。");
   return requestJson(`${String(endpoint).replace(/\/$/, "")}/${encodeURIComponent(cleanId)}`, {
     method: "GET",
   }, options);
@@ -196,7 +196,7 @@ export async function loadConversation(conversationId, endpoint = "/api/conversa
 
 export async function deleteConversation(conversationId, endpoint = "/api/conversations", options = {}) {
   const cleanId = String(conversationId || "").trim();
-  if (!cleanId) throw new Error("Conversation ID is required.");
+  if (!cleanId) throw new Error("必須提供對話編號。");
   return requestJson(`${String(endpoint).replace(/\/$/, "")}/${encodeURIComponent(cleanId)}`, {
     method: "DELETE",
   }, options);
@@ -218,13 +218,13 @@ export async function createDocumentFolder(name, endpoint = "/api/folders", opti
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: String(name || "") }),
   }, options);
-  if (!body.folder) throw new Error("Folder API response is missing folder metadata.");
+  if (!body.folder) throw new Error("資料夾 API 回應缺少資料夾資訊。");
   return normalizeFolder(body.folder);
 }
 
 export async function renameDocumentFolder(folderId, name, endpoint = "/api/folders", options = {}) {
   const cleanFolderId = String(folderId || "").trim();
-  if (!cleanFolderId) throw new Error("Folder ID is required.");
+  if (!cleanFolderId) throw new Error("必須提供資料夾編號。");
   const body = await requestJson(
     `${String(endpoint).replace(/\/$/, "")}/${encodeURIComponent(cleanFolderId)}`,
     {
@@ -234,13 +234,13 @@ export async function renameDocumentFolder(folderId, name, endpoint = "/api/fold
     },
     options,
   );
-  if (!body.folder) throw new Error("Folder API response is missing folder metadata.");
+  if (!body.folder) throw new Error("資料夾 API 回應缺少資料夾資訊。");
   return normalizeFolder(body.folder);
 }
 
 export async function deleteDocumentFolder(folderId, endpoint = "/api/folders", options = {}) {
   const cleanFolderId = String(folderId || "").trim();
-  if (!cleanFolderId) throw new Error("Folder ID is required.");
+  if (!cleanFolderId) throw new Error("必須提供資料夾編號。");
   return requestJson(
     `${String(endpoint).replace(/\/$/, "")}/${encodeURIComponent(cleanFolderId)}`,
     { method: "DELETE" },
@@ -255,7 +255,7 @@ export async function moveDocumentToFolder(
   options = {},
 ) {
   const cleanSourceId = String(sourceId || "").trim();
-  if (!cleanSourceId) throw new Error("Document source ID is required.");
+  if (!cleanSourceId) throw new Error("必須提供文件來源編號。");
   const body = await requestJson(
     `${String(endpoint).replace(/\/$/, "")}/${encodeURIComponent(cleanSourceId)}/folder`,
     {
@@ -265,7 +265,7 @@ export async function moveDocumentToFolder(
     },
     options,
   );
-  if (!body.document) throw new Error("Document API response is missing document metadata.");
+  if (!body.document) throw new Error("文件 API 回應缺少文件資訊。");
   return normalizeUploadedDocument(body.document);
 }
 
@@ -304,9 +304,9 @@ export async function uploadDocument(file, endpoint = "/api/documents/upload", o
     body = {};
   }
   if (!response.ok) {
-    throw new Error(String(body.error || `Document upload returned HTTP ${response.status}`));
+    throw new Error(String(body.error || `文件上傳回傳 HTTP ${response.status}`));
   }
-  if (!body.document) throw new Error("Document upload response is missing document metadata.");
+  if (!body.document) throw new Error("文件上傳回應缺少文件資訊。");
   return {
     document: normalizeUploadedDocument(body.document),
     duplicate: Boolean(body.duplicate),
@@ -318,7 +318,7 @@ export function uploadWordDocument(file, endpoint = "/api/documents/upload", opt
 }
 
 function normalizeUploadedDocument(document) {
-  const name = String(document?.name || "Untitled");
+  const name = String(document?.name || "未命名文件");
   return {
     source_id: String(document?.source_id || ""),
     name,
@@ -365,18 +365,18 @@ async function requestJson(endpoint, requestOptions, options = {}) {
     body = {};
   }
   if (!response.ok) {
-    throw new Error(String(body.error || `Conversation API returned HTTP ${response.status}`));
+    throw new Error(String(body.error || `對話 API 回傳 HTTP ${response.status}`));
   }
   return body;
 }
 
 export async function callAgentEndpoint(endpoint, payload, options = {}) {
   const cleanEndpoint = String(endpoint || "").trim();
-  if (!cleanEndpoint) throw new Error("Agent endpoint is not configured.");
+  if (!cleanEndpoint) throw new Error("尚未設定模型服務端點。");
   const endpointUrl = parseEndpointUrl(cleanEndpoint);
   const pageProtocol = options.pageProtocol ?? globalThis.location?.protocol ?? "";
   if (pageProtocol === "https:" && endpointUrl.protocol !== "https:") {
-    throw new Error("HTTPS GitHub Pages requires an HTTPS Agent endpoint.");
+    throw new Error("HTTPS 頁面必須使用 HTTPS 模型服務端點。");
   }
 
   const fetchImpl = options.fetchImpl || fetch;
@@ -392,7 +392,7 @@ export async function callAgentEndpoint(endpoint, payload, options = {}) {
       signal: controller.signal,
     });
     if (!response.ok) {
-      throw new Error(`Agent endpoint returned HTTP ${response.status}`);
+      throw new Error(`模型服務回傳 HTTP ${response.status}`);
     }
     const body = await response.json();
     return validateAgentResponse(body);
@@ -416,7 +416,7 @@ export async function callRetrievalRouter(endpoint, payload, options = {}) {
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
-    if (!response.ok) throw new Error(`Retrieval router returned HTTP ${response.status}`);
+    if (!response.ok) throw new Error(`檢索路由回傳 HTTP ${response.status}`);
     const body = await response.json();
     return {
       needsRetrieval: Boolean(body.needs_retrieval),
@@ -444,10 +444,10 @@ export async function callHybridRetriever(endpoint, payload, options = {}) {
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
-    if (!response.ok) throw new Error(`Hybrid retriever returned HTTP ${response.status}`);
+    if (!response.ok) throw new Error(`混合檢索回傳 HTTP ${response.status}`);
     const body = await response.json();
     if (!Array.isArray(body.contexts)) {
-      throw new Error("Hybrid retriever response is missing contexts.");
+      throw new Error("混合檢索回應缺少取回片段。");
     }
     return body;
   } finally {
@@ -459,7 +459,7 @@ function parseEndpointUrl(endpoint) {
   try {
     return new URL(endpoint, globalThis.location?.origin || "http://127.0.0.1");
   } catch {
-    throw new Error("Agent endpoint must be a valid URL.");
+    throw new Error("模型服務端點必須是有效網址。");
   }
 }
 

@@ -1,7 +1,7 @@
-# Production-ready RAG 目標規格
+# 正式部署 RAG 目標規格
 
 日期：2026-07-26
-專案：`IFRS17-RAG`
+專案：`Universal-RAG`
 狀態：正式專案目標與驗收依據
 
 ## 1. 目標

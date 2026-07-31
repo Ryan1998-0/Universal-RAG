@@ -3,7 +3,6 @@ import {
   callAgentEndpoint,
   callHybridRetriever,
   callRetrievalRouter,
-  createConversation,
   createDocumentFolder,
   deleteConversation,
   deleteDocumentFolder,
@@ -22,6 +21,18 @@ let knowledgeBases = {};
 let qaModels = {};
 
 const HISTORY_STORAGE_KEY = "rag-query-history-v1";
+const STATIC_SHOWCASE_RUNTIME = {
+  defaultProfile: "default",
+  defaultModel: "ollama:qwen2.5:7b",
+  profiles: [{ id: "default", label: "泛用知識庫", sampleQueries: [] }],
+  models: [{
+    id: "ollama:qwen2.5:7b",
+    provider: "ollama",
+    name: "qwen2.5:7b",
+    label: "Qwen 2.5 7B（本機）",
+  }],
+  retrieval: { topK: 8, candidateK: 24, maxTopK: 12 },
+};
 
 const translations = {
   "zh-Hant": {
@@ -54,7 +65,7 @@ const translations = {
     folderFailed: "資料夾操作失敗",
     documentMoved: "文件分類已更新",
     uncategorized: "未分類",
-    liveAgent: "Live Agent",
+    liveAgent: "本機模型",
     graph: "圖譜",
     selected: "已選",
     source: "來源",
@@ -70,84 +81,21 @@ const translations = {
     chineseAnswer: "中文回答",
     retrievalTerms: "檢索詞",
     citation: "來源",
-    liveAgentReady: "本機 Qwen 已設定",
-    liveAgentOffline: "本機 Qwen 未連線",
-    liveAgentPending: "本機 Qwen 正在回答",
-    liveAgentError: "本機 Qwen 呼叫失敗",
-    agentReadyMessage: "送出問題後會呼叫本機後端，再由 Ollama Qwen 根據檢索資料生成回答。",
-    agentOfflineMessage: "目前找不到本機後端 endpoint；請用 rag_demo.web_app 啟動 demo。",
-    agentEndpointRequired: "此知識庫需要 Agent endpoint",
-    staticUnavailable: "公開靜態頁未打包此知識庫，請設定 Agent endpoint 後查詢。",
-    agentProfile: "Agent profile",
+    liveAgentReady: "本機模型已設定",
+    liveAgentOffline: "本機模型未連線",
+    liveAgentPending: "本機模型正在回答",
+    liveAgentError: "本機模型呼叫失敗",
+    agentReadyMessage: "送出問題後會呼叫本機後端，再由目前選定的模型根據檢索資料生成回答。",
+    agentOfflineMessage: "目前找不到本機服務端點；請用 rag_demo.web_app 啟動服務。",
+    agentEndpointRequired: "此知識庫需要模型服務端點",
+    staticUnavailable: "公開靜態頁未包含此知識庫，請設定模型服務端點後查詢。",
+    agentProfile: "模型知識庫",
     matchedEntities: "命中實體",
     relationSupport: "關係支援",
     noGraphEntity: "沒有命中圖譜實體。",
     noRelationSupport: "沒有找到關係支援。",
     query: "問題",
     queryPlaceholder: "輸入問題",
-    runIdEmpty: "",
-  },
-  en: {
-    loadingProfile: "Loading profile...",
-    profileLoaded: "Profile loaded",
-    profileSelected: "Profile selected",
-    staticBuild: "Static demo build",
-    knowledgeBase: "Knowledge base",
-    model: "Model",
-    language: "Language",
-    data: "Data",
-    answer: "Answer",
-    retrievedEvidence: "Retrieved evidence",
-    retrievedInfo: "Retrieved evidence",
-    openTrace: "Open this RAG log",
-    runTrace: "Run trace",
-    traceTitle: "RAG node log",
-    send: "Send",
-    documents: "Documents",
-    ragDocuments: "RAG documents",
-    selectAll: "Select all",
-    clear: "Clear",
-    uploadWorking: "Detecting format, extracting content, and building retrieval indexes...",
-    uploadComplete: "Conversion and indexing are complete. Select the files to use for RAG",
-    uploadDuplicate: "This file already exists. Select it to use it",
-    uploadFailed: "Document upload or conversion failed",
-    folderCreated: "Folder created",
-    folderRenamed: "Folder renamed",
-    folderDeleted: "Folder deleted; its documents were moved to Uncategorized",
-    folderFailed: "Folder operation failed",
-    documentMoved: "Document folder updated",
-    uncategorized: "Uncategorized",
-    liveAgent: "Live Agent",
-    graph: "Graph",
-    selected: "selected",
-    source: "Source",
-    noEvidence: "No evidence found. Try a more specific question.",
-    evidenceFor: "Evidence for",
-    retrievalConfidence: "Retrieval confidence",
-    qaLlm: "QA model",
-    contexts: "Contexts",
-    totalTime: "Total time",
-    translation: "Language handling",
-    aliasHits: "Alias hits",
-    direct: "Direct",
-    chineseAnswer: "Answer",
-    retrievalTerms: "Retrieval terms",
-    citation: "Source",
-    liveAgentReady: "Local Qwen configured",
-    liveAgentOffline: "Local Qwen offline",
-    liveAgentPending: "Local Qwen answering",
-    liveAgentError: "Local Qwen request failed",
-    agentReadyMessage: "Questions call the local backend, then Ollama Qwen answers from retrieved context.",
-    agentOfflineMessage: "No local backend endpoint is configured. Start the demo with rag_demo.web_app.",
-    agentEndpointRequired: "This knowledge base requires an Agent endpoint",
-    staticUnavailable: "This public static page does not bundle that knowledge base. Configure an Agent endpoint to query it.",
-    agentProfile: "Agent profile",
-    matchedEntities: "Matched entities",
-    relationSupport: "Relation support",
-    noGraphEntity: "No graph entity match.",
-    noRelationSupport: "No relation support found.",
-    query: "Query",
-    queryPlaceholder: "Ask a question",
     runIdEmpty: "",
   },
 };
@@ -180,6 +128,7 @@ const state = {
   collapsedDocumentGroups: new Set(),
   folderDialogMode: "create",
   editingFolderId: "",
+  staticShowcase: false,
 };
 
 const elements = {
@@ -262,7 +211,15 @@ async function init() {
   elements.newChat.disabled = true;
   bindEvents();
   try {
-    configureRuntime(await loadRuntimeConfig());
+    let runtime;
+    try {
+      runtime = await loadRuntimeConfig();
+    } catch (error) {
+      if (!isStaticShowcaseHost()) throw error;
+      state.staticShowcase = true;
+      runtime = STATIC_SHOWCASE_RUNTIME;
+    }
+    configureRuntime(runtime);
     elements.knowledgeBase.value = state.profile;
     elements.qaModel.value = state.qaModel;
     elements.language.value = state.language;
@@ -270,7 +227,7 @@ async function init() {
     state.agentEndpoint = readAgentEndpoint({ defaultEndpoint: "/api/ask" });
     elements.agentEndpoint.value = state.agentEndpoint;
     await loadKnowledgeBase(state.profile);
-    await refreshConversationHistory({ loadLatest: true });
+    await refreshConversationHistory();
     startControlWatcher();
   } finally {
     elements.input.disabled = false;
@@ -483,6 +440,7 @@ function renderChips() {
     .slice(0, 4)
     .map((query) => [query, query]);
   elements.chips.hidden = chipLabels.length === 0;
+  elements.demoCta.hidden = !currentKnowledgeBase().defaultQuery;
   for (const [label, query] of chipLabels) {
     const button = document.createElement("button");
     button.type = "button";
@@ -538,8 +496,8 @@ function openFolderDialog(mode) {
   state.folderDialogMode = mode;
   state.editingFolderId = mode === "rename" ? folder.id : "";
   elements.folderDialogTitle.textContent = mode === "rename"
-    ? (state.language === "en" ? "Rename folder" : "重新命名資料夾")
-    : (state.language === "en" ? "New folder" : "新增資料夾");
+    ? "重新命名資料夾"
+    : "新增資料夾";
   elements.folderNameInput.value = mode === "rename" ? folder.name : "";
   elements.folderDialogError.textContent = "";
   elements.folderDialogError.hidden = true;
@@ -580,7 +538,7 @@ function openDeleteFolderDialog() {
   const folder = currentUploadFolder();
   if (folder.system) return;
   state.editingFolderId = folder.id;
-  elements.deleteFolderMessage.textContent = `${state.language === "en" ? "Delete" : "刪除"}「${folder.name}」？`;
+  elements.deleteFolderMessage.textContent = `刪除「${folder.name}」？`;
   elements.deleteFolderDialog.showModal();
 }
 
@@ -747,7 +705,7 @@ function renderDocumentSelector() {
 function sourceStatusLabel(source, chunkCount) {
   const extractionMethod = String(source.extraction?.method || "").trim();
   const status = source.selected_by_default ? "內建" : "已轉換";
-  return [status, `${chunkCount} chunks`, extractionMethod].filter(Boolean).join(" · ");
+  return [status, `${chunkCount} 個片段`, extractionMethod].filter(Boolean).join(" · ");
 }
 
 function filterSources(sources) {
@@ -774,7 +732,7 @@ function groupSources(sources) {
         key,
         title: isFolder
           ? (folder.id === "uncategorized" ? t("uncategorized") : folder.name)
-          : String(source.group_label || fallbackTitle || "Other"),
+          : String(source.group_label || fallbackTitle || "其他"),
         folderId: isFolder ? folder.id : "",
         sources: [],
       });
@@ -836,7 +794,7 @@ function startControlWatcher() {
 
 async function loadKnowledgeBase(profile) {
   const config = knowledgeBases[profile];
-  if (!config) throw new Error(`Unknown knowledge base profile: ${profile}`);
+  if (!config) throw new Error(`找不到知識庫設定：${profile}`);
   state.profile = config.profile;
   state.query = "";
   state.latestResult = null;
@@ -853,7 +811,20 @@ async function loadKnowledgeBase(profile) {
 
   elements.dataStatus.textContent = `${config.label} ${t("loadingProfile")}`;
   elements.dataMeta.textContent = "";
-  const profileData = await loadProfileData(config.profile);
+  let profileData;
+  try {
+    profileData = await loadProfileData(config.profile);
+  } catch (error) {
+    if (!state.staticShowcase) throw error;
+    profileData = {
+      profile: config.profile,
+      label: config.label,
+      sampleQueries: [],
+      meta: { mode: "static-showcase" },
+      sources: [],
+      folders: [{ id: "uncategorized", name: "未分類", system: true, document_count: 0 }],
+    };
+  }
   state.data = {
     meta: profileData.meta,
     sources: profileData.sources,
@@ -872,7 +843,12 @@ async function loadKnowledgeBase(profile) {
   renderDocumentSelector();
   renderChips();
   elements.dataStatus.textContent = `${config.label} ${t("profileLoaded")}`;
+  if (state.staticShowcase) elements.dataStatus.textContent = t("staticBuild");
   updateDataMeta();
+}
+
+function isStaticShowcaseHost() {
+  return window.location.protocol === "file:" || window.location.hostname.endsWith(".github.io");
 }
 
 async function handleDocumentFiles(files) {
@@ -961,7 +937,7 @@ function updateDataMeta() {
   );
   const aliasCount = Number(state.data.meta?.alias_count || state.data.aliases?.length || 0);
   const graphCount = Number(state.data.meta?.graph_relation_count || state.data.graph?.relations?.length || 0);
-  elements.dataMeta.textContent = `${totalChunks} chunks · ${aliasCount} aliases · ${graphCount} graph relations`;
+  elements.dataMeta.textContent = `${totalChunks} 個片段 · ${aliasCount} 個別名 · ${graphCount} 筆圖譜關係`;
 }
 
 function setDocumentUploadStatus(message, status = "") {
@@ -972,7 +948,7 @@ function setDocumentUploadStatus(message, status = "") {
 
 function currentKnowledgeBase() {
   return knowledgeBases[state.profile] || {
-    label: state.profile || "Knowledge base",
+    label: state.profile || "知識庫",
     profile: state.profile || "default",
     defaultQuery: "",
     queries: [],
@@ -984,7 +960,7 @@ function selectedModel() {
   return qaModels[state.qaModel] || Object.values(qaModels)[0] || {
     provider: "ollama",
     name: state.qaModel || "unknown",
-    label: state.qaModel || "Model",
+    label: state.qaModel || "模型",
   };
 }
 
@@ -1019,13 +995,7 @@ function resetChatPanels() {
 
 async function startNewConversation() {
   resetCurrentConversationState();
-  try {
-    const conversation = await createConversation("/api/conversations", state.profile);
-    state.conversationId = String(conversation.id || "");
-    await refreshConversationHistory();
-  } catch {
-    renderConversationHistory();
-  }
+  renderConversationHistory();
   elements.input.focus();
 
   if (window.matchMedia("(max-width: 760px)").matches) {
@@ -1204,7 +1174,7 @@ function prepareGeneralAnswer(decision, { retrievalPending = false } = {}) {
   elements.answer.innerHTML = `
     <div class="answer-head">
       <div>
-        <p class="eyebrow">Self-RAG Router</p>
+        <p class="eyebrow">自適應檢索路由</p>
         <h3>${retrievalPending ? "需要檢索" : "直接回答"}</h3>
       </div>
     </div>
@@ -1490,7 +1460,7 @@ async function askLiveAgent(result, { retrievalDecision = null } = {}) {
   renderAgentMessage({
     status: "pending",
     title: t("liveAgentPending"),
-    message: `Agent API: ${currentKnowledgeBase().label} · ${selectedModel().label}`,
+    message: `模型服務：${currentKnowledgeBase().label} · ${selectedModel().label}`,
   });
 
   try {
@@ -1527,7 +1497,7 @@ async function askLiveAgent(result, { retrievalDecision = null } = {}) {
 
 function renderMetrics(result, expanded) {
   elements.resultTitle.textContent = `${t("evidenceFor")}: ${state.query}`;
-  elements.confidence.textContent = `${t("retrievalConfidence")}: ${titleCase(result.confidence)}`;
+  elements.confidence.textContent = `${t("retrievalConfidence")}: ${confidenceLabel(result.confidence)}`;
   elements.confidence.className = `confidence confidence-${result.confidence}`;
   elements.metrics.innerHTML = "";
   const metrics = [
@@ -1538,7 +1508,7 @@ function renderMetrics(result, expanded) {
     [t("totalTime"), `${result.timings.totalMs.toFixed(2)} ms`],
     [
       t("translation"),
-      result.translation.addedTerms?.length ? "Query expansion" : t("direct"),
+      result.translation.addedTerms?.length ? "查詢擴展" : t("direct"),
     ],
     [t("aliasHits"), expanded.matchedAliases.length],
   ];
@@ -1554,7 +1524,7 @@ function renderVariantDetails(variant) {
   const detail = architectureForVariant(variant);
   elements.variantDetails.innerHTML = `
     <div>
-      <p class="eyebrow">Architecture</p>
+      <p class="eyebrow">檢索架構</p>
       <h3>${escapeHtml(detail.label)}</h3>
     </div>
     <p>${escapeHtml(detail.summary)}</p>
@@ -1580,10 +1550,10 @@ function renderAgentMessage({ status, title, message }) {
   elements.agentAnswer.innerHTML = `
     <div class="answer-head">
       <div>
-        <p class="eyebrow">Local Qwen</p>
+        <p class="eyebrow">本機模型</p>
         <h3>${escapeHtml(title)}</h3>
       </div>
-      <span>${escapeHtml(status)}</span>
+      <span>${escapeHtml(agentStatusLabel(status))}</span>
     </div>
     <p>${escapeHtml(message)}</p>
   `;
@@ -1597,15 +1567,15 @@ function renderAgentResponse(response) {
   elements.agentAnswer.innerHTML = `
     <div class="answer-head">
       <div>
-        <p class="eyebrow">Local Qwen</p>
+        <p class="eyebrow">本機模型</p>
         <h3>${escapeHtml(t("answer"))}</h3>
       </div>
       <span>${escapeHtml(model)}</span>
     </div>
     <p>${escapeHtml(response.answer)}</p>
     <p class="answer-terms">
-      ${totalMs != null ? `Agent total ${Number(totalMs).toFixed(0)} ms` : "Agent timing unavailable"}
-      ${warnings.length ? ` · warnings: ${warnings.map(escapeHtml).join(", ")}` : ""}
+      ${totalMs != null ? `模型總耗時 ${Number(totalMs).toFixed(0)} ms` : "無模型耗時資料"}
+      ${warnings.length ? ` · 警告：${warnings.map(escapeHtml).join("、")}` : ""}
     </p>
   `;
 }
@@ -1649,7 +1619,7 @@ function renderResults(result, expanded) {
         ${source?.source_type ? `<span>${escapeHtml(source.source_type)}</span>` : ""}
       </div>
       <p class="excerpt">${highlight(escapeHtml(excerpt), terms)}</p>
-      ${terms.length ? `<p class="terms">Matched: ${terms.map(escapeHtml).join(", ")}</p>` : ""}
+        ${terms.length ? `<p class="terms">命中詞：${terms.map(escapeHtml).join("、")}</p>` : ""}
     `;
     elements.results.append(card);
   }
@@ -1666,10 +1636,10 @@ function renderComparisonGraph(comparisonGraph) {
   elements.comparison.innerHTML = `
     <div class="comparison-head">
       <div>
-        <p class="eyebrow">Graph table</p>
+        <p class="eyebrow">圖譜比較表</p>
         <h3>${escapeHtml(comparisonGraph.title)}</h3>
       </div>
-      <span>${comparisonGraph.nodes.length} nodes · ${comparisonGraph.edges.length} edges</span>
+      <span>${comparisonGraph.nodes.length} 個節點 · ${comparisonGraph.edges.length} 條關係</span>
     </div>
     <p class="comparison-summary">${escapeHtml(comparisonGraph.summary)}</p>
     <div class="comparison-table-wrap">
@@ -1677,10 +1647,10 @@ function renderComparisonGraph(comparisonGraph) {
         <thead>
           <tr>
             <th>比較面向</th>
-            <th>${escapeHtml(comparisonGraph.oldLabel || "Before")}</th>
-            <th>${escapeHtml(comparisonGraph.newLabel || "After")}</th>
+            <th>${escapeHtml(comparisonGraph.oldLabel || "調整前")}</th>
+            <th>${escapeHtml(comparisonGraph.newLabel || "調整後")}</th>
             <th>影響</th>
-            <th>Evidence</th>
+            <th>證據</th>
           </tr>
         </thead>
         <tbody>
@@ -1702,7 +1672,7 @@ function renderComparisonRow(row) {
       <td>${escapeHtml(row.oldPolicy)}</td>
       <td>${escapeHtml(row.newPolicy)}</td>
       <td>${escapeHtml(row.impact)}</td>
-      <td>${escapeHtml(evidence || "No linked chunk")}</td>
+      <td>${escapeHtml(evidence || "沒有連結的片段")}</td>
     </tr>
   `;
 }
@@ -1717,7 +1687,7 @@ function renderGraph(graphResult) {
     const warning = document.createElement("div");
     warning.className = "warning";
     warning.textContent =
-      "Broad graph match detected. Hub entities can pull unrelated chunks, so ranked text evidence takes priority.";
+      "偵測到過於寬廣的圖譜命中。中心實體可能帶入無關片段，因此優先採用文字檢索排序。";
     elements.graphPanel.append(warning);
   }
   const entityBlock = document.createElement("div");
@@ -1770,38 +1740,38 @@ function renderTrace(result, expanded) {
 
 function buildTraceMarkdown(result, expanded, selectedSources) {
   const lines = [
-    "# RAG Run Log",
+    "# RAG 執行紀錄",
     "",
-    `Run ID: ${state.latestRunId}`,
-    `Time: ${new Date().toISOString()}`,
-    `Knowledge base: ${currentKnowledgeBase().label}`,
-    `Model: ${selectedModel().label}`,
-    `Question: ${result.query}`,
-    `Retrieval query: ${result.retrievalQuery}`,
+    `執行編號：${state.latestRunId}`,
+    `時間：${new Date().toISOString()}`,
+    `知識庫：${currentKnowledgeBase().label}`,
+    `模型：${selectedModel().label}`,
+    `問題：${result.query}`,
+    `檢索查詢：${result.retrievalQuery}`,
     "",
-    "## Selected Documents",
+    "## 已選文件",
     "",
     ...selectedSources.map(
       (source) =>
         `- ${source.name} (${source.source_type || "source"})${source.url ? ` - ${source.url}` : ""}`,
     ),
     "",
-    "## Pipeline Nodes",
+    "## 處理節點",
     "",
     ...result.pipeline.map((step, index) => `${index + 1}. ${step.name}: ${step.detail}`),
     "",
-    "## Timings",
+    "## 各階段耗時",
     "",
     ...Object.entries(result.timings).map(([key, value]) => `- ${key}: ${Number(value).toFixed(2)} ms`),
     "",
-    "## Retrieval Diagnostics",
+    "## 檢索診斷",
     "",
-    `- Confidence: ${result.confidence}`,
-    `- Alias hits: ${expanded.matchedAliases.map((item) => item.canonical).join(", ") || "none"}`,
-    `- Matched graph entities: ${result.diagnostics.matchedEntities.join(", ") || "none"}`,
-    `- Hub warning: ${result.diagnostics.hubWarning ? "yes" : "no"}`,
+    `- 信心：${confidenceLabel(result.confidence)}`,
+    `- 命中別名：${expanded.matchedAliases.map((item) => item.canonical).join("、") || "無"}`,
+    `- 命中圖譜實體：${result.diagnostics.matchedEntities.join("、") || "無"}`,
+    `- 中心實體警告：${result.diagnostics.hubWarning ? "是" : "否"}`,
     "",
-    "## Retrieved Contexts",
+    "## 取回片段",
     "",
   ];
 
@@ -1810,16 +1780,16 @@ function buildTraceMarkdown(result, expanded, selectedSources) {
     lines.push(
       `### ${context.rank}. ${context.title}`,
       "",
-      `- Source: ${source?.name || context.source}`,
-      `- Page: ${context.page || "chunk"}`,
-      `- Branch: ${context.branch || "merged"}`,
-      `- Rerank score: ${context.rerankScore ?? context.score}`,
-      context.bm25Score != null ? `- BM25 score: ${context.bm25Score}` : "- BM25 score: unavailable",
+      `- 來源：${source?.name || context.source}`,
+      `- 頁面或片段：${context.page || "片段"}`,
+      `- 檢索分支：${context.branch || "已融合"}`,
+      `- 重排分數：${context.rerankScore ?? context.score}`,
+      context.bm25Score != null ? `- BM25 分數：${context.bm25Score}` : "- BM25 分數：無資料",
       context.embeddingScore != null
-        ? `- Embedding cosine: ${context.embeddingScore}`
-        : "- Embedding cosine: unavailable",
-      context.fusionScore != null ? `- RRF fusion score: ${context.fusionScore}` : "- RRF fusion score: unavailable",
-      source?.url ? `- URL: ${source.url}` : "- URL: unavailable",
+        ? `- Embedding 餘弦相似度：${context.embeddingScore}`
+        : "- Embedding 餘弦相似度：無資料",
+      context.fusionScore != null ? `- RRF 融合分數：${context.fusionScore}` : "- RRF 融合分數：無資料",
+      source?.url ? `- 網址：${source.url}` : "- 網址：無資料",
       "",
       context.content,
       "",
@@ -1845,55 +1815,51 @@ function sourceFor(sourceId) {
 
 function labelForVariant(variant) {
   return {
-    bm25: "BM25-only",
-    dense: "Dense proxy",
+    bm25: "僅使用 BM25",
+    dense: "語意檢索代理",
     bm25_dense: "BM25 + Dense",
     bm25_embedding_rerank: "BM25 + Embedding + Rerank",
     bm25_dense_graph: "BM25 + Dense + Graph",
-    full: "Full stack lab",
+    full: "完整檢索流程",
   }[variant] || variant;
 }
 
 function architectureForVariant(variant) {
   const architectures = {
     bm25: {
-      label: "BM25-only",
-      summary: "Lexical baseline. It ranks chunks by keyword and token overlap with the question.",
-      steps: ["BM25", "Top K evidence"],
+      label: "僅使用 BM25",
+      summary: "以關鍵詞與問題詞彙重疊程度排序片段，作為字面檢索基準。",
+      steps: ["BM25", "前 K 筆證據"],
     },
     bm25_dense: {
-      label: "BM25 + Dense",
-      summary:
-        "Hybrid retrieval. The public static demo uses an alias-expanded dense proxy because no embedding model runs in GitHub Pages.",
-      steps: ["BM25", "Dense proxy / Alias expansion", "RRF Merge", "Top K evidence"],
+      label: "BM25 + 語意檢索",
+      summary: "結合字面與語意候選，再以 RRF 融合排序。",
+      steps: ["BM25", "語意檢索或別名擴展", "RRF 融合", "前 K 筆證據"],
     },
     bm25_embedding_rerank: {
       label: "BM25 + Embedding + Rerank",
-      summary:
-        "Local hybrid retrieval. BM25 and multilingual embeddings generate candidates, RRF fuses both rankings, and a final relevance reranker selects the evidence sent to Qwen.",
-      steps: ["BM25", "Multilingual Embedding", "RRF Merge", "Hybrid Reranker", "Top K evidence"],
+      summary: "BM25 與多語 Embedding 產生候選，RRF 融合後再以相關性模型重排證據。",
+      steps: ["BM25", "多語 Embedding", "RRF 融合", "混合重排", "前 K 筆證據"],
     },
     bm25_dense_graph: {
-      label: "BM25 + Dense + Graph",
-      summary:
-        "Adds graph relation support to the BM25 + Dense candidates, then merges the three retrieval branches.",
-      steps: ["BM25", "Dense proxy / Alias expansion", "Graph Retrieval", "RRF Merge", "Top K evidence"],
+      label: "BM25 + 語意檢索 + 圖譜",
+      summary: "在字面與語意候選之外加入圖譜關係，再融合三條檢索分支。",
+      steps: ["BM25", "語意檢索或別名擴展", "圖譜檢索", "RRF 融合", "前 K 筆證據"],
     },
     full: {
-      label: "Full stack lab",
-      summary:
-        "The complete retrieval path merges lexical, dense, and graph evidence, exposes reranking, suppresses broad hub matches, and applies evidence quality rules.",
+      label: "完整檢索流程",
+      summary: "融合字面、語意與圖譜證據，經重排、中心實體抑制及證據品質檢查後輸出。",
       steps: [
-        "Query Expansion",
-        "Metadata Filter",
+        "查詢擴展",
+        "Metadata 範圍過濾",
         "BM25",
-        "Dense proxy / Alias expansion",
-        "Graph Retrieval",
-        "RRF Merge",
-        "Reranker",
-        "Graph Hub Guard",
-        "Evidence Quality Gate",
-        "Comparison Graph when relevant",
+        "語意檢索或別名擴展",
+        "圖譜檢索",
+        "RRF 融合",
+        "重排",
+        "中心實體防護",
+        "證據品質檢查",
+        "需要時建立比較圖",
       ],
     },
   };
@@ -1901,8 +1867,22 @@ function architectureForVariant(variant) {
   return architectures[variant] || architectures.full;
 }
 
-function titleCase(value) {
-  return value.slice(0, 1).toUpperCase() + value.slice(1);
+function confidenceLabel(value) {
+  return {
+    high: "高",
+    medium: "中",
+    low: "低",
+  }[String(value || "").toLowerCase()] || String(value || "未知");
+}
+
+function agentStatusLabel(value) {
+  return {
+    ready: "就緒",
+    offline: "未連線",
+    pending: "處理中",
+    error: "錯誤",
+    success: "完成",
+  }[String(value || "").toLowerCase()] || String(value || "未知");
 }
 
 function formatRetrievalScore(value) {
@@ -1952,7 +1932,7 @@ function evidenceSnippet(content, terms, maxLength = 760) {
 }
 
 function formatCitation(citation) {
-  const title = citation.title || "Untitled source";
+  const title = citation.title || "未命名來源";
   if (!citation.page || title.toLowerCase().includes(String(citation.page).toLowerCase())) {
     return title;
   }

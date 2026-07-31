@@ -242,7 +242,7 @@ def resolve_project_path(
     env: Optional[Mapping[str, str]] = None,
     project_root: Optional[Path] = None,
 ) -> Path:
-    values = env or os.environ
+    values = os.environ if env is None else env
     configured = values.get(env_key)
     if configured:
         return Path(configured).expanduser()
@@ -258,14 +258,15 @@ def resolve_profile_path(
     env: Optional[Mapping[str, str]] = None,
     project_root: Optional[Path] = None,
 ) -> Path:
-    values = env or os.environ
+    values = os.environ if env is None else env
     configured = values.get(env_key)
     if configured:
         return Path(configured).expanduser()
 
     root = project_root or Path(__file__).resolve().parents[1]
-    profile = values.get("RAG_PROFILE")
-    if profile:
-        return root / "profiles" / profile / profile_relative_path
+    profile = str(values.get("RAG_PROFILE") or "").strip() or "default"
+    profile_root = root / "profiles" / profile
+    if profile_root.is_dir():
+        return profile_root / profile_relative_path
 
     return root / default_relative_path

@@ -9,6 +9,7 @@ DEFAULT_RAW_DIR = "data/raw"
 DEFAULT_INDEX_DIR = "data/index"
 DEFAULT_ALIAS_PATH = "data/entities/default_aliases.json"
 DEFAULT_GRAPH_PATH = "data/graph/graph.json"
+DEFAULT_PROFILE = "default"
 PROFILE_MANIFEST = "knowledge_base.json"
 
 
@@ -29,10 +30,10 @@ class KnowledgeBaseProfile:
         env: Optional[Mapping[str, str]] = None,
         project_root: Optional[Path] = None,
     ) -> "KnowledgeBaseProfile":
-        values = env or os.environ
+        values = os.environ if env is None else env
         root = project_root or Path(__file__).resolve().parents[1]
-        profile_name = str(values.get("RAG_PROFILE", "")).strip()
-        profile_root = root / "profiles" / profile_name if profile_name else None
+        profile_name = str(values.get("RAG_PROFILE") or "").strip() or DEFAULT_PROFILE
+        profile_root = root / "profiles" / profile_name
         manifest_path = profile_root / PROFILE_MANIFEST if profile_root else None
         manifest = _load_manifest(manifest_path)
 
@@ -78,7 +79,7 @@ class KnowledgeBaseProfile:
         )
 
         return cls(
-            name=profile_name or "default",
+            name=profile_name,
             project_root=root,
             raw_dir=raw_dir,
             index_dir=index_dir,

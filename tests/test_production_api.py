@@ -404,7 +404,7 @@ class ProductionApiTests(unittest.TestCase):
                 "sub": subject,
                 "tenant_id": tenant_id,
                 "roles": ["member"],
-                "aud": "ifrs17-rag-dev",
+                "aud": "universal-rag-dev",
                 "iat": now,
                 "exp": now + timedelta(minutes=5),
             },
@@ -431,7 +431,7 @@ class ProductionApiTests(unittest.TestCase):
             {
                 "sub": "subject-a",
                 "tenant_id": "tenant-a",
-                "aud": "ifrs17-rag-dev",
+                "aud": "universal-rag-dev",
                 "iat": now - timedelta(minutes=10),
                 "exp": now - timedelta(minutes=5),
             },

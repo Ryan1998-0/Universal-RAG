@@ -1,5 +1,5 @@
 {
-  "label": "IFRS17",
+  "label": "IFRS 17 範例資料",
   "sample_queries": [
     "IFRS17 的目的是什麼？",
     "IFRS17 適用哪些合約？",
@@ -9,7 +9,7 @@
     "持有的再保險合約要怎麼處理？",
     "舊制 IFRS 4 和新制 IFRS 17 差在哪？"
   ],
-  "data_path": "../../docs/ifrs17-demo/data/ifrs17_demo_data.json",
+  "data_path": "data/retrieval_data.json",
   "query_expansions": [
     {
       "markers": ["目的", "目標", "objective"],

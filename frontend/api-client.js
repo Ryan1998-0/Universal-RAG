@@ -26,7 +26,7 @@ export async function requestJson(path, options = {}, fetchImpl = globalThis.fet
   if (!response.ok) {
     const error = body?.error || {};
     throw new ApiClientError(
-      String(error.message || `Request returned HTTP ${response.status}`),
+      String(error.message || `請求回傳 HTTP ${response.status}`),
       {
         status: response.status,
         code: String(error.code || "REQUEST_FAILED"),
@@ -213,13 +213,13 @@ export async function pollJob(
     if (success.includes(job.status)) return job;
     if (failure.includes(job.status)) {
       throw new ApiClientError(
-        `Background job failed${job.error_code ? `: ${job.error_code}` : ""}`,
+        `背景工作失敗${job.error_code ? `：${job.error_code}` : ""}`,
         { code: String(job.error_code || "BACKGROUND_JOB_FAILED") },
       );
     }
     await delay(intervalMs);
   }
-  throw new ApiClientError("Background job did not finish before the timeout.", {
+  throw new ApiClientError("背景工作未在期限內完成。", {
     code: "BACKGROUND_JOB_TIMEOUT",
   });
 }
@@ -235,7 +235,7 @@ export async function sha256File(file) {
 async function uploadReservedContent(target, file, fetchImpl) {
   const method = String(target?.method || "PUT");
   const url = String(target?.url || "");
-  if (!url) throw new ApiClientError("Upload target is missing.");
+  if (!url) throw new ApiClientError("缺少上傳目的地。");
   const sameOrigin = new URL(url, globalThis.location?.origin || "http://127.0.0.1").origin
     === (globalThis.location?.origin || "http://127.0.0.1");
   const response = await fetchImpl(url, {
@@ -245,7 +245,7 @@ async function uploadReservedContent(target, file, fetchImpl) {
     credentials: sameOrigin ? "same-origin" : "omit",
   });
   if (!response.ok) {
-    throw new ApiClientError(`Upload returned HTTP ${response.status}`, {
+    throw new ApiClientError(`上傳回傳 HTTP ${response.status}`, {
       status: response.status,
       code: "UPLOAD_FAILED",
     });

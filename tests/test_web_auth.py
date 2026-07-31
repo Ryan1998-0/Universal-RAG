@@ -58,7 +58,7 @@ class WebAuthTests(unittest.TestCase):
                 "sub": "subject-a",
                 "tenant_id": "tenant-a",
                 "roles": ["member"],
-                "aud": "ifrs17-rag-dev",
+                "aud": "universal-rag-dev",
                 "iat": now,
                 "exp": now + timedelta(minutes=30),
             },

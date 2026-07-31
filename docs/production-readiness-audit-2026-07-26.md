@@ -1,7 +1,7 @@
-# Production Readiness Re-audit
+# 正式部署準備度複核
 
 日期：2026-07-26
-範圍：`IFRS17-RAG` 最新本機工作樹
+範圍：`Universal-RAG` 最新本機工作樹
 結論：`STAGING CANDIDATE / PRODUCTION NO-GO`
 
 ## 結論

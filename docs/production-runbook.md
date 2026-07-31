@@ -1,4 +1,4 @@
-# Production Runbook
+# 正式部署與維運手冊
 
 日期：2026-07-26
 適用版本：`0.2.x`
@@ -33,8 +33,8 @@ Provider 必須支援 Authorization Code Flow + PKCE，並設定：
 ## 3. 第一次部署
 
 ```bash
-git clone <repository-url> IFRS17-RAG
-cd IFRS17-RAG
+git clone <repository-url> Universal-RAG
+cd Universal-RAG
 cp .env.production.example .env.production
 chmod 600 .env.production
 ```

@@ -12,6 +12,7 @@ from rag_demo.hybrid_retrieval import (
     load_profile_retrieval_config,
     reciprocal_rank_fusion,
 )
+from rag_demo.config import RagConfig
 from rag_demo.retrieval_scope import RetrievalScope
 
 
@@ -69,6 +70,7 @@ class HybridRetrievalTest(unittest.TestCase):
         self.assertEqual(
             [step["name"] for step in result["pipeline"]],
             [
+                "Query Planning",
                 "BM25",
                 "Embedding",
                 "RRF Merge",
@@ -77,6 +79,29 @@ class HybridRetrievalTest(unittest.TestCase):
             ],
         )
         self.assertTrue(result["evidenceEvaluation"]["sufficient"])
+
+    def test_multi_query_runs_each_variant_and_exposes_diagnostics(self):
+        seen_queries = []
+        retriever = HybridRetriever(
+            chunks=self.chunks,
+            aliases=[],
+            embeddings=[[1.0, 0.0], [0.0, 1.0], [0.7, 0.7]],
+            embed_query_fn=lambda query: seen_queries.append(query) or [1.0, 0.0],
+            embedding_model="fake",
+        )
+
+        result = retriever.retrieve(
+            "What fruit is red?",
+            retrieval_query="red fruit",
+            query_variants=["red fruit", "apple crisp pies", "fruit color"],
+            evidence_query="red fruit apple",
+            top_k=2,
+            candidate_k=3,
+        )
+
+        self.assertEqual(result["retrievalQueries"], ["red fruit", "apple crisp pies", "fruit color", "What fruit is red?"])
+        self.assertEqual(seen_queries, result["retrievalQueries"])
+        self.assertEqual(result["diagnostics"]["queryCount"], 4)
 
     def test_evidence_gate_rejects_normalized_top_result_without_raw_relevance(self):
         evaluation = evaluate_retrieval_evidence(
@@ -156,6 +181,85 @@ class HybridRetrievalTest(unittest.TestCase):
 
         self.assertTrue(evaluation["sufficient"])
         self.assertEqual(evaluation["confidence"], "medium")
+
+    def test_precision_question_requires_subject_and_value_in_same_evidence_window(self):
+        evaluation = evaluate_retrieval_evidence(
+            [
+                {
+                    "content": "工作規則應記載考勤、請假、獎懲及升遷。",
+                    "bm25Score": 8.0,
+                    "embeddingScore": 0.72,
+                    "matchedTerms": ["規定", "事假"],
+                },
+                {
+                    "content": "勞工有正當事由得請假；事假以外期間的工資標準另定。",
+                    "bm25Score": 4.0,
+                    "embeddingScore": 0.66,
+                    "matchedTerms": ["事假"],
+                },
+            ],
+            question="事假天數上限是多少？",
+        )
+
+        self.assertFalse(evaluation["sufficient"])
+        self.assertFalse(evaluation["signals"]["answerBearingEvidence"])
+
+    def test_precision_question_accepts_answer_bearing_subject_value_window(self):
+        evaluation = evaluate_retrieval_evidence(
+            [
+                {
+                    "content": "勞工因事故必須親自處理者，得請事假，一年內合計不得超過十四日。",
+                    "bm25Score": 8.0,
+                    "embeddingScore": 0.72,
+                    "matchedTerms": ["事假", "上限"],
+                }
+            ],
+            question="事假天數上限是多少？",
+        )
+
+        self.assertTrue(evaluation["sufficient"])
+        self.assertTrue(evaluation["signals"]["answerBearingEvidence"])
+
+    def test_relaxed_gate_accepts_relevant_lower_rank_context(self):
+        evaluation = evaluate_retrieval_evidence(
+            [
+                {
+                    "content": "文件標題與來源資訊。",
+                    "bm25Score": 0.39,
+                    "embeddingScore": 0.21,
+                    "matchedTerms": ["文件", "來源"],
+                },
+                {
+                    "content": "勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。",
+                    "bm25Score": 0.44,
+                    "embeddingScore": 0.41,
+                    "matchedTerms": ["公假", "假期", "實際需要"],
+                },
+            ],
+            settings=RagConfig(evidence_gate_mode="relaxed"),
+            question="公假的假期依什麼決定？",
+        )
+
+        self.assertTrue(evaluation["sufficient"])
+        self.assertEqual(evaluation["signals"]["gateMode"], "relaxed")
+        self.assertTrue(evaluation["signals"]["relaxedRelevance"])
+
+    def test_relaxed_gate_still_rejects_generic_only_match(self):
+        evaluation = evaluate_retrieval_evidence(
+            [
+                {
+                    "content": "一般資料與時間說明。",
+                    "bm25Score": 12.7,
+                    "embeddingScore": 0.408,
+                    "matchedTerms": ["資料", "時間"],
+                }
+            ],
+            settings=RagConfig(evidence_gate_mode="relaxed"),
+            question="台北捷運末班車時間是幾點？",
+        )
+
+        self.assertFalse(evaluation["sufficient"])
+        self.assertFalse(evaluation["signals"]["relaxedRelevance"])
 
     def test_source_filter_is_applied_to_both_retrieval_branches(self):
         result = self.retriever.retrieve(

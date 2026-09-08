@@ -22,6 +22,7 @@ import numpy as np
 
 from rag_demo.config import RagConfig
 from rag_demo.embeddings import DEFAULT_EMBEDDING_MODEL, embed_chunks
+from rag_demo.ollama_client import ask_ollama_vision
 from rag_demo.word_documents import extract_docx_blocks
 
 
@@ -35,6 +36,14 @@ MAX_TEXT_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_PDF_PAGES = 200
 MAX_EXTRACTED_CHARACTERS = 5_000_000
 MIN_PDF_TEXT_CHARACTERS = 24
+DOCX_RASTER_IMAGE_EXTENSIONS = {".bmp", ".gif", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"}
+DOCX_VISION_PROMPT = """你正在辨識公司內部操作手冊的畫面截圖。
+請使用繁體中文輸出，並完成以下工作：
+1. 逐字保留可辨識的介面文字、欄位名稱、按鈕、日期、代碼、檔名與路徑。
+2. 說明畫面顯示的操作動作與選取條件。
+3. 表格或樞紐分析請列出欄位配置、重要數值及篩選狀態。
+4. 看不清楚的內容標記為「無法辨識」，不要猜測。
+只輸出可供知識庫檢索的內容，不要加入開場白。"""
 _SOURCE_ID_PATTERN = re.compile(r"^upload-[0-9a-f]{20}$")
 _FOLDER_ID_PATTERN = re.compile(r"^folder-[0-9a-f]{12}$")
 FOLDER_REGISTRY_FILENAME = "_folders.json"
@@ -96,6 +105,7 @@ class DocumentStore:
         embed_chunks_fn: Optional[Callable[[Sequence[dict]], Sequence[Sequence[float]]]] = None,
         now_fn: Optional[Callable[[], datetime]] = None,
         ocr_fn: Optional[Callable[[Path], dict]] = None,
+        image_understanding_fn: Optional[Callable[[Path], dict]] = None,
         pdf_reader_factory: Optional[Callable[[BytesIO], object]] = None,
         pdf_page_renderer: Optional[Callable[[Path, int, Path], Path]] = None,
     ):
@@ -106,6 +116,7 @@ class DocumentStore:
         )
         self._now_fn = now_fn or (lambda: datetime.now(timezone.utc))
         self._ocr_fn = ocr_fn or perform_ocr
+        self._image_understanding_fn = image_understanding_fn or perform_image_understanding
         self._pdf_reader_factory = pdf_reader_factory
         self._pdf_page_renderer = pdf_page_renderer or render_pdf_page
         self._lock = threading.RLock()
@@ -152,6 +163,7 @@ class DocumentStore:
             payload=payload,
             extension=extension,
             ocr_fn=self._ocr_fn,
+            image_understanding_fn=self._image_understanding_fn,
             pdf_reader_factory=self._pdf_reader_factory,
             pdf_page_renderer=self._pdf_page_renderer,
         )
@@ -576,13 +588,20 @@ def extract_document(
     payload: bytes,
     extension: str,
     ocr_fn: Callable[[Path], dict] = None,
+    image_understanding_fn: Callable[[Path], dict] = None,
     pdf_reader_factory: Optional[Callable[[BytesIO], object]] = None,
     pdf_page_renderer: Optional[Callable[[Path, int, Path], Path]] = None,
 ) -> ExtractionResult:
     ocr_fn = ocr_fn or perform_ocr
+    image_understanding_fn = image_understanding_fn or perform_image_understanding
     pdf_page_renderer = pdf_page_renderer or render_pdf_page
     if extension == ".docx":
-        return _extract_docx(filename, payload)
+        return _extract_docx(
+            filename,
+            payload,
+            ocr_fn=ocr_fn,
+            image_understanding_fn=image_understanding_fn,
+        )
     if extension == ".pdf":
         return _extract_pdf(
             filename,
@@ -727,6 +746,24 @@ def perform_ocr(image_path: Path) -> dict:
     raise DocumentPipelineError(f"圖片 OCR 失敗。{detail}".rstrip("。"))
 
 
+def perform_image_understanding(image_path: Path) -> dict:
+    model = os.getenv("RAG_VLM_MODEL", "").strip()
+    if not model:
+        return {"text": "", "engine": "disabled", "model": ""}
+    timeout_seconds = float(os.getenv("RAG_VLM_TIMEOUT_SECONDS", "300"))
+    text = ask_ollama_vision(
+        image_path=image_path,
+        prompt=DOCX_VISION_PROMPT,
+        model=model,
+        timeout_seconds=timeout_seconds,
+    )
+    return {
+        "text": text,
+        "engine": "ollama-vlm",
+        "model": model,
+    }
+
+
 def render_pdf_page(pdf_path: Path, page_number: int, output_dir: Path) -> Path:
     pdftoppm = shutil.which("pdftoppm")
     if not pdftoppm:
@@ -788,36 +825,152 @@ def split_sized_text(text: str, chunk_size: int, chunk_stride: int):
         start = max(start + 1, min(start + chunk_stride, end))
 
 
-def _extract_docx(filename: str, payload: bytes) -> ExtractionResult:
-    blocks = extract_docx_blocks(payload)
+def _extract_docx(
+    filename: str,
+    payload: bytes,
+    ocr_fn,
+    image_understanding_fn,
+) -> ExtractionResult:
+    blocks = extract_docx_blocks(payload, include_images=True)
     units = []
+    warnings = []
     current_title = Path(filename).stem
     current_lines: List[str] = []
+    current_section = 1
+    image_count = sum(1 for block in blocks if block.get("kind") == "image")
+    recognized_image_count = 0
+    ocr_image_count = 0
+    vlm_image_count = 0
+    vision_models = set()
+    recognition_cache = {}
 
     def flush() -> None:
         content = normalize_extracted_text("\n\n".join(current_lines))
         if content:
-            units.append({"title": current_title, "page": f"章節 {len(units) + 1}", "content": content})
+            units.append(
+                {
+                    "title": current_title,
+                    "page": f"章節 {current_section}",
+                    "content": content,
+                    "extraction_method": "docx-xml",
+                }
+            )
+        current_lines.clear()
 
-    for block in blocks:
-        text = normalize_extracted_text(block.get("text"))
-        if not text:
-            continue
-        if block.get("kind") == "heading":
+    with tempfile.TemporaryDirectory(prefix="rag-docx-images-") as directory:
+        image_dir = Path(directory)
+        for block in blocks:
+            kind = block.get("kind")
+            text = normalize_extracted_text(block.get("text"))
+            if kind == "heading" and text:
+                had_content = bool(current_lines or units)
+                flush()
+                if had_content:
+                    current_section += 1
+                current_title = text
+                continue
+            if kind == "table" and text:
+                current_lines.append(f"[表格 {int(block.get('table_index') or 1)}]\n{text}")
+                continue
+            if kind != "image":
+                if text:
+                    current_lines.append(text)
+                continue
+
             flush()
-            current_title = text
-            current_lines = []
-        elif block.get("kind") == "table":
-            current_lines.append(f"[表格 {int(block.get('table_index') or 1)}]\n{text}")
-        else:
-            current_lines.append(text)
+            image_index = int(block.get("image_index") or 1)
+            extension = str(block.get("extension") or "").lower()
+            image_payload = bytes(block.get("payload") or b"")
+            if extension not in DOCX_RASTER_IMAGE_EXTENSIONS or not image_payload:
+                warnings.append(
+                    f"圖片 {image_index} 格式 {extension or 'unknown'} 不支援 OCR/VLM，已略過。"
+                )
+                continue
+
+            digest = hashlib.sha256(image_payload).hexdigest()
+            cached = recognition_cache.get(digest)
+            if cached is None:
+                image_path = image_dir / f"image-{image_index}{extension}"
+                image_path.write_bytes(image_payload)
+                cached = {
+                    "ocr_text": "",
+                    "ocr_engine": "",
+                    "ocr_confidence": None,
+                    "vision_text": "",
+                    "vision_engine": "",
+                    "vision_model": "",
+                }
+                try:
+                    ocr_result = ocr_fn(image_path)
+                    cached["ocr_text"] = normalize_extracted_text(ocr_result.get("text"))
+                    cached["ocr_engine"] = str(ocr_result.get("engine") or "ocr")
+                    if ocr_result.get("confidence") is not None:
+                        cached["ocr_confidence"] = round(float(ocr_result["confidence"]), 6)
+                except Exception as exc:
+                    warnings.append(f"圖片 {image_index} OCR 失敗：{exc}")
+                try:
+                    vision_result = image_understanding_fn(image_path)
+                    cached["vision_text"] = normalize_extracted_text(vision_result.get("text"))
+                    cached["vision_engine"] = str(vision_result.get("engine") or "")
+                    cached["vision_model"] = str(vision_result.get("model") or "")
+                except Exception as exc:
+                    warnings.append(f"圖片 {image_index} VLM 辨識失敗：{exc}")
+                recognition_cache[digest] = cached
+
+            content_parts = []
+            alt_text = normalize_extracted_text(block.get("alt_text"))
+            if alt_text:
+                content_parts.append(f"[圖片替代文字]\n{alt_text}")
+            if cached["ocr_text"]:
+                content_parts.append(f"[圖片 OCR 文字]\n{cached['ocr_text']}")
+                ocr_image_count += 1
+            if cached["vision_text"]:
+                content_parts.append(f"[VLM 畫面說明]\n{cached['vision_text']}")
+                vlm_image_count += 1
+                if cached["vision_model"]:
+                    vision_models.add(cached["vision_model"])
+            content = normalize_extracted_text("\n\n".join(content_parts))
+            if not content:
+                warnings.append(f"圖片 {image_index} 沒有取得可索引內容。")
+                continue
+            recognized_image_count += 1
+            unit = {
+                "title": f"{current_title} / 圖片 {image_index}",
+                "page": f"章節 {current_section} / 圖片 {image_index}",
+                "content": content,
+                "extraction_method": (
+                    "docx-image-ocr+vlm"
+                    if cached["ocr_text"] and cached["vision_text"]
+                    else ("docx-image-vlm" if cached["vision_text"] else "docx-image-ocr")
+                ),
+                "ocr_engine": cached["ocr_engine"],
+            }
+            if cached["ocr_confidence"] is not None:
+                unit["ocr_confidence"] = cached["ocr_confidence"]
+            units.append(unit)
     flush()
+    method = "docx-xml"
+    if vlm_image_count and ocr_image_count:
+        method = "docx-xml+ocr+vlm"
+    elif vlm_image_count:
+        method = "docx-xml+vlm"
+    elif ocr_image_count:
+        method = "docx-xml+ocr"
     return ExtractionResult(
         units=units,
-        method="docx-xml",
+        method=method,
         source_type="word",
         mime_type=DOCX_MIME_TYPE,
-        details={"section_count": len(units)},
+        ocr_used=ocr_image_count > 0,
+        warnings=warnings,
+        details={
+            "section_count": len(units),
+            "embedded_image_count": image_count,
+            "recognized_image_count": recognized_image_count,
+            "ocr_image_count": ocr_image_count,
+            "vlm_image_count": vlm_image_count,
+            "vision_models": sorted(vision_models),
+        },
     )
 
 

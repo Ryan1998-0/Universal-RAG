@@ -1,0 +1,2089 @@
+{
+  "test_set_id": "taiwan-leave-rules-c-v1",
+  "mode": "C End-to-end RAG",
+  "run_at": "2026-09-08T11:14:22+08:00",
+  "endpoint": "http://127.0.0.1:8765/api/ask",
+  "source_id": "upload-35e56e82836bb3a2dcc3",
+  "model": "ollama:qwen2.5:7b",
+  "case_count": 10,
+  "correct_count": 7,
+  "retrieved_context_count": 10,
+  "evidence_sufficient_count": 10,
+  "results": [
+    {
+      "id": "family-care-hour-unit",
+      "question": "依台灣現行勞工請假規則，勞工為親自照顧家庭成員而請事假時，是否可以小時為請假單位？",
+      "answer": "根據檢索資料，勞工為親自照顧家庭成員而請事假時，得依第七條規定請事假，並得擇定以小時為請假單位。\n\n來源：[1] [2]",
+      "score": {
+        "score": 100.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "得",
+              "可以",
+              "可"
+            ],
+            "matched": "得",
+            "pass": true
+          },
+          {
+            "accepted": [
+              "小時"
+            ],
+            "matched": "小時",
+            "pass": true
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": true,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "依台灣現行勞工請假規則，勞工為親自照顧家庭成員而請事假時，是否可以小時為請假單位？",
+        "台灣勞動法 事假 単位 時間",
+        "台灣勞基法 事假 単位 時間",
+        "台灣勞工請假規則 事假 単位 時間"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::0",
+          "rank": 1,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "8bd9a02cadb74338896d1df907464905",
+          "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        },
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::1",
+          "rank": 2,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "8bd9a02cadb74338896d1df907464905",
+          "content_sha256": "dd9ef33895c17c51ecd0cec63b8045a9ec5c740d740a19a9537b9cb7824109b3",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        }
+      ],
+      "grounding_warnings": [],
+      "timings": {
+        "routeMs": 44424.48,
+        "retrieveMs": 986.97,
+        "generateMs": 45174.87,
+        "evaluateMs": 0.0,
+        "totalMs": 90596.49
+      },
+      "client_wall_ms": 90629.86,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "8bd9a02cadb74338896d1df907464905",
+        "profile": "default",
+        "conversation_id": "ea46217815194ffab4d46b9ce9dfe5d4",
+        "answer": "根據檢索資料，勞工為親自照顧家庭成員而請事假時，得依第七條規定請事假，並得擇定以小時為請假單位。\n\n來源：[1] [2]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::0",
+            "rank": 1,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "8bd9a02cadb74338896d1df907464905",
+            "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          },
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::1",
+            "rank": 2,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "8bd9a02cadb74338896d1df907464905",
+            "content_sha256": "dd9ef33895c17c51ecd0cec63b8045a9ec5c740d740a19a9537b9cb7824109b3",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          }
+        ],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "涉及特定法律與政策要求，需確認相關規定。",
+          "query": "依台灣現行勞工請假規則，勞工為親自照顧家庭成員而請事假時，是否可以小時為請假單位？",
+          "queries": [
+            "依台灣現行勞工請假規則，勞工為親自照顧家庭成員而請事假時，是否可以小時為請假單位？",
+            "台灣勞動法 事假 単位 時間",
+            "台灣勞基法 事假 単位 時間",
+            "台灣勞工請假規則 事假 単位 時間"
+          ],
+          "sub_questions": [
+            "台灣現行勞工請假規則中，關於事假單位的規定。"
+          ],
+          "intent_labels": [
+            "fact"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.887126,
+              "bm25Score": 120.4879,
+              "embeddingScore": 0.61016,
+              "rerankScore": 0.887126,
+              "matchedTerms": [
+                "勞工",
+                "工請",
+                "請假",
+                "假規",
+                "規則",
+                "勞工請",
+                "工請假",
+                "請假規",
+                "假規則",
+                "工為",
+                "為親",
+                "親自",
+                "自照",
+                "照顧",
+                "顧家",
+                "家庭",
+                "庭成",
+                "成員",
+                "而請",
+                "請事"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.681538,
+              "bm25Score": 142.4228,
+              "embeddingScore": 0.57653,
+              "rerankScore": 0.681538,
+              "matchedTerms": [
+                "勞工",
+                "工請",
+                "請假",
+                "假規",
+                "規則",
+                "勞工請",
+                "工請假",
+                "請假規",
+                "假規則",
+                "工為",
+                "為親",
+                "親自",
+                "自照",
+                "照顧",
+                "顧家",
+                "家庭",
+                "庭成",
+                "成員",
+                "而請",
+                "請事"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 120.4879,
+              "embedding": 0.61016,
+              "matchedTerms": 20,
+              "meaningfulMatchedTerms": 20,
+              "requiresAnswerValue": false,
+              "answerBearingEvidence": null
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 44424.48,
+          "retrieveMs": 986.97,
+          "generateMs": 45174.87,
+          "evaluateMs": 0.0,
+          "totalMs": 90596.49
+        },
+        "client_wall_ms": 90629.86
+      }
+    },
+    {
+      "id": "ordinary-sick-bonus-proportional",
+      "question": "除特殊保護情形外，勞工請普通傷病假時，全勤獎金應如何扣發？",
+      "answer": "根據目前檢索資料無法確認。缺少的是勞工請普通傷病假超過30日後，全勤獎金的扣發方式。\n\n來源：[4] [5]",
+      "score": {
+        "score": 0.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "傷病假日數",
+              "病假日數",
+              "請假日數"
+            ],
+            "matched": "",
+            "pass": false
+          },
+          {
+            "accepted": [
+              "依比例",
+              "按比例"
+            ],
+            "matched": "",
+            "pass": false
+          },
+          {
+            "accepted": [
+              "優於法令",
+              "更優約定",
+              "更優的約定",
+              "較優約定"
+            ],
+            "matched": "",
+            "pass": false
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": false,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "除特殊保護情形外，勞工請普通傷病假時，全勤獎金應如何扣發？",
+        "勞工請普通傷病假 全勤獎金 扣發 标准",
+        "勞動法 劳工傷病假 全勤獎金 扣發 规定",
+        "雇主對勞工請普通傷病假扣發全勤獎金的處理方式"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [],
+      "grounding_warnings": [
+        "回答包含無效來源標記：[4], [5]"
+      ],
+      "timings": {
+        "routeMs": 45732.08,
+        "retrieveMs": 344.36,
+        "generateMs": 41354.17,
+        "evaluateMs": 0.0,
+        "totalMs": 87439.62
+      },
+      "client_wall_ms": 87443.27,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "01d402bf1b2d48babc28ebabf5395ee8",
+        "profile": "default",
+        "conversation_id": "57e8091b26c74c6ab70927eaaf0ed88f",
+        "answer": "根據目前檢索資料無法確認。缺少的是勞工請普通傷病假超過30日後，全勤獎金的扣發方式。\n\n來源：[4] [5]",
+        "confidence": "high",
+        "citations": [],
+        "grounding_warnings": [
+          "回答包含無效來源標記：[4], [5]"
+        ],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "涉及勞動法規與獎金扣發細則，需確認具體規定。",
+          "query": "除特殊保護情形外，勞工請普通傷病假時，全勤獎金應如何扣發？",
+          "queries": [
+            "除特殊保護情形外，勞工請普通傷病假時，全勤獎金應如何扣發？",
+            "勞工請普通傷病假 全勤獎金 扣發 标准",
+            "勞動法 劳工傷病假 全勤獎金 扣發 规定",
+            "雇主對勞工請普通傷病假扣發全勤獎金的處理方式"
+          ],
+          "sub_questions": [
+            "勞工請普通傷病假時，全勤獎金扣發標準。"
+          ],
+          "intent_labels": [
+            "method"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.9175,
+              "bm25Score": 100.791067,
+              "embeddingScore": 0.634776,
+              "rerankScore": 0.9175,
+              "matchedTerms": [
+                "情形",
+                "勞工",
+                "工請",
+                "請普",
+                "普通",
+                "通傷",
+                "傷病",
+                "病假",
+                "假時",
+                "勞工請",
+                "工請普",
+                "請普通",
+                "普通傷",
+                "通傷病",
+                "傷病假",
+                "全勤",
+                "勤獎",
+                "獎金",
+                "扣發",
+                "全勤獎"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.642135,
+              "bm25Score": 97.096825,
+              "embeddingScore": 0.568291,
+              "rerankScore": 0.642135,
+              "matchedTerms": [
+                "情形",
+                "勞工",
+                "工請",
+                "請普",
+                "普通",
+                "通傷",
+                "傷病",
+                "病假",
+                "勞工請",
+                "工請普",
+                "請普通",
+                "普通傷",
+                "通傷病",
+                "傷病假",
+                "全勤",
+                "勤獎",
+                "獎金",
+                "扣發",
+                "全勤獎",
+                "勤獎金"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 100.791067,
+              "embedding": 0.634776,
+              "matchedTerms": 20,
+              "meaningfulMatchedTerms": 20,
+              "requiresAnswerValue": false,
+              "answerBearingEvidence": null
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 45732.08,
+          "retrieveMs": 344.36,
+          "generateMs": 41354.17,
+          "evaluateMs": 0.0,
+          "totalMs": 87439.62
+        },
+        "client_wall_ms": 87443.27
+      }
+    },
+    {
+      "id": "ten-day-adverse-action",
+      "question": "勞工一年內普通傷病假未超過幾日，雇主原則上不得因請假而為不利處分？",
+      "answer": "根據目前檢索資料無法確認。缺少具體哪一項條文明確規定勞工一年內普通傷病假未超過幾日時，雇主原則上不得因請假而為不利處分。\n\n來源：[1] [2]",
+      "score": {
+        "score": 66.7,
+        "required_checks": [
+          {
+            "accepted": [
+              "十日",
+              "10日",
+              "十天",
+              "10天"
+            ],
+            "matched": "",
+            "pass": false
+          },
+          {
+            "accepted": [
+              "不得",
+              "不可以",
+              "不可"
+            ],
+            "matched": "不得",
+            "pass": true
+          },
+          {
+            "accepted": [
+              "不利處分",
+              "不利之處分"
+            ],
+            "matched": "不利處分",
+            "pass": true
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": false,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "勞工 一年內 普通傷病假 不得 負面處分",
+        "勞工 一年內 普通傷病假 不得 負面處分 法規",
+        "勞工請假期間 雇主不得為不利處分 績效",
+        "勞動法 勞工請假 雇主不得為不利處分 條文"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::1",
+          "rank": 1,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "25bc45568a8e4078af4fe80b9ce4737c",
+          "content_sha256": "dd9ef33895c17c51ecd0cec63b8045a9ec5c740d740a19a9537b9cb7824109b3",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        },
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::0",
+          "rank": 2,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "25bc45568a8e4078af4fe80b9ce4737c",
+          "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        }
+      ],
+      "grounding_warnings": [],
+      "timings": {
+        "routeMs": 80214.37,
+        "retrieveMs": 285.51,
+        "generateMs": 46938.43,
+        "evaluateMs": 0.0,
+        "totalMs": 127447.1
+      },
+      "client_wall_ms": 127450.38,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "25bc45568a8e4078af4fe80b9ce4737c",
+        "profile": "default",
+        "conversation_id": "a365eb65ec624a529ae5947c336e448b",
+        "answer": "根據目前檢索資料無法確認。缺少具體哪一項條文明確規定勞工一年內普通傷病假未超過幾日時，雇主原則上不得因請假而為不利處分。\n\n來源：[1] [2]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::1",
+            "rank": 1,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "25bc45568a8e4078af4fe80b9ce4737c",
+            "content_sha256": "dd9ef33895c17c51ecd0cec63b8045a9ec5c740d740a19a9537b9cb7824109b3",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          },
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::0",
+            "rank": 2,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "25bc45568a8e4078af4fe80b9ce4737c",
+            "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          }
+        ],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+          "query": "勞工 一年內 普通傷病假 不得 負面處分",
+          "queries": [
+            "勞工 一年內 普通傷病假 不得 負面處分",
+            "勞工 一年內 普通傷病假 不得 負面處分 法規",
+            "勞工請假期間 雇主不得為不利處分 績效",
+            "勞動法 勞工請假 雇主不得為不利處分 條文"
+          ],
+          "sub_questions": [
+            "勞工一年內普通傷病假未超過幾日，雇主原則上不得因請假而為不利處分？",
+            "雇主在什麼情況下可以對請過傷病假的勞工進行不利處分？",
+            "普通傷病假的定義是什麼？",
+            "一年內請假天數的計算方式是什麼？"
+          ],
+          "intent_labels": [
+            "fact"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.883886,
+              "bm25Score": 64.187019,
+              "embeddingScore": 0.656994,
+              "rerankScore": 0.883886,
+              "matchedTerms": [
+                "勞工",
+                "一年",
+                "年內",
+                "一年內",
+                "普通",
+                "通傷",
+                "傷病",
+                "病假",
+                "普通傷",
+                "通傷病",
+                "傷病假",
+                "不得",
+                "處分",
+                "工請",
+                "請假",
+                "假期",
+                "期間",
+                "勞工請",
+                "工請假",
+                "假期間"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.64773,
+              "bm25Score": 69.739852,
+              "embeddingScore": 0.520437,
+              "rerankScore": 0.64773,
+              "matchedTerms": [
+                "勞工",
+                "一年",
+                "年內",
+                "一年內",
+                "普通",
+                "通傷",
+                "傷病",
+                "病假",
+                "普通傷",
+                "通傷病",
+                "傷病假",
+                "不得",
+                "處分",
+                "法規",
+                "工請",
+                "請假",
+                "假期",
+                "期間",
+                "勞工請",
+                "工請假"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 64.187019,
+              "embedding": 0.656994,
+              "matchedTerms": 20,
+              "meaningfulMatchedTerms": 20,
+              "requiresAnswerValue": true,
+              "answerBearingEvidence": true
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 80214.37,
+          "retrieveMs": 285.51,
+          "generateMs": 46938.43,
+          "evaluateMs": 0.0,
+          "totalMs": 127447.1
+        },
+        "client_wall_ms": 127450.38
+      }
+    },
+    {
+      "id": "amendment-effective-date",
+      "question": "勞工請假規則民國114年12月9日修正發布的條文，自何時施行？",
+      "answer": "根據檢索資料，勞工請假規則於民國 114 年 12 月 9 日修正並發布，其修正後的條文自民國 115 年 1 月 1 日施行。\n\n來源：[1]",
+      "score": {
+        "score": 100.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "民國115年1月1日",
+              "民國一百十五年一月一日",
+              "2026年1月1日"
+            ],
+            "matched": "民國115年1月1日",
+            "pass": true
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": true,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "民國114年12月9日修正發布的勞工請假規則 施行日期",
+        "民國114年12月9日修正勞工請假規則 施行日期",
+        "勞工請假規則 114年12月9日 施行日期",
+        "請假規則 修正 施行日期"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::0",
+          "rank": 1,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "ad538be3d32e4a8ebf91e13c1cad81d9",
+          "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        }
+      ],
+      "grounding_warnings": [],
+      "timings": {
+        "routeMs": 44254.45,
+        "retrieveMs": 445.63,
+        "generateMs": 45569.09,
+        "evaluateMs": 0.0,
+        "totalMs": 90276.46
+      },
+      "client_wall_ms": 90280.48,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "ad538be3d32e4a8ebf91e13c1cad81d9",
+        "profile": "default",
+        "conversation_id": "33c1363949f248d49d2860033bc19dbd",
+        "answer": "根據檢索資料，勞工請假規則於民國 114 年 12 月 9 日修正並發布，其修正後的條文自民國 115 年 1 月 1 日施行。\n\n來源：[1]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::0",
+            "rank": 1,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "ad538be3d32e4a8ebf91e13c1cad81d9",
+            "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          }
+        ],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+          "query": "民國114年12月9日修正發布的勞工請假規則 施行日期",
+          "queries": [
+            "民國114年12月9日修正發布的勞工請假規則 施行日期",
+            "民國114年12月9日修正勞工請假規則 施行日期",
+            "勞工請假規則 114年12月9日 施行日期",
+            "請假規則 修正 施行日期"
+          ],
+          "sub_questions": [
+            "民國114年12月9日修正發布的勞工請假規則 施行日期"
+          ],
+          "intent_labels": [
+            "fact"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.900297,
+              "bm25Score": 59.433192,
+              "embeddingScore": 0.757987,
+              "rerankScore": 0.900297,
+              "matchedTerms": [
+                "114",
+                "12",
+                "9",
+                "民國",
+                "年",
+                "月",
+                "修正",
+                "勞工",
+                "工請",
+                "請假",
+                "假規",
+                "規則",
+                "勞工請",
+                "工請假",
+                "請假規",
+                "假規則",
+                "施行",
+                "行日",
+                "日期",
+                "施行日"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.66303,
+              "bm25Score": 64.770656,
+              "embeddingScore": 0.407117,
+              "rerankScore": 0.66303,
+              "matchedTerms": [
+                "12",
+                "9",
+                "民國",
+                "日修",
+                "修正",
+                "正發",
+                "發布",
+                "勞工",
+                "工請",
+                "請假",
+                "假規",
+                "規則",
+                "日修正",
+                "修正發",
+                "正發布",
+                "勞工請",
+                "工請假",
+                "請假規",
+                "假規則",
+                "施行"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 59.433192,
+              "embedding": 0.757987,
+              "matchedTerms": 20,
+              "meaningfulMatchedTerms": 17,
+              "requiresAnswerValue": false,
+              "answerBearingEvidence": null
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 44254.45,
+          "retrieveMs": 445.63,
+          "generateMs": 45569.09,
+          "evaluateMs": 0.0,
+          "totalMs": 90276.46
+        },
+        "client_wall_ms": 90280.48
+      }
+    },
+    {
+      "id": "personal-leave-limit-pay",
+      "question": "事假一年內最多幾日？事假期間是否給薪？",
+      "answer": "根據檢索資料，勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n\n來源：[1] [2]",
+      "score": {
+        "score": 100.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "十四日",
+              "14日",
+              "十四天",
+              "14天"
+            ],
+            "matched": "十四日",
+            "pass": true
+          },
+          {
+            "accepted": [
+              "不給工資",
+              "不給薪",
+              "無薪"
+            ],
+            "matched": "不給工資",
+            "pass": true
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": true,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "事假 一年 最多幾日 是否有薪",
+        "一年內最多事假天數",
+        "事假期間薪酬待遇",
+        "公司政策 事假 天數限制"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::1",
+          "rank": 1,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "48a358b74bca4079b838d96003cf52fe",
+          "content_sha256": "dd9ef33895c17c51ecd0cec63b8045a9ec5c740d740a19a9537b9cb7824109b3",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        },
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::0",
+          "rank": 2,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "48a358b74bca4079b838d96003cf52fe",
+          "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        }
+      ],
+      "grounding_warnings": [],
+      "timings": {
+        "routeMs": 36236.88,
+        "retrieveMs": 439.97,
+        "generateMs": 43578.51,
+        "evaluateMs": 0.0,
+        "totalMs": 80265.39
+      },
+      "client_wall_ms": 80269.24,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "48a358b74bca4079b838d96003cf52fe",
+        "profile": "default",
+        "conversation_id": "60667decc5364bfe8cf59face1bf7ebb",
+        "answer": "根據檢索資料，勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n\n來源：[1] [2]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::1",
+            "rank": 1,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "48a358b74bca4079b838d96003cf52fe",
+            "content_sha256": "dd9ef33895c17c51ecd0cec63b8045a9ec5c740d740a19a9537b9cb7824109b3",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          },
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::0",
+            "rank": 2,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "48a358b74bca4079b838d96003cf52fe",
+            "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          }
+        ],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+          "query": "事假 一年 最多幾日 是否有薪",
+          "queries": [
+            "事假 一年 最多幾日 是否有薪",
+            "一年內最多事假天數",
+            "事假期間薪酬待遇",
+            "公司政策 事假 天數限制"
+          ],
+          "sub_questions": [
+            "一年內最多可請多少天事假？",
+            "事假期間是否給薪？"
+          ],
+          "intent_labels": [
+            "fact"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.8397,
+              "bm25Score": 14.58425,
+              "embeddingScore": 0.59951,
+              "rerankScore": 0.8397,
+              "matchedTerms": [
+                "事假",
+                "一年",
+                "年內",
+                "一年內",
+                "假期",
+                "期間",
+                "事假期",
+                "假期間"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.64151,
+              "bm25Score": 17.845629,
+              "embeddingScore": 0.385305,
+              "rerankScore": 0.64151,
+              "matchedTerms": [
+                "事假",
+                "一年",
+                "年內",
+                "一年內",
+                "假期",
+                "期間",
+                "事假期",
+                "假期間",
+                "假一",
+                "假一年"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 14.58425,
+              "embedding": 0.59951,
+              "matchedTerms": 8,
+              "meaningfulMatchedTerms": 8,
+              "requiresAnswerValue": true,
+              "answerBearingEvidence": true
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 36236.88,
+          "retrieveMs": 439.97,
+          "generateMs": 43578.51,
+          "evaluateMs": 0.0,
+          "totalMs": 80265.39
+        },
+        "client_wall_ms": 80269.24
+      }
+    },
+    {
+      "id": "cancer-outpatient-classification",
+      "question": "經醫師診斷罹患癌症（含原位癌）並採門診治療，其休養期間應併入哪一類傷病假計算？",
+      "answer": "根據檢索資料，經醫師診斷罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n\n來源：[1]",
+      "score": {
+        "score": 100.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "住院傷病假",
+              "住院病假"
+            ],
+            "matched": "住院傷病假",
+            "pass": true
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": true,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "癌症 门诊治疗 休养期间 假期待遇",
+        "癌症患者門診治療的休養期間應併入哪一類傷病假計算？",
+        "經醫師診斷罹患癌症（含原位癌）並採門診治療，其休養期間應併入哪一類傷病假計算？",
+        "公司政策 癌症 治疗 休假 计算方式"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::0",
+          "rank": 1,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "f5ef9edde649404293876cc5f1d9339f",
+          "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        }
+      ],
+      "grounding_warnings": [],
+      "timings": {
+        "routeMs": 41464.03,
+        "retrieveMs": 484.15,
+        "generateMs": 43454.0,
+        "evaluateMs": 0.0,
+        "totalMs": 85409.16
+      },
+      "client_wall_ms": 85411.7,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "f5ef9edde649404293876cc5f1d9339f",
+        "profile": "default",
+        "conversation_id": "d6b978bbf0044c33b6e0bf2936241df3",
+        "answer": "根據檢索資料，經醫師診斷罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n\n來源：[1]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::0",
+            "rank": 1,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "f5ef9edde649404293876cc5f1d9339f",
+            "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          }
+        ],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+          "query": "癌症 门诊治疗 休养期间 假期待遇",
+          "queries": [
+            "癌症 门诊治疗 休养期间 假期待遇",
+            "癌症患者門診治療的休養期間應併入哪一類傷病假計算？",
+            "經醫師診斷罹患癌症（含原位癌）並採門診治療，其休養期間應併入哪一類傷病假計算？",
+            "公司政策 癌症 治疗 休假 计算方式"
+          ],
+          "sub_questions": [
+            "癌症患者門診治療休養期間如何計入傷病假？"
+          ],
+          "intent_labels": [
+            "fact"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.657234,
+              "bm25Score": 90.79835,
+              "embeddingScore": 0.159817,
+              "rerankScore": 0.657234,
+              "matchedTerms": [
+                "癌症",
+                "假期",
+                "門診",
+                "治療",
+                "休養",
+                "養期",
+                "期間",
+                "併入",
+                "傷病",
+                "病假",
+                "假計",
+                "計算",
+                "休養期",
+                "養期間",
+                "傷病假",
+                "病假計",
+                "假計算",
+                "經醫",
+                "醫師",
+                "師診"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.652111,
+              "bm25Score": 33.369605,
+              "embeddingScore": 0.384384,
+              "rerankScore": 0.652111,
+              "matchedTerms": [
+                "假期",
+                "治療",
+                "休養",
+                "養期",
+                "期間",
+                "傷病",
+                "病假",
+                "計算",
+                "休養期",
+                "養期間",
+                "傷病假"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 90.79835,
+              "embedding": 0.159817,
+              "matchedTerms": 20,
+              "meaningfulMatchedTerms": 20,
+              "requiresAnswerValue": false,
+              "answerBearingEvidence": null
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 41464.03,
+          "retrieveMs": 484.15,
+          "generateMs": 43454.0,
+          "evaluateMs": 0.0,
+          "totalMs": 85409.16
+        },
+        "client_wall_ms": 85411.7
+      }
+    },
+    {
+      "id": "pregnancy-bedrest-classification",
+      "question": "懷孕期間需要安胎休養，其休養期間應併入哪一類傷病假計算？",
+      "answer": "根據檢索資料，懷孕期間需安胎休養者，其治療或休養期間應併入住院傷病假計算。\n\n來源：[1]",
+      "score": {
+        "score": 100.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "住院傷病假",
+              "住院病假"
+            ],
+            "matched": "住院傷病假",
+            "pass": true
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": true,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "懷孕 安胎 休養 價病假 算法",
+        "懷孕 安胎 休養 價病假 分類",
+        "勞動法 孕婦 休養 價病假 規定",
+        "公司政策 孕婦 休養 價病假 算法"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::0",
+          "rank": 1,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "959c6995c82d4cc49f9ee35114def276",
+          "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        }
+      ],
+      "grounding_warnings": [],
+      "timings": {
+        "routeMs": 46903.02,
+        "retrieveMs": 371.47,
+        "generateMs": 43187.53,
+        "evaluateMs": 0.0,
+        "totalMs": 90469.65
+      },
+      "client_wall_ms": 90473.66,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "959c6995c82d4cc49f9ee35114def276",
+        "profile": "default",
+        "conversation_id": "4c658b335d674d0e83f8fb17f4f16b3f",
+        "answer": "根據檢索資料，懷孕期間需安胎休養者，其治療或休養期間應併入住院傷病假計算。\n\n來源：[1]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::0",
+            "rank": 1,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "959c6995c82d4cc49f9ee35114def276",
+            "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          }
+        ],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+          "query": "懷孕 安胎 休養 價病假 算法",
+          "queries": [
+            "懷孕 安胎 休養 價病假 算法",
+            "懷孕 安胎 休養 價病假 分類",
+            "勞動法 孕婦 休養 價病假 規定",
+            "公司政策 孕婦 休養 價病假 算法"
+          ],
+          "sub_questions": [
+            "懷孕期間安胎休養是否屬於傷病假",
+            "懷孕期間安胎休養應併入哪一類傷病假計算"
+          ],
+          "intent_labels": [
+            "fact"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.9175,
+              "bm25Score": 19.684681,
+              "embeddingScore": 0.548067,
+              "rerankScore": 0.9175,
+              "matchedTerms": [
+                "懷孕",
+                "安胎",
+                "休養",
+                "病假",
+                "勞動",
+                "動法",
+                "勞動法",
+                "規定",
+                "孕期",
+                "期間",
+                "間需",
+                "需要",
+                "胎休",
+                "懷孕期",
+                "孕期間",
+                "期間需",
+                "安胎休",
+                "胎休養",
+                "養期",
+                "併入"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.500038,
+              "bm25Score": 11.641761,
+              "embeddingScore": 0.485024,
+              "rerankScore": 0.500038,
+              "matchedTerms": [
+                "休養",
+                "病假",
+                "規定",
+                "期間",
+                "需要",
+                "養期",
+                "傷病",
+                "計算",
+                "休養期",
+                "養期間",
+                "傷病假"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 19.684681,
+              "embedding": 0.548067,
+              "matchedTerms": 20,
+              "meaningfulMatchedTerms": 20,
+              "requiresAnswerValue": false,
+              "answerBearingEvidence": null
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 46903.02,
+          "retrieveMs": 371.47,
+          "generateMs": 43187.53,
+          "evaluateMs": 0.0,
+          "totalMs": 90469.65
+        },
+        "client_wall_ms": 90473.66
+      }
+    },
+    {
+      "id": "official-leave-pay-duration",
+      "question": "依法令應給予的公假是否給薪？假期長度如何決定？",
+      "answer": "根據目前檢索資料無法確認公假是否給薪以及假期長度如何決定。相關條文未明確提及公假的給薪情況及假期長度，僅提到勞工依法令規定應給予公假者，工資照給，但其假期視實際需要定之。\n\n來源：[8] [10]",
+      "score": {
+        "score": 100.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "工資照給",
+              "給薪",
+              "有薪"
+            ],
+            "matched": "工資照給",
+            "pass": true
+          },
+          {
+            "accepted": [
+              "實際需要"
+            ],
+            "matched": "實際需要",
+            "pass": true
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": true,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "依法令應給予的公假是否給薪",
+        "公假給薪 法令 规定",
+        "公假假期長度 确定 方法",
+        "勞動法 公假 薪資 标准"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [],
+      "grounding_warnings": [
+        "回答包含無效來源標記：[8], [10]"
+      ],
+      "timings": {
+        "routeMs": 41607.51,
+        "retrieveMs": 402.61,
+        "generateMs": 46586.45,
+        "evaluateMs": 0.0,
+        "totalMs": 88611.18
+      },
+      "client_wall_ms": 88616.13,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "b5ffb8f385d84047a842c14c7e260b5b",
+        "profile": "default",
+        "conversation_id": "776fe62663e548f68aebe8fba65484e6",
+        "answer": "根據目前檢索資料無法確認公假是否給薪以及假期長度如何決定。相關條文未明確提及公假的給薪情況及假期長度，僅提到勞工依法令規定應給予公假者，工資照給，但其假期視實際需要定之。\n\n來源：[8] [10]",
+        "confidence": "high",
+        "citations": [],
+        "grounding_warnings": [
+          "回答包含無效來源標記：[8], [10]"
+        ],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "問題明確依賴可核對的法規、文件或來源，應先檢索外部證據。",
+          "query": "依法令應給予的公假是否給薪",
+          "queries": [
+            "依法令應給予的公假是否給薪",
+            "公假給薪 法令 规定",
+            "公假假期長度 确定 方法",
+            "勞動法 公假 薪資 标准"
+          ],
+          "sub_questions": [
+            "依法令應給予的公假是否給薪？",
+            "假期長度如何決定？"
+          ],
+          "intent_labels": [
+            "method"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.888455,
+              "bm25Score": 15.406542,
+              "embeddingScore": 0.586225,
+              "rerankScore": 0.888455,
+              "matchedTerms": [
+                "依法",
+                "法令",
+                "應給",
+                "給予",
+                "公假",
+                "依法令",
+                "應給予",
+                "假期",
+                "勞動",
+                "動法",
+                "勞動法",
+                "方式"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.639048,
+              "bm25Score": 15.994139,
+              "embeddingScore": 0.470568,
+              "rerankScore": 0.639048,
+              "matchedTerms": [
+                "依法",
+                "法令",
+                "應給",
+                "給予",
+                "公假",
+                "依法令",
+                "應給予",
+                "假期"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 15.406542,
+              "embedding": 0.586225,
+              "matchedTerms": 12,
+              "meaningfulMatchedTerms": 12,
+              "requiresAnswerValue": false,
+              "answerBearingEvidence": null
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 41607.51,
+          "retrieveMs": 402.61,
+          "generateMs": 46586.45,
+          "evaluateMs": 0.0,
+          "totalMs": 88611.18
+        },
+        "client_wall_ms": 88616.13
+      }
+    },
+    {
+      "id": "combined-sick-leave-limit",
+      "question": "未住院傷病假與住院傷病假合併計算時，法定上限是多少？",
+      "answer": "根據目前檢索資料無法確認。缺少直接支持未住院傷病假與住院傷病假合併計算時的法定上限的資訊。\n\n來源：[1] [2]",
+      "score": {
+        "score": 0.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "二年",
+              "2年"
+            ],
+            "matched": "",
+            "pass": false
+          },
+          {
+            "accepted": [
+              "一年",
+              "1年"
+            ],
+            "matched": "",
+            "pass": false
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": false,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "未住院傷病假 住院傷病假 合併計算 法定上限",
+        "勞動法 未住院傷病假 住院傷病假 合併計算 上限",
+        "勞工保險條例 未住院傷病假 住院傷病假 合併計算 法定上限",
+        "未住院傷病假與住院傷病假合併計算時，法定上限是多少？"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::1",
+          "rank": 1,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "2bacef24003744dab62adcda6bf48402",
+          "content_sha256": "dd9ef33895c17c51ecd0cec63b8045a9ec5c740d740a19a9537b9cb7824109b3",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        },
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::0",
+          "rank": 2,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "2bacef24003744dab62adcda6bf48402",
+          "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        }
+      ],
+      "grounding_warnings": [],
+      "timings": {
+        "routeMs": 41553.62,
+        "retrieveMs": 246.05,
+        "generateMs": 39221.31,
+        "evaluateMs": 0.0,
+        "totalMs": 81030.96
+      },
+      "client_wall_ms": 81036.53,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "2bacef24003744dab62adcda6bf48402",
+        "profile": "default",
+        "conversation_id": "67b8396b39ee4d94b6bc43d13b020749",
+        "answer": "根據目前檢索資料無法確認。缺少直接支持未住院傷病假與住院傷病假合併計算時的法定上限的資訊。\n\n來源：[1] [2]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::1",
+            "rank": 1,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "2bacef24003744dab62adcda6bf48402",
+            "content_sha256": "dd9ef33895c17c51ecd0cec63b8045a9ec5c740d740a19a9537b9cb7824109b3",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          },
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::0",
+            "rank": 2,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "2bacef24003744dab62adcda6bf48402",
+            "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          }
+        ],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "問題要求可核對的精確事實或數值，為避免模型憑記憶誤答，應先檢索外部證據。",
+          "query": "未住院傷病假 住院傷病假 合併計算 法定上限",
+          "queries": [
+            "未住院傷病假 住院傷病假 合併計算 法定上限",
+            "勞動法 未住院傷病假 住院傷病假 合併計算 上限",
+            "勞工保險條例 未住院傷病假 住院傷病假 合併計算 法定上限",
+            "未住院傷病假與住院傷病假合併計算時，法定上限是多少？"
+          ],
+          "sub_questions": [
+            "未住院傷病假與住院傷病假合併計算的法定上限"
+          ],
+          "intent_labels": [
+            "fact"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.708095,
+              "bm25Score": 36.329969,
+              "embeddingScore": 0.675474,
+              "rerankScore": 0.708095,
+              "matchedTerms": [
+                "傷病",
+                "病假",
+                "傷病假",
+                "計算",
+                "勞工"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.6575,
+              "bm25Score": 84.185645,
+              "embeddingScore": 0.514712,
+              "rerankScore": 0.6575,
+              "matchedTerms": [
+                "未住",
+                "住院",
+                "院傷",
+                "傷病",
+                "病假",
+                "未住院",
+                "住院傷",
+                "院傷病",
+                "傷病假",
+                "計算",
+                "勞動",
+                "動法",
+                "勞動法",
+                "勞工",
+                "工保",
+                "保險",
+                "勞工保",
+                "工保險",
+                "假與",
+                "與住"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 36.329969,
+              "embedding": 0.675474,
+              "matchedTerms": 5,
+              "meaningfulMatchedTerms": 5,
+              "requiresAnswerValue": true,
+              "answerBearingEvidence": true
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 41553.62,
+          "retrieveMs": 246.05,
+          "generateMs": 39221.31,
+          "evaluateMs": 0.0,
+          "totalMs": 81030.96
+        },
+        "client_wall_ms": 81036.53
+      }
+    },
+    {
+      "id": "spouse-adoptive-parent-bereavement",
+      "question": "配偶的養父母喪亡，勞工依法可請幾日喪假？是否給薪？",
+      "answer": "根據檢索資料，勞工的配偶的養父母喪亡時，勞工可以請六日的喪假，且此期間內工資照給。\n\n來源：[2]",
+      "score": {
+        "score": 100.0,
+        "required_checks": [
+          {
+            "accepted": [
+              "六日",
+              "6日",
+              "六天",
+              "6天"
+            ],
+            "matched": "六日",
+            "pass": true
+          },
+          {
+            "accepted": [
+              "工資照給",
+              "給薪",
+              "有薪"
+            ],
+            "matched": "工資照給",
+            "pass": true
+          }
+        ],
+        "forbidden_hits": []
+      },
+      "correct": true,
+      "retrieval_needed": true,
+      "retrieval_queries": [
+        "配偶養父母喪亡 僱主 法定喪假天數",
+        "配偶的養父母喪亡 办理喪假 天數",
+        "配偶養父母喪亡 依法可請幾日喪假",
+        "喪假期間 是否給薪"
+      ],
+      "context_count": 2,
+      "context_ranks": [
+        1,
+        2
+      ],
+      "evidence_sufficient": true,
+      "evidence_confidence": "high",
+      "evidence_reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+      "citations": [
+        {
+          "id": "upload-35e56e82836bb3a2dcc3::0",
+          "rank": 2,
+          "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+          "page": "全文",
+          "source": "upload-35e56e82836bb3a2dcc3",
+          "run_id": "2d2a5ed2883145bb905cfe6e168ab31a",
+          "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+          "document_version_id": "",
+          "chunk_record_id": "",
+          "verified": true
+        }
+      ],
+      "grounding_warnings": [],
+      "timings": {
+        "routeMs": 41031.07,
+        "retrieveMs": 300.08,
+        "generateMs": 43211.74,
+        "evaluateMs": 0.0,
+        "totalMs": 84551.25
+      },
+      "client_wall_ms": 84555.23,
+      "raw_response": {
+        "schema_version": "rag-agent-response-v1",
+        "run_id": "2d2a5ed2883145bb905cfe6e168ab31a",
+        "profile": "default",
+        "conversation_id": "58fdd463c67640babe02af096292d7ca",
+        "answer": "根據檢索資料，勞工的配偶的養父母喪亡時，勞工可以請六日的喪假，且此期間內工資照給。\n\n來源：[2]",
+        "confidence": "high",
+        "citations": [
+          {
+            "id": "upload-35e56e82836bb3a2dcc3::0",
+            "rank": 2,
+            "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+            "page": "全文",
+            "source": "upload-35e56e82836bb3a2dcc3",
+            "run_id": "2d2a5ed2883145bb905cfe6e168ab31a",
+            "content_sha256": "7ea15b0fa3ec51cf98d89d40fd8066a78b1d789f07ba9f198ef07e90fdf8ee6f",
+            "document_version_id": "",
+            "chunk_record_id": "",
+            "verified": true
+          }
+        ],
+        "grounding_warnings": [],
+        "retrieval": {
+          "server_generated": true,
+          "needed": true,
+          "reason": "問題明確依賴可核對的法規、文件或來源，應先檢索外部證據。",
+          "query": "配偶養父母喪亡 僱主 法定喪假天數",
+          "queries": [
+            "配偶養父母喪亡 僱主 法定喪假天數",
+            "配偶的養父母喪亡 办理喪假 天數",
+            "配偶養父母喪亡 依法可請幾日喪假",
+            "喪假期間 是否給薪"
+          ],
+          "sub_questions": [
+            "配偶的養父母喪亡，勞工人員可請幾日喪假？",
+            "喪假期間是否給薪？"
+          ],
+          "intent_labels": [
+            "fact"
+          ],
+          "contexts": [
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::1",
+              "rank": 1,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 2",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 11 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 12 條\n本規則自發布日施行。\n本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+              "score": 0.650366,
+              "bm25Score": 9.07457,
+              "embeddingScore": 0.618433,
+              "rerankScore": 0.650366,
+              "matchedTerms": [
+                "喪假",
+                "依法",
+                "假期",
+                "期間",
+                "假期間",
+                "勞工",
+                "工依",
+                "勞工依",
+                "工依法"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            },
+            {
+              "id": "upload-35e56e82836bb3a2dcc3::0",
+              "rank": 2,
+              "title": "勞工請假規則_2026-01-01.txt | 勞工請假規則_2026-01-01 / part 1",
+              "source": "upload-35e56e82836bb3a2dcc3",
+              "page": "全文",
+              "content": "法規名稱：勞工請假規則\n修正日期：民國 114 年 12 月 09 日\n本次修正施行日期：民國 115 年 01 月 01 日\n資料來源：勞動部勞動法令查詢系統\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935\n第 1 條\n本規則依勞動基準法（以下簡稱本法）第四十三條規定訂定之。\n第 2 條\n勞工結婚者給予婚假八日，工資照給。\n第 3 條\n勞工喪假依左列規定：\n一、父母、養父母、繼父母、配偶喪亡者，給予喪假八日，工資照給。\n二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。\n三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。\n第 4 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n一、未住院者，一年內合計不得超過三十日。\n二、住院者，二年內合計不得超過一年。\n三、未住院傷病假與住院傷病假二年內合計不得超過一年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假一年內未超過三十日部分，工資折半發給，其領有勞工保險普通傷病給付未達工資半數者，由雇主補足之。\n第 5 條\n勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。\n第 6 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 7 條\n勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 8 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 9 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n一、勞工請婚假、喪假、公傷病假及公假。\n二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。\n三、勞工因親自照顧家庭成員，依第七條規定請事假。\n勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 9-1 條\n勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 10 條",
+              "score": 0.647869,
+              "bm25Score": 38.404709,
+              "embeddingScore": 0.255091,
+              "rerankScore": 0.647869,
+              "matchedTerms": [
+                "配偶",
+                "養父",
+                "父母",
+                "母喪",
+                "喪亡",
+                "養父母",
+                "父母喪",
+                "母喪亡",
+                "喪假",
+                "依法",
+                "假期",
+                "期間",
+                "假期間",
+                "勞工",
+                "工依",
+                "勞工依",
+                "工依法"
+              ],
+              "documentVersionId": "",
+              "chunkRecordId": "",
+              "indexVersionId": ""
+            }
+          ],
+          "evidence_evaluation": {
+            "status": "relevant",
+            "sufficient": true,
+            "confidence": "high",
+            "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+            "signals": {
+              "bm25": 9.07457,
+              "embedding": 0.618433,
+              "matchedTerms": 9,
+              "meaningfulMatchedTerms": 9,
+              "requiresAnswerValue": true,
+              "answerBearingEvidence": true
+            }
+          }
+        },
+        "model": {
+          "provider": "ollama",
+          "name": "qwen2.5:7b"
+        },
+        "quality_evaluation": null,
+        "timings": {
+          "routeMs": 41031.07,
+          "retrieveMs": 300.08,
+          "generateMs": 43211.74,
+          "evaluateMs": 0.0,
+          "totalMs": 84551.25
+        },
+        "client_wall_ms": 84555.23
+      }
+    }
+  ]
+}

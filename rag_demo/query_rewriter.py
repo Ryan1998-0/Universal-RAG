@@ -1,17 +1,18 @@
 import re
 from dataclasses import dataclass
+from typing import Tuple
 
 from rag_demo.general_answer import CURRENT_DATETIME_REASON, is_current_datetime_question
 from rag_demo.model_providers import ask_model
 
 
-QUERY_REWRITER_SYSTEM_PROMPT = """你是 RAG 系統的 query-only 檢索路由器。
+QUERY_REWRITER_SYSTEM_PROMPT = """你是 RAG 系統的 query-only 問題分析與檢索規劃器。
 
 你只有兩項可用能力：
 1. 讓本機模型直接回答。
 2. 呼叫一個通用檢索器尋找外部證據。
 
-在檢索發生前，你不知道知識庫有哪些文件、標題、章節或內容，也不可猜測。你的任務不是回答問題，而是只根據「目前問題」判斷是否需要外部證據；需要時，再產生一個不依賴語料清單的檢索查詢。
+在檢索發生前，你不知道知識庫有哪些文件、標題、章節或內容，也不可猜測。你的任務不是回答問題，而是只根據「目前問題」判斷是否需要外部證據；需要時，先重述問題、拆成可驗證子問題，再產生多個互補且不依賴語料清單的檢索查詢。
 
 請遵守：
 - 使用繁體中文。
@@ -23,6 +24,9 @@ QUERY_REWRITER_SYSTEM_PROMPT = """你是 RAG 系統的 query-only 檢索路由�
 - 不確定能否可靠直接回答時，選擇檢索；檢索後會由另一個節點判斷證據是否足夠。
 - 需要檢索時，可以加入由問題本身推導出的同義詞與上位概念，但不可使用未知的文件標題或章節名稱。
 - 改寫時必須保留問題中的具體動作、對象與限制，再補上口語動作的中性同義詞；不可把查詢壓縮成只有「合法性、規定、資料、要求」等抽象詞。
+- 子問題必須對應回答所需的不同證據欄位，例如對象、條件、數值、期間、例外或程序；簡單問題不可為了湊數而虛構子問題。
+- 產生 2 至 5 個互補查詢：至少包含原意完整查詢、精確關鍵詞查詢、答案承載詞查詢；不得只改變語序製造重複查詢。
+- 對話背景只可補回目前問題省略的主題，不可沿用先前助理的答案或把答案內容塞進查詢。
 - 不要直接回答使用者問題。
 """
 
@@ -33,12 +37,14 @@ class QueryRewriteDecision:
     reason: str
     retrieval_query: str
     raw_output: str = ""
+    sub_questions: Tuple[str, ...] = ()
+    query_variants: Tuple[str, ...] = ()
 
 
 def build_rewrite_prompt(question: str, conversation_context: str = "") -> str:
     context_text = str(conversation_context or "").strip() or "- 無"
 
-    return f"""請只根據目前問題判斷是否需要外部檢索，再在需要時改寫成適合 embedding / hybrid search 的查詢文字。
+    return f"""請只根據目前問題判斷是否需要外部檢索，再在需要時拆解問題並產生適合 embedding / hybrid search 的多個查詢。
 
 要求：
 1. 用一句話摘要使用者真正想問的內容，不要展示思考過程。
@@ -47,9 +53,11 @@ def build_rewrite_prompt(question: str, conversation_context: str = "") -> str:
 4. 不需要檢索：寒暄、系統能力、基本算術、日期時間、純文字處理、使用者已提供完成任務所需的全部內容，或不要求精確專業細節的穩定基礎常識。
 5. 對話背景只能解析代名詞或省略；不可因舊問題提到某個領域，就把無關的目前問題送去檢索。
 6. 你不知道可檢索資料有哪些文件、標題或章節，不可推測或引用語料清單。
-7. 需要檢索時，輸出一行「向量檢索用查詢」，只使用目前問題及其自然同義詞。
-8. 不需要檢索時，向量檢索用查詢保留目前問題。
-9. 不要回答問題，只產生決策與檢索文字。
+7. 需要檢索時，列出 1 至 4 個可獨立驗證的子問題；簡單問題只列 1 個。
+8. 需要檢索時，列出 2 至 5 個互補查詢，其中至少有：完整語意、精確詞彙、答案承載詞（例如數值、期間、條件、程序）。
+9. 「向量檢索用查詢」填入最完整的主要查詢，並同時列出其餘檢索查詢。
+10. 不需要檢索時，不列子問題與額外查詢，向量檢索用查詢保留目前問題。
+11. 不要回答問題，只產生決策與檢索文字。
 
 口語改寫示例（只示範語意展開，不代表知識庫一定有相關文件）：
 - 「老闆要我晚一點下班，這樣可以嗎？」可改寫為「晚下班 延長工作時間 加班 工時限制 是否允許」。
@@ -60,7 +68,12 @@ def build_rewrite_prompt(question: str, conversation_context: str = "") -> str:
 語意理解：...
 是否需要檢索：是 / 否
 判斷理由：...
+子問題1：...
+子問題2：...
 向量檢索用查詢：...
+檢索查詢1：...
+檢索查詢2：...
+檢索查詢3：...
 
 對話背景（只用於解析目前問題中的代名詞或省略，不可把舊問題當成目前問題）：
 {context_text}
@@ -87,7 +100,7 @@ def decide_and_rewrite_query_for_retrieval(
 ) -> QueryRewriteDecision:
     decision_question = strip_greeting_prefix(question)
     deterministic_decision = deterministic_retrieval_decision(decision_question, original_question=question)
-    if deterministic_decision is not None:
+    if deterministic_decision is not None and not deterministic_decision.needs_retrieval:
         return deterministic_decision
 
     output = ask_model(
@@ -98,10 +111,16 @@ def decide_and_rewrite_query_for_retrieval(
         model=model,
         system=QUERY_REWRITER_SYSTEM_PROMPT,
     )
-    retrieval_query = extract_retrieval_query(output) or decision_question or question
+    retrieval_queries = extract_retrieval_queries(output)
+    retrieval_query = extract_retrieval_query(output) or (
+        retrieval_queries[0] if retrieval_queries else decision_question or question
+    )
     sanitized_query = sanitize_retrieval_query(question, retrieval_query)
     needs_retrieval = extract_needs_retrieval(output)
     reason = extract_decision_reason(output)
+    if deterministic_decision is not None and deterministic_decision.needs_retrieval:
+        needs_retrieval = True
+        reason = deterministic_decision.reason
     acronym_reason = ambiguous_acronym_definition_reason(decision_question)
     if acronym_reason:
         needs_retrieval = True
@@ -111,6 +130,14 @@ def decide_and_rewrite_query_for_retrieval(
         reason=reason,
         retrieval_query=sanitized_query,
         raw_output=output,
+        sub_questions=tuple(extract_sub_questions(output)),
+        query_variants=tuple(
+            dict.fromkeys(
+                sanitize_retrieval_query(question, query)
+                for query in [sanitized_query, *retrieval_queries]
+                if str(query).strip()
+            )
+        ),
     )
 
 
@@ -252,6 +279,29 @@ def extract_retrieval_query(output: str) -> str:
         if marker in line:
             return line.split(marker, 1)[1].strip()
     return output.strip().splitlines()[-1].strip() if output.strip() else ""
+
+
+def extract_retrieval_queries(output: str):
+    queries = []
+    for line in str(output or "").splitlines():
+        match = re.match(r"\s*(?:檢索查詢|搜尋查詢)\s*\d*\s*[：:]\s*(.+?)\s*$", line)
+        if match:
+            query = match.group(1).strip(" -•\t")
+            if query:
+                queries.append(query)
+    primary = extract_retrieval_query(output)
+    return list(dict.fromkeys([query for query in [primary, *queries] if query]))[:6]
+
+
+def extract_sub_questions(output: str):
+    questions = []
+    for line in str(output or "").splitlines():
+        match = re.match(r"\s*子問題\s*\d*\s*[：:]\s*(.+?)\s*$", line)
+        if match:
+            question = match.group(1).strip(" -•\t")
+            if question:
+                questions.append(question)
+    return list(dict.fromkeys(questions))[:4]
 
 
 def extract_needs_retrieval(output: str) -> bool:

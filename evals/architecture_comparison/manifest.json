@@ -1,0 +1,42 @@
+{
+  "dataset_id": "nist_ai_600_1_multimodal_v1",
+  "created_for": "Universal-RAG architecture comparison",
+  "source": {
+    "title": "Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile",
+    "publisher": "National Institute of Standards and Technology",
+    "report_number": "NIST AI 600-1",
+    "publication_date": "2024-07-26",
+    "landing_page": "https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence",
+    "download_url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf"
+  },
+  "files": [
+    {
+      "path": "corpus/NIST.AI.600-1.pdf",
+      "media_type": "application/pdf",
+      "role": "canonical_document",
+      "pages": 64,
+      "bytes": 1174643,
+      "sha256": "6e73620ab6b64e90ef2c04bf0e0d6246185a2f4b1b13cab0df494496cff89b6a"
+    },
+    {
+      "path": "corpus/NIST.AI.600-1.page-18-table.png",
+      "media_type": "image/png",
+      "role": "ocr_and_table_layout_test",
+      "derived_from_pdf_page": 18
+    },
+    {
+      "path": "corpus/NIST.AI.600-1.cover.png",
+      "media_type": "image/png",
+      "role": "ocr_and_cover_layout_test",
+      "derived_from_pdf_page": 1
+    }
+  ],
+  "modalities": [
+    "born-digital text",
+    "structured tables",
+    "document layout",
+    "rasterized page image",
+    "OCR"
+  ],
+  "known_limit": "The selected report has strong text and table structure but limited semantic imagery. Its image variants primarily test OCR and layout preservation, not visual-scene reasoning."
+}

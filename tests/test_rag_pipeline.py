@@ -6,7 +6,10 @@ from rag_demo.rag_pipeline import (
     RagPipeline,
     RagPipelineInputError,
     RagPipelineRequest,
+    attention_order_contexts,
+    build_grounded_answer_request,
     citations_from_answer,
+    enforce_grounded_answer_contract,
 )
 
 
@@ -100,12 +103,39 @@ class RagPipelineContractTests(unittest.TestCase):
         result = pipeline.run(request)
 
         self.assertEqual(retriever.calls[0]["source_ids"], ["official-ifrs17"])
+        self.assertGreaterEqual(len(retriever.calls[0]["query_variants"]), 2)
+        self.assertTrue(retriever.calls[0]["evidence_query"])
         self.assertIn("尚未賺得的利潤", model_prompts[0])
         self.assertEqual(result["retrieval"]["contexts"][0]["id"], "server-context-1")
         self.assertTrue(result["retrieval"]["server_generated"])
         self.assertEqual(result["citations"][0]["run_id"], "run-server-evidence")
         self.assertEqual(len(result["citations"][0]["content_sha256"]), 64)
         self.assertEqual(result["grounding_warnings"], [])
+
+    def test_grounded_prompt_uses_exclusive_evidence_contract_and_edge_ordering(self):
+        contexts = [
+            {"rank": rank, "title": f"T{rank}", "page": str(rank), "content": f"E{rank}"}
+            for rank in range(1, 5)
+        ]
+
+        ordered = attention_order_contexts(contexts)
+        request = build_grounded_answer_request("目前問題？", contexts)
+
+        self.assertEqual([item["rank"] for item in ordered], [1, 3, 4, 2])
+        self.assertLess(request["prompt"].index('rank="1"'), request["prompt"].index('rank="3"'))
+        self.assertLess(request["prompt"].index('rank="4"'), request["prompt"].index('rank="2"'))
+        self.assertIn("唯一允許引用", request["prompt"])
+        self.assertIn("每一個包含事實", request["prompt"])
+        self.assertIn("唯一允許來源", request["system"])
+
+    def test_grounded_answer_without_valid_source_marker_fails_closed(self):
+        contexts = [{"rank": 1, "content": "正確證據"}]
+
+        refused = enforce_grounded_answer_contract("模型直接猜了一個答案。", contexts)
+        accepted = enforce_grounded_answer_contract("依資料可確認。來源：[1]", contexts)
+
+        self.assertIn("沒有通過來源約束", refused)
+        self.assertEqual(accepted, "依資料可確認。來源：[1]")
 
     def test_citations_follow_answer_markers_instead_of_first_four_contexts(self):
         contexts = [
@@ -154,9 +184,61 @@ class RagPipelineContractTests(unittest.TestCase):
             persist_conversation=False,
         ))
 
-        self.assertIn("相關性不足", result["answer"])
+        self.assertIn("根據目前檢索資料無法確認", result["answer"])
+        self.assertIn("沒有返回可用片段", result["answer"])
         self.assertEqual(result["citations"], [])
         self.assertEqual(result["retrieval"]["contexts"], [])
+
+    def test_pipeline_can_attach_claude_reference_score_using_same_grounded_prompt(self):
+        retriever = FakeRetriever([
+            {
+                "id": "manual-step",
+                "rank": 1,
+                "title": "操作手冊",
+                "source": "manual",
+                "page": "3",
+                "content": "先登入系統，再按匯出。",
+            }
+        ])
+        captured = {}
+
+        def quality_evaluator(**kwargs):
+            captured.update(kwargs)
+            return {
+                "status": "completed",
+                "reference": {"score": 100, "answer": "先登入系統，再按匯出。"},
+                "candidate": {"score": 88},
+            }
+
+        pipeline = RagPipeline(
+            settings_factory=lambda: self.settings,
+            retriever_factory=lambda profile: retriever,
+            route_fn=lambda question, **kwargs: SimpleNamespace(
+                needs_retrieval=True,
+                reason="需要文件證據",
+                retrieval_query=question,
+            ),
+            evidence_fn=lambda contexts, **kwargs: {
+                "sufficient": True,
+                "confidence": "high",
+                "reason": "evidence passed",
+            },
+            ask_model_fn=lambda prompt, model, system=None: "先登入系統，再按匯出。來源：[1]",
+            quality_evaluator_fn=quality_evaluator,
+            quality_evaluation_enabled_fn=lambda: True,
+            datetime_answer_fn=lambda question: None,
+        )
+
+        result = pipeline.run(RagPipelineRequest(
+            question="操作步驟是什麼？",
+            model="ollama:qwen2.5:7b",
+            persist_conversation=False,
+        ))
+
+        self.assertIn("先登入系統，再按匯出。", captured["final_prompt"])
+        self.assertEqual(captured["qwen_answer"], result["answer"])
+        self.assertEqual(result["quality_evaluation"]["reference"]["score"], 100)
+        self.assertEqual(result["quality_evaluation"]["candidate"]["score"], 88)
 
     def test_pipeline_skips_retrieval_for_general_question(self):
         def fail_retriever(profile):

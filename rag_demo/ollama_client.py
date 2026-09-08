@@ -1,5 +1,7 @@
+import base64
 import json
 import os
+from pathlib import Path
 from typing import Dict, Optional
 import urllib.request
 from urllib.parse import urlparse
@@ -41,6 +43,46 @@ def ask_ollama(
         method="POST",
     )
 
+    with urllib.request.urlopen(request, timeout=max(1.0, float(timeout_seconds))) as response:
+        body = json.loads(response.read().decode("utf-8"))
+    return body["response"].strip()
+
+
+def build_ollama_vision_payload(
+    prompt: str,
+    image_bytes: bytes,
+    model: str,
+) -> Dict[str, object]:
+    if not image_bytes:
+        raise ValueError("image_bytes must not be empty")
+    payload = build_ollama_payload(prompt=prompt, model=model)
+    payload["images"] = [base64.b64encode(image_bytes).decode("ascii")]
+    payload["keep_alive"] = os.getenv("RAG_OLLAMA_VISION_KEEP_ALIVE", "30m").strip() or "30m"
+    payload["options"] = {
+        **payload["options"],
+        "num_ctx": _int_env("RAG_OLLAMA_VISION_NUM_CTX", 8192),
+        "num_predict": _int_env("RAG_OLLAMA_VISION_NUM_PREDICT", 1024),
+    }
+    return payload
+
+
+def ask_ollama_vision(
+    image_path: Path,
+    prompt: str,
+    model: str,
+    timeout_seconds: float = 240.0,
+) -> str:
+    payload = build_ollama_vision_payload(
+        prompt=prompt,
+        image_bytes=Path(image_path).read_bytes(),
+        model=model,
+    )
+    request = urllib.request.Request(
+        f"{ollama_base_url()}/api/generate",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
     with urllib.request.urlopen(request, timeout=max(1.0, float(timeout_seconds))) as response:
         body = json.loads(response.read().decode("utf-8"))
     return body["response"].strip()

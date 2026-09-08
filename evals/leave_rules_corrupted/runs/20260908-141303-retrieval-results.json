@@ -1,0 +1,1532 @@
+{
+  "benchmark_id": "taiwan-leave-rules-corrupted-numeric-v1",
+  "source_id": "upload-3d71de8ed015e92460da",
+  "mode": "retrieval-only-for-Luna-C",
+  "run_at": "2026-09-08T14:13:03+08:00",
+  "results": [
+    {
+      "id": "corrupt-marriage-leave",
+      "question": "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？",
+      "oracle_context": "勞工結婚者給予婚假八十八日，工資照給。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？",
+        "retrievalQuery": "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？",
+        "retrievalQueries": [
+          "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？"
+        ],
+        "evidenceQuery": "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.810378,
+            "bm25Score": 30.622591,
+            "embeddingScore": 0.601904,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.810378,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "勞工",
+              "以請",
+              "婚假"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.65,
+            "bm25Score": 43.002159,
+            "embeddingScore": 0.428637,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.65,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "勞工",
+              "工結",
+              "結婚",
+              "婚假",
+              "勞工結",
+              "工結婚"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.048,
+          "embeddingMs": 84.379,
+          "fusionMs": 0.013,
+          "rerankMs": 0.479,
+          "totalMs": 85.083
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 30.622591,
+            "embedding": 0.601904,
+            "matchedTerms": 9,
+            "meaningfulMatchedTerms": 9,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "_client_wall_ms": 95.87
+      }
+    },
+    {
+      "id": "corrupt-parent-bereavement",
+      "question": "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？",
+      "oracle_context": "父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？",
+        "retrievalQuery": "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？",
+        "retrievalQueries": [
+          "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？"
+        ],
+        "evidenceQuery": "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.68254,
+            "bm25Score": 24.809291,
+            "embeddingScore": 0.564055,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.68254,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "喪假"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.663182,
+            "bm25Score": 74.452569,
+            "embeddingScore": 0.353639,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.663182,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "父母",
+              "養父",
+              "養父母",
+              "繼父",
+              "母或",
+              "配偶",
+              "偶喪",
+              "喪亡",
+              "繼父母",
+              "父母或",
+              "配偶喪",
+              "偶喪亡",
+              "喪假"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.047,
+          "embeddingMs": 16.83,
+          "fusionMs": 0.014,
+          "rerankMs": 0.447,
+          "totalMs": 17.473
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 24.809291,
+            "embedding": 0.564055,
+            "matchedTerms": 7,
+            "meaningfulMatchedTerms": 7,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "_client_wall_ms": 18.14
+      }
+    },
+    {
+      "id": "corrupt-spouse-adoptive-bereavement",
+      "question": "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？",
+      "oracle_context": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？",
+        "retrievalQuery": "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？",
+        "retrievalQueries": [
+          "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？"
+        ],
+        "evidenceQuery": "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.671758,
+            "bm25Score": 24.809291,
+            "embeddingScore": 0.573112,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.671758,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "喪假"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.664898,
+            "bm25Score": 81.448421,
+            "embeddingScore": 0.345659,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.664898,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "配偶",
+              "養父",
+              "父母",
+              "母或",
+              "或繼",
+              "繼父",
+              "母喪",
+              "喪亡",
+              "養父母",
+              "父母或",
+              "母或繼",
+              "或繼父",
+              "繼父母",
+              "父母喪"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.043,
+          "embeddingMs": 19.094,
+          "fusionMs": 0.009,
+          "rerankMs": 0.421,
+          "totalMs": 19.683
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 24.809291,
+            "embedding": 0.573112,
+            "matchedTerms": 7,
+            "meaningfulMatchedTerms": 7,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "_client_wall_ms": 20.27
+      }
+    },
+    {
+      "id": "corrupt-sibling-bereavement",
+      "question": "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？",
+      "oracle_context": "曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？",
+        "retrievalQuery": "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？",
+        "retrievalQueries": [
+          "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？"
+        ],
+        "evidenceQuery": "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.75154,
+            "bm25Score": 24.809291,
+            "embeddingScore": 0.56848,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.75154,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "喪假"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.654211,
+            "bm25Score": 45.858413,
+            "embeddingScore": 0.352427,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.654211,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "兄弟",
+              "弟姊",
+              "姊妹",
+              "喪亡",
+              "兄弟姊",
+              "弟姊妹",
+              "喪假"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.031,
+          "embeddingMs": 27.53,
+          "fusionMs": 0.014,
+          "rerankMs": 0.421,
+          "totalMs": 28.105
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "low",
+        "evidenceEvaluation": {
+          "status": "ambiguous",
+          "sufficient": false,
+          "confidence": "low",
+          "reason": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。",
+          "signals": {
+            "bm25": 24.809291,
+            "embedding": 0.56848,
+            "matchedTerms": 7,
+            "meaningfulMatchedTerms": 7,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": false
+          }
+        },
+        "_client_wall_ms": 28.71
+      }
+    },
+    {
+      "id": "corrupt-outpatient-sick-limit",
+      "question": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+      "oracle_context": "未住院者，十年內合計不得超過三百日。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+        "retrievalQuery": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+        "retrievalQueries": [
+          "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？"
+        ],
+        "evidenceQuery": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.836925,
+            "bm25Score": 80.722759,
+            "embeddingScore": 0.580724,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.836925,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "普通",
+              "通傷",
+              "傷病",
+              "病假",
+              "普通傷",
+              "通傷病",
+              "傷病假",
+              "內合",
+              "合計",
+              "計不",
+              "不得",
+              "得超",
+              "超過",
+              "內合計"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.675102,
+            "bm25Score": 113.322265,
+            "embeddingScore": 0.397586,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.675102,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "未住",
+              "住院",
+              "普通",
+              "通傷",
+              "傷病",
+              "病假",
+              "未住院",
+              "普通傷",
+              "通傷病",
+              "傷病假",
+              "內合",
+              "合計",
+              "計不",
+              "不得"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.048,
+          "embeddingMs": 15.403,
+          "fusionMs": 0.01,
+          "rerankMs": 0.412,
+          "totalMs": 15.956
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 80.722759,
+            "embedding": 0.580724,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "_client_wall_ms": 16.58
+      }
+    },
+    {
+      "id": "corrupt-inpatient-sick-limit",
+      "question": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+      "oracle_context": "住院者，二十年內合計不得超過十年。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+        "retrievalQuery": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+        "retrievalQueries": [
+          "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？"
+        ],
+        "evidenceQuery": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.851343,
+            "bm25Score": 80.722759,
+            "embeddingScore": 0.548634,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.851343,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "普通",
+              "通傷",
+              "傷病",
+              "病假",
+              "內合",
+              "合計",
+              "計不",
+              "不得",
+              "得超",
+              "超過",
+              "普通傷",
+              "通傷病",
+              "傷病假",
+              "內合計"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.672083,
+            "bm25Score": 107.031194,
+            "embeddingScore": 0.348476,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.672083,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "住院",
+              "普通",
+              "通傷",
+              "傷病",
+              "病假",
+              "內合",
+              "合計",
+              "計不",
+              "不得",
+              "得超",
+              "超過",
+              "普通傷",
+              "通傷病",
+              "傷病假"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.033,
+          "embeddingMs": 15.387,
+          "fusionMs": 0.009,
+          "rerankMs": 0.42,
+          "totalMs": 16.168
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 80.722759,
+            "embedding": 0.548634,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "_client_wall_ms": 16.71
+      }
+    },
+    {
+      "id": "corrupt-combined-sick-limit",
+      "question": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+      "oracle_context": "未住院傷病假與住院傷病假二十年內合計不得超過十年。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+        "retrievalQuery": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+        "retrievalQueries": [
+          "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？"
+        ],
+        "evidenceQuery": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.766651,
+            "bm25Score": 59.539907,
+            "embeddingScore": 0.548065,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.766651,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "傷病",
+              "病假",
+              "計算",
+              "傷病假",
+              "內合",
+              "合計",
+              "計不",
+              "不得",
+              "得超",
+              "超過",
+              "內合計",
+              "合計不",
+              "計不得",
+              "不得超"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.672727,
+            "bm25Score": 113.093682,
+            "embeddingScore": 0.385126,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.672727,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "未住",
+              "住院",
+              "與住",
+              "院傷",
+              "傷病",
+              "病假",
+              "計算",
+              "未住院",
+              "與住院",
+              "住院傷",
+              "院傷病",
+              "傷病假",
+              "內合",
+              "合計"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.038,
+          "embeddingMs": 19.091,
+          "fusionMs": 0.013,
+          "rerankMs": 0.524,
+          "totalMs": 19.708
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 59.539907,
+            "embedding": 0.548065,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": false,
+            "answerBearingEvidence": null
+          }
+        },
+        "_client_wall_ms": 20.29
+      }
+    },
+    {
+      "id": "corrupt-sick-pay-ratio",
+      "question": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+      "oracle_context": "普通傷病假十年內未超過三百日部分，工資按十分之一發給。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+        "retrievalQuery": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+        "retrievalQueries": [
+          "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？"
+        ],
+        "evidenceQuery": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.90491,
+            "bm25Score": 110.068621,
+            "embeddingScore": 0.69888,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.90491,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "普通",
+              "通傷",
+              "傷病",
+              "病假",
+              "十年",
+              "年內",
+              "內未",
+              "未超",
+              "超過",
+              "過三",
+              "三百",
+              "百日",
+              "部分",
+              "普通傷"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.675738,
+            "bm25Score": 121.802678,
+            "embeddingScore": 0.393644,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.675738,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "普通",
+              "通傷",
+              "傷病",
+              "病假",
+              "十年",
+              "年內",
+              "內未",
+              "未超",
+              "超過",
+              "過三",
+              "三百",
+              "百日",
+              "部分",
+              "普通傷"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.099,
+          "embeddingMs": 16.789,
+          "fusionMs": 0.011,
+          "rerankMs": 0.446,
+          "totalMs": 17.698
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 110.068621,
+            "embedding": 0.69888,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "_client_wall_ms": 18.32
+      }
+    },
+    {
+      "id": "corrupt-personal-leave-limit",
+      "question": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+      "oracle_context": "勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+        "retrievalQuery": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+        "retrievalQueries": [
+          "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？"
+        ],
+        "evidenceQuery": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.833061,
+            "bm25Score": 56.219605,
+            "embeddingScore": 0.66278,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.833061,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "事假",
+              "內合",
+              "合計",
+              "計不",
+              "不得",
+              "得超",
+              "超過",
+              "內合計",
+              "合計不",
+              "計不得",
+              "不得超",
+              "得超過",
+              "假期",
+              "期間"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.664,
+            "bm25Score": 78.539093,
+            "embeddingScore": 0.501624,
+            "fusionScore": 0.032522,
+            "rerankScore": 0.664,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "事假",
+              "內合",
+              "合計",
+              "計不",
+              "不得",
+              "得超",
+              "超過",
+              "內合計",
+              "合計不",
+              "計不得",
+              "不得超",
+              "得超過",
+              "假期",
+              "期間"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.044,
+          "embeddingMs": 15.886,
+          "fusionMs": 0.011,
+          "rerankMs": 0.462,
+          "totalMs": 16.497
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 56.219605,
+            "embedding": 0.66278,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "_client_wall_ms": 17.12
+      }
+    },
+    {
+      "id": "corrupt-adverse-action-threshold",
+      "question": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+      "oracle_context": "勞工十年內請普通傷病假日數未超過一百日者，雇主不得因勞工請普通傷病假而為不利之處分。",
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+        "retrievalQuery": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+        "retrievalQueries": [
+          "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？"
+        ],
+        "evidenceQuery": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-3d71de8ed015e92460da::1",
+            "rank": 1,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 2",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。\n勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。\n勞工請普通傷病假超過第十項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。\n第 1000 條\n勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。辦理請假手續時，雇主得要求勞工提出有關證明文件。\n第 1100 條\n雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。\n第 1200 條\n本規則自發布日施行。\n本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+            "branch": "Hybrid reranker",
+            "score": 0.936923,
+            "bm25Score": 117.374178,
+            "embeddingScore": 0.789767,
+            "fusionScore": 0.032787,
+            "rerankScore": 0.936923,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "勞工",
+              "普通",
+              "通傷",
+              "傷病",
+              "病假",
+              "未超",
+              "超過",
+              "普通傷",
+              "通傷病",
+              "傷病假",
+              "未超過",
+              "雇主",
+              "主不",
+              "不得"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-3d71de8ed015e92460da::0",
+            "rank": 2,
+            "title": "勞工請假規則_數值污染壓力測試副本.txt | 勞工請假規則_數值污染壓力測試副本 / part 1",
+            "source": "upload-3d71de8ed015e92460da",
+            "page": "全文",
+            "content": "# 注意：本檔案是數值污染壓力測試副本，所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。\n法規名稱：勞工請假規則（數值污染測試版）\n修正日期：民國 999 年 11 月 31 日\n本次修正施行日期：民國 1000 年 11 月 31 日\n資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）\n官方全文：https://laws.mol.gov.tw/FLAW/FLAWDAT0999.aspx?id=FL099999\n第 101 條\n本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。\n第 202 條\n勞工結婚者給予婚假八十八日，工資照給。\n第 303 條\n勞工喪假依左列規定：\n十一、父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。\n十二、祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。\n十三、曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。\n第 404 條\n勞工因普通傷害、疾病或生理原因必須治療或休養者，得在左列規定範圍內請普通傷病假：\n十一、未住院者，十年內合計不得超過三百日。\n十二、住院者，二十年內合計不得超過十年。\n十三、未住院傷病假與住院傷病假二十年內合計不得超過十年。\n經醫師診斷，罹患癌症（含原位癌）採門診方式治療或懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。\n普通傷病假十年內未超過三百日部分，工資按十分之一發給，其領有勞工保險普通傷病給付未達工資十分之一者，由雇主補足之。\n第 505 條\n勞工普通傷病假超過前條第十項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以十年為限。\n第 606 條\n勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。\n第 707 條\n勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。\n勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。\n第 808 條\n勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。\n第 909 條\n勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；其他法律另有規定者，從其規定：\n十一、勞工請婚假、喪假、公傷病假及公假。\n十二、勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假。\n十三、勞工因親自照顧家庭成員，依第七十條規定請事假。\n勞工請前項第十二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。\n第 90-10 條\n勞工十年內請普通傷病假日數未超過一百日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+            "branch": "Hybrid reranker",
+            "score": 0.626865,
+            "bm25Score": 103.045023,
+            "embeddingScore": 0.568921,
+            "fusionScore": 0.032258,
+            "rerankScore": 0.626865,
+            "matchedTerms": [
+              "數值",
+              "值污",
+              "污染",
+              "副本",
+              "數值污",
+              "值污染",
+              "勞工",
+              "普通",
+              "通傷",
+              "傷病",
+              "病假",
+              "未超",
+              "超過",
+              "普通傷",
+              "通傷病",
+              "傷病假",
+              "未超過",
+              "雇主",
+              "主不",
+              "不得"
+            ],
+            "documentVersionId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 2 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 2."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.056,
+          "embeddingMs": 21.899,
+          "fusionMs": 0.013,
+          "rerankMs": 0.491,
+          "totalMs": 22.553
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 2,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 117.374178,
+            "embedding": 0.789767,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "_client_wall_ms": 23.17
+      }
+    }
+  ]
+}

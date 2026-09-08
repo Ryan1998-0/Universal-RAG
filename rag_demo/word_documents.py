@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import posixpath
 import re
 import shutil
 import threading
@@ -33,9 +34,21 @@ DOCX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml
 
 _WORD_NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 _WORD = f"{{{_WORD_NAMESPACE}}}"
+_DRAWING_NAMESPACE = "http://schemas.openxmlformats.org/drawingml/2006/main"
+_DRAWING = f"{{{_DRAWING_NAMESPACE}}}"
+_RELATIONSHIP_NAMESPACE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+_RELATIONSHIP = f"{{{_RELATIONSHIP_NAMESPACE}}}"
+_PACKAGE_RELATIONSHIP_NAMESPACE = "http://schemas.openxmlformats.org/package/2006/relationships"
+_PACKAGE_RELATIONSHIP = f"{{{_PACKAGE_RELATIONSHIP_NAMESPACE}}}"
+_WORDPROCESSING_DRAWING_NAMESPACE = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+_WORDPROCESSING_DRAWING = f"{{{_WORDPROCESSING_DRAWING_NAMESPACE}}}"
+_VML_NAMESPACE = "urn:schemas-microsoft-com:vml"
+_VML = f"{{{_VML_NAMESPACE}}}"
 _DOCUMENT_XML = "word/document.xml"
+_DOCUMENT_RELS_XML = "word/_rels/document.xml.rels"
 _STYLES_XML = "word/styles.xml"
 _SOURCE_ID_PATTERN = re.compile(r"^upload-[0-9a-f]{20}$")
+MAX_DOCX_IMAGES = 500
 
 
 class WordDocumentError(ValueError):
@@ -227,8 +240,11 @@ def normalize_word_filename(filename: str) -> str:
     return clean_filename
 
 
-def extract_docx_blocks(payload: bytes) -> List[dict]:
-    document_xml, styles_xml = _read_docx_xml(payload)
+def extract_docx_blocks(payload: bytes, include_images: bool = False) -> List[dict]:
+    document_xml, styles_xml, image_parts = _read_docx_parts(
+        payload,
+        include_images=include_images,
+    )
     try:
         document = ElementTree.fromstring(document_xml)
         styles = _style_names(styles_xml)
@@ -241,29 +257,46 @@ def extract_docx_blocks(payload: bytes) -> List[dict]:
 
     blocks = []
     table_index = 0
+    image_index = 0
     for child in body:
         if child.tag == f"{_WORD}p":
             text = _paragraph_text(child)
-            if not text:
-                continue
-            blocks.append(
-                {
-                    "kind": "heading" if _is_heading_paragraph(child, styles) else "paragraph",
-                    "text": text,
-                }
-            )
+            if text:
+                blocks.append(
+                    {
+                        "kind": "heading" if _is_heading_paragraph(child, styles) else "paragraph",
+                        "text": text,
+                    }
+                )
         elif child.tag == f"{_WORD}tbl":
             table_text = _table_text(child)
-            if not table_text:
-                continue
-            table_index += 1
-            blocks.append(
-                {
-                    "kind": "table",
-                    "text": table_text,
-                    "table_index": table_index,
-                }
-            )
+            if table_text:
+                table_index += 1
+                blocks.append(
+                    {
+                        "kind": "table",
+                        "text": table_text,
+                        "table_index": table_index,
+                    }
+                )
+        if include_images:
+            alt_text = _container_alt_text(child)
+            for relationship_id in _container_image_relationship_ids(child):
+                image = image_parts.get(relationship_id)
+                if image is None:
+                    continue
+                image_index += 1
+                blocks.append(
+                    {
+                        "kind": "image",
+                        "image_index": image_index,
+                        "relationship_id": relationship_id,
+                        "media_name": image["media_name"],
+                        "extension": image["extension"],
+                        "payload": image["payload"],
+                        "alt_text": alt_text,
+                    }
+                )
     return blocks
 
 
@@ -327,6 +360,11 @@ def build_word_chunks(
 
 
 def _read_docx_xml(payload: bytes):
+    document_xml, styles_xml, _ = _read_docx_parts(payload, include_images=False)
+    return document_xml, styles_xml
+
+
+def _read_docx_parts(payload: bytes, include_images: bool):
     try:
         with zipfile.ZipFile(BytesIO(payload)) as archive:
             members = archive.infolist()
@@ -340,9 +378,72 @@ def _read_docx_xml(payload: bytes):
                 raise WordDocumentError("檔案不是有效的 .docx Word 文件。")
             document_xml = archive.read(_DOCUMENT_XML)
             styles_xml = archive.read(_STYLES_XML) if _STYLES_XML in names else b""
-            return document_xml, styles_xml
+            image_parts = (
+                _read_docx_image_parts(archive, names)
+                if include_images and _DOCUMENT_RELS_XML in names
+                else {}
+            )
+            return document_xml, styles_xml, image_parts
     except (zipfile.BadZipFile, RuntimeError, NotImplementedError) as exc:
         raise WordDocumentError("檔案不是有效或可讀取的 .docx Word 文件。") from exc
+
+
+def _read_docx_image_parts(archive: zipfile.ZipFile, names: set) -> Dict[str, dict]:
+    try:
+        relationships = ElementTree.fromstring(archive.read(_DOCUMENT_RELS_XML))
+    except ElementTree.ParseError as exc:
+        raise WordDocumentError("Word 圖片關聯結構損壞，無法讀取。") from exc
+
+    image_parts: Dict[str, dict] = {}
+    for relationship in relationships.findall(f"{_PACKAGE_RELATIONSHIP}Relationship"):
+        relationship_id = relationship.get("Id") or ""
+        relationship_type = relationship.get("Type") or ""
+        target = relationship.get("Target") or ""
+        if (
+            not relationship_id
+            or not relationship_type.endswith("/image")
+            or relationship.get("TargetMode") == "External"
+        ):
+            continue
+        part_name = (
+            target.lstrip("/")
+            if target.startswith("/")
+            else posixpath.normpath(posixpath.join("word", target))
+        )
+        if not part_name.startswith("word/") or part_name not in names:
+            continue
+        extension = Path(part_name).suffix.lower()
+        image_parts[relationship_id] = {
+            "media_name": Path(part_name).name,
+            "extension": extension,
+            "payload": archive.read(part_name),
+        }
+        if len(image_parts) > MAX_DOCX_IMAGES:
+            raise WordDocumentError(f"Word 內嵌圖片超過 {MAX_DOCX_IMAGES} 張上限。")
+    return image_parts
+
+
+def _container_image_relationship_ids(container) -> List[str]:
+    relationship_ids = []
+    for blip in container.findall(f".//{_DRAWING}blip"):
+        relationship_id = blip.get(f"{_RELATIONSHIP}embed")
+        if relationship_id:
+            relationship_ids.append(relationship_id)
+    for image_data in container.findall(f".//{_VML}imagedata"):
+        relationship_id = image_data.get(f"{_RELATIONSHIP}id")
+        if relationship_id:
+            relationship_ids.append(relationship_id)
+    return relationship_ids
+
+
+def _container_alt_text(container) -> str:
+    candidates = []
+    for properties in container.findall(f".//{_WORDPROCESSING_DRAWING}docPr"):
+        for attribute in ("descr", "title", "name"):
+            value = str(properties.get(attribute) or "").strip()
+            if value and not re.fullmatch(r"Picture\s+\d+", value, flags=re.IGNORECASE):
+                candidates.append(value)
+    return " / ".join(dict.fromkeys(candidates))
 
 
 def _style_names(styles_xml: bytes) -> Dict[str, str]:

@@ -1,0 +1,143 @@
+{
+  "dataset_id": "nist_ai_600_1_multimodal_v1",
+  "page_number_note": "source_pages_pdf uses physical PDF pages; source_pages_printed uses the printed page number where present.",
+  "questions": [
+    {
+      "id": "direct-01",
+      "type": "direct_text",
+      "question": "GAI Public Working Group 聚焦的四項主要考量是什麼？",
+      "expected_answer": "Governance、Content Provenance、Pre-deployment Testing、Incident Disclosure。",
+      "source_pages_pdf": [6],
+      "source_pages_printed": [2],
+      "answerable": true
+    },
+    {
+      "id": "direct-02",
+      "type": "definition",
+      "question": "文件如何定義 Confabulation？",
+      "expected_answer": "產生以自信語氣陳述、但錯誤或虛假的內容，可能誤導或欺騙使用者；俗稱 hallucinations 或 fabrications。",
+      "source_pages_pdf": [8],
+      "source_pages_printed": [4],
+      "answerable": true
+    },
+    {
+      "id": "list-01",
+      "type": "ordered_list_lookup",
+      "question": "風險清單中的第 4 項與第 5 項分別是什麼？",
+      "expected_answer": "第 4 項是 Data Privacy；第 5 項是 Environmental Impacts。",
+      "source_pages_pdf": [8],
+      "source_pages_printed": [4],
+      "answerable": true
+    },
+    {
+      "id": "multihop-01",
+      "type": "cross_section_synthesis",
+      "question": "根據文件，為什麼企業 RAG 一方面應附來源，另一方面又不能盲目信任檢索到的內容？",
+      "expected_answer": "高完整性資訊應能連回原始來源並以證據驗證；但 GAI 系統也可能遭間接提示注入，攻擊者可把惡意提示放入可能被檢索的資料，因此檢索內容仍須視為不可信輸入並做安全控制。",
+      "source_pages_pdf": [13, 15],
+      "source_pages_printed": [9, 11],
+      "answerable": true
+    },
+    {
+      "id": "security-01",
+      "type": "direct_text",
+      "question": "文件描述的 indirect prompt injection 是什麼？",
+      "expected_answer": "攻擊者不直接操作介面，而是把提示注入很可能被 LLM 整合應用檢索到的資料，藉此遠端利用系統。",
+      "source_pages_pdf": [15],
+      "source_pages_printed": [11],
+      "answerable": true
+    },
+    {
+      "id": "table-01",
+      "type": "table_schema",
+      "question": "第 3 節 Suggested Actions 表格的三個主要欄位名稱是什麼？",
+      "expected_answer": "Action ID、Suggested Action、GAI Risks。",
+      "source_pages_pdf": [17, 18],
+      "source_pages_printed": [13, 14],
+      "answerable": true
+    },
+    {
+      "id": "table-02",
+      "type": "exact_id_table_lookup",
+      "question": "GV-1.5-003 建議保留什麼，對應哪些 GAI risks？",
+      "expected_answer": "維持文件保留政策，保存測試、評估、驗證與確認（TEVV）以及 GAI 數位內容透明度方法的歷史；對應 Information Integrity 與 Intellectual Property。",
+      "source_pages_pdf": [20],
+      "source_pages_printed": [16],
+      "answerable": true
+    },
+    {
+      "id": "table-03",
+      "type": "long_table_cell",
+      "question": "GV-1.6-003 建議 GAI 系統清冊額外記錄哪些項目？",
+      "expected_answer": "資料來源／出處資訊（例如來源、簽章、版本、水印）；內部 bug tracking 或外部分享來源中的已知問題；人工監督角色與責任；智慧財產、授權作品或個人、特權、專有、敏感資料的特殊權利與考量；底層基礎模型、版本與存取模式。",
+      "source_pages_pdf": [20],
+      "source_pages_printed": [16],
+      "answerable": true
+    },
+    {
+      "id": "table-04",
+      "type": "exact_id_table_lookup",
+      "question": "GV-1.7-001 的建議行動及其對應風險是什麼？",
+      "expected_answer": "建立協定，確保必要時可以停用 GAI 系統；對應 Information Security 與 Value Chain and Component Integration。",
+      "source_pages_pdf": [21],
+      "source_pages_printed": [17],
+      "answerable": true
+    },
+    {
+      "id": "table-05",
+      "type": "row_relationship",
+      "question": "哪一個 Action ID 要求為 GAI 介面、模態及 human-AI configurations 定義 acceptable use policies？",
+      "expected_answer": "GV-3.2-003。",
+      "source_pages_pdf": [22],
+      "source_pages_printed": [18],
+      "answerable": true
+    },
+    {
+      "id": "layout-01",
+      "type": "toc_layout",
+      "question": "目錄顯示 Appendix A 從印刷頁碼第幾頁開始？",
+      "expected_answer": "第 47 頁。",
+      "source_pages_pdf": [4],
+      "source_pages_printed": ["front matter"],
+      "answerable": true
+    },
+    {
+      "id": "image-01",
+      "type": "image_ocr",
+      "question": "封面上的報告編號是什麼？",
+      "expected_answer": "NIST AI 600-1。",
+      "source_pages_pdf": [1],
+      "source_pages_printed": ["cover"],
+      "answerable": true,
+      "preferred_input": "corpus/NIST.AI.600-1.cover.png"
+    },
+    {
+      "id": "image-02",
+      "type": "image_ocr_table",
+      "question": "在頁面影像的 GOVERN 1.2 表格中，GV-1.2-002 的 Suggested Action 是什麼？",
+      "expected_answer": "Establish policies to evaluate risk-relevant capabilities of GAI and robustness of safety measures, both prior to deployment and on an ongoing basis, through internal and external evaluations.（作答可合理翻譯，但須包含部署前與持續進行內外部評估。）",
+      "source_pages_pdf": [18],
+      "source_pages_printed": [14],
+      "answerable": true,
+      "preferred_input": "corpus/NIST.AI.600-1.page-18-table.png"
+    },
+    {
+      "id": "negative-01",
+      "type": "unanswerable",
+      "question": "NIST 在這份文件中規定 RAG chunk size 上限是多少 tokens？",
+      "expected_answer": "文件未規定 RAG chunk size 上限，應拒絕臆測。",
+      "source_pages_pdf": [],
+      "source_pages_printed": [],
+      "answerable": false
+    },
+    {
+      "id": "negative-02",
+      "type": "unanswerable",
+      "question": "這份文件要求企業使用 Qdrant 還是 Elasticsearch 作為向量資料庫？",
+      "expected_answer": "文件沒有指定向量資料庫產品，應拒絕二選一。",
+      "source_pages_pdf": [],
+      "source_pages_printed": [],
+      "answerable": false
+    }
+  ]
+}

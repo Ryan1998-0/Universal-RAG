@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+import zipfile
 from io import BytesIO
 from pathlib import Path
 
@@ -29,6 +30,42 @@ class FakePdfReader:
 
     def __init__(self, pages):
         self.pages = pages
+
+
+def make_docx_with_image_bytes():
+    document_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+  <w:body>
+    <w:p><w:r><w:t>先開啟付款資料。</w:t></w:r></w:p>
+    <w:p>
+      <w:r>
+        <w:drawing>
+          <wp:inline>
+            <wp:docPr id="1" name="Picture 1" descr="付款日期輸入畫面"/>
+            <a:graphic><a:graphicData><a:blip r:embed="rId5"/></a:graphicData></a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:sectPr/>
+  </w:body>
+</w:document>
+"""
+    relationships_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>
+</Relationships>
+"""
+    output = BytesIO()
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("word/document.xml", document_xml)
+        archive.writestr("word/_rels/document.xml.rels", relationships_xml)
+        archive.writestr("word/media/image1.png", b"fake-png")
+    return output.getvalue()
 
 
 class DocumentPipelineTest(unittest.TestCase):
@@ -206,6 +243,36 @@ class DocumentPipelineTest(unittest.TestCase):
         self.assertTrue(result.ocr_used)
         self.assertEqual(result.units[0]["ocr_confidence"], 0.94)
         self.assertIn("IMAGE-990", result.units[0]["content"])
+
+    def test_docx_images_are_ocrd_and_described_by_vlm(self):
+        result = extract_document(
+            "付款手冊.docx",
+            make_docx_with_image_bytes(),
+            ".docx",
+            ocr_fn=lambda _: {
+                "text": "請輸入開始日期 2025/12/3",
+                "confidence": 0.91,
+                "engine": "test-ocr",
+            },
+            image_understanding_fn=lambda _: {
+                "text": "終端機正在要求輸入付款清單的開始與結束日期。",
+                "engine": "test-vlm",
+                "model": "test-vision-model",
+            },
+        )
+
+        self.assertEqual(result.method, "docx-xml+ocr+vlm")
+        self.assertTrue(result.ocr_used)
+        self.assertEqual(result.details["embedded_image_count"], 1)
+        self.assertEqual(result.details["recognized_image_count"], 1)
+        self.assertEqual(result.details["ocr_image_count"], 1)
+        self.assertEqual(result.details["vlm_image_count"], 1)
+        self.assertEqual(result.details["vision_models"], ["test-vision-model"])
+        self.assertEqual(len(result.units), 2)
+        self.assertIn("先開啟付款資料", result.units[0]["content"])
+        self.assertIn("2025/12/3", result.units[1]["content"])
+        self.assertIn("開始與結束日期", result.units[1]["content"])
+        self.assertEqual(result.units[1]["ocr_confidence"], 0.91)
 
     def test_pdf_prefers_text_layer(self):
         result = extract_document(

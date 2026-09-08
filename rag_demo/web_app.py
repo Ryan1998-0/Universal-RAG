@@ -17,11 +17,13 @@ from rag_demo.document_pipeline import (
     DocumentStore,
 )
 from rag_demo.hybrid_retrieval import (
+    evaluate_retrieval_evidence,
     get_hybrid_retriever,
     list_profile_retrieval_configs,
     load_profile_retrieval_config,
     register_uploaded_document,
 )
+from rag_demo.fine_evidence import retrieve_fine_evidence
 from rag_demo.knowledge_base import active_knowledge_base
 from rag_demo.query_rewriter import QueryRewriteDecision, decide_and_rewrite_query_for_retrieval
 from rag_demo.model_providers import ask_model, parse_model_spec
@@ -32,6 +34,7 @@ from rag_demo.rag_pipeline import (
     allowed_models_from_env,
     answer_from_contexts as _answer_from_browser_contexts,
     conversation_context as _conversation_context,
+    normalize_contexts,
     rag_conversation_context as _rag_conversation_context,
 )
 DEFAULT_MODEL = os.getenv("RAG_MODEL", "ollama:qwen2.5:7b")
@@ -489,6 +492,8 @@ class RagRequestHandler(BaseHTTPRequestHandler):
                 "needs_retrieval": decision.needs_retrieval,
                 "reason": decision.reason,
                 "retrieval_query": decision.retrieval_query,
+                "sub_questions": list(getattr(decision, "sub_questions", ()) or ()),
+                "query_variants": list(getattr(decision, "query_variants", ()) or ()),
                 "timing_ms": round((perf_counter() - started_at) * 1000, 2),
             })
         except Exception as exc:
@@ -506,9 +511,16 @@ class RagRequestHandler(BaseHTTPRequestHandler):
 
             source_ids = _source_ids_from_payload(payload)
             settings = RagConfig.from_env()
+            query_variants = [
+                str(query).strip()[:500]
+                for query in (payload.get("query_variants") or [])[:8]
+                if str(query).strip()
+            ] if isinstance(payload.get("query_variants"), list) else []
             result = get_hybrid_retriever(profile).retrieve(
                 question=question,
                 retrieval_query=str(payload.get("retrieval_query") or "").strip(),
+                query_variants=query_variants,
+                evidence_query=str(payload.get("evidence_query") or "").strip()[:2000],
                 source_ids=source_ids,
                 top_k=_parse_int(
                     str(payload.get("top_k", settings.hybrid_top_k)),
@@ -519,6 +531,26 @@ class RagRequestHandler(BaseHTTPRequestHandler):
                     settings.hybrid_candidate_k,
                 ),
             )
+            contexts = normalize_contexts(
+                result.get("contexts"),
+                max_contexts=settings.hybrid_max_top_k,
+            )
+            if contexts and settings.fine_evidence_enabled:
+                raw_contexts = [dict(context) for context in contexts]
+                contexts, evidence_focus = retrieve_fine_evidence(
+                    question=question,
+                    contexts=raw_contexts,
+                    settings=settings,
+                    chunk_fraction=settings.fine_evidence_chunk_fraction,
+                )
+                result["contexts"] = contexts
+                result["raw_contexts"] = raw_contexts
+                result["evidence_focus"] = evidence_focus
+                result["evidenceEvaluation"] = evaluate_retrieval_evidence(
+                    contexts,
+                    settings=settings,
+                    question=question,
+                )
             self._send_json(result)
         except Exception as exc:
             self._send_json({"error": str(exc)}, status=500)

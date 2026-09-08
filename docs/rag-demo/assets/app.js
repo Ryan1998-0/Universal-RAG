@@ -15,12 +15,13 @@ import {
   renameDocumentFolder,
   saveAgentEndpoint,
   uploadDocument,
-} from "../agent-client.js?v=canonical-pipeline-1";
+} from "../agent-client.js?v=canonical-pipeline-3";
 
 let knowledgeBases = {};
 let qaModels = {};
 
 const HISTORY_STORAGE_KEY = "rag-query-history-v1";
+const SOURCE_SELECTION_STORAGE_KEY = "rag-selected-sources-v1";
 const STATIC_SHOWCASE_RUNTIME = {
   defaultProfile: "default",
   defaultModel: "ollama:qwen2.5:7b",
@@ -203,9 +204,12 @@ const elements = {
   deleteConversationMessage: document.querySelector("#deleteConversationMessage"),
 };
 
+let responsiveLayoutMode = "";
+
 init();
 
 async function init() {
+  applyResponsivePanelDefaults();
   elements.input.disabled = true;
   elements.askAgent.disabled = true;
   elements.newChat.disabled = true;
@@ -234,6 +238,27 @@ async function init() {
     elements.askAgent.disabled = false;
     elements.newChat.disabled = false;
   }
+}
+
+function applyResponsivePanelDefaults() {
+  const nextMode = window.matchMedia("(max-width: 899px)").matches
+    ? "narrow"
+    : window.matchMedia("(max-width: 1439px)").matches
+      ? "compact"
+      : "wide";
+  elements.conversationRail.classList.toggle("is-collapsed", nextMode === "narrow");
+  elements.knowledgePanel.classList.toggle("is-collapsed", nextMode !== "wide");
+  responsiveLayoutMode = nextMode;
+  syncPanelToggleState();
+}
+
+function syncPanelToggleState() {
+  const historyExpanded = !elements.conversationRail.classList.contains("is-collapsed");
+  const knowledgeExpanded = !elements.knowledgePanel.classList.contains("is-collapsed");
+  elements.historyToggle.setAttribute("aria-expanded", String(historyExpanded));
+  elements.historyToggle.setAttribute("aria-label", historyExpanded ? "收合對話紀錄" : "展開對話紀錄");
+  elements.knowledgeToggle.setAttribute("aria-expanded", String(knowledgeExpanded));
+  elements.knowledgeToggle.setAttribute("aria-label", knowledgeExpanded ? "收合文件選擇" : "展開文件選擇");
 }
 
 function configureRuntime(runtime) {
@@ -286,6 +311,14 @@ function configureRuntime(runtime) {
 }
 
 function bindEvents() {
+  window.addEventListener("resize", () => {
+    const nextMode = window.matchMedia("(max-width: 899px)").matches
+      ? "narrow"
+      : window.matchMedia("(max-width: 1439px)").matches
+        ? "compact"
+        : "wide";
+    if (nextMode !== responsiveLayoutMode) applyResponsivePanelDefaults();
+  });
   elements.form.addEventListener("submit", (event) => {
     event.preventDefault();
     handleAdaptiveQuestion(elements.input.value);
@@ -361,13 +394,15 @@ function bindEvents() {
   const toggleRail = () => {
     const willOpen = elements.conversationRail.classList.contains("is-collapsed");
     elements.conversationRail.classList.toggle("is-collapsed");
-    if (willOpen && window.matchMedia("(max-width: 760px)").matches) {
+    if (willOpen && window.matchMedia("(max-width: 899px)").matches) {
       elements.knowledgePanel.classList.add("is-collapsed");
     }
+    syncPanelToggleState();
   };
   elements.historyToggle.addEventListener("click", toggleRail);
   elements.historyClose.addEventListener("click", () => {
     elements.conversationRail.classList.add("is-collapsed");
+    syncPanelToggleState();
   });
   elements.newChat.addEventListener("click", () => startNewConversation());
   elements.ragDetailsToggle.addEventListener("click", toggleRagDetails);
@@ -375,13 +410,31 @@ function bindEvents() {
   const toggleKnowledgePanel = () => {
     const willOpen = elements.knowledgePanel.classList.contains("is-collapsed");
     elements.knowledgePanel.classList.toggle("is-collapsed");
-    if (willOpen && window.matchMedia("(max-width: 760px)").matches) {
+    if (willOpen && window.matchMedia("(max-width: 899px)").matches) {
       elements.conversationRail.classList.add("is-collapsed");
     }
+    syncPanelToggleState();
   };
   elements.knowledgeToggle.addEventListener("click", toggleKnowledgePanel);
   elements.knowledgeClose.addEventListener("click", () => {
     elements.knowledgePanel.classList.add("is-collapsed");
+    syncPanelToggleState();
+  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    let changed = false;
+    if (!elements.knowledgePanel.classList.contains("is-collapsed")) {
+      elements.knowledgePanel.classList.add("is-collapsed");
+      changed = true;
+    }
+    if (
+      window.matchMedia("(max-width: 899px)").matches
+      && !elements.conversationRail.classList.contains("is-collapsed")
+    ) {
+      elements.conversationRail.classList.add("is-collapsed");
+      changed = true;
+    }
+    if (changed) syncPanelToggleState();
   });
 
   elements.demoCta.addEventListener("click", () => {
@@ -411,6 +464,7 @@ function bindEvents() {
 
   elements.clearDocuments.addEventListener("click", () => {
     state.selectedSourceIds = new Set();
+    saveSelectedSourceIds();
     renderDocumentSelector();
     if (state.query && state.latestRouteDecision?.needsRetrieval) rerunCurrentRetrieval();
   });
@@ -576,14 +630,47 @@ async function deleteSelectedFolder() {
 
 function selectAllSources() {
   state.selectedSourceIds = new Set((state.data?.sources || []).map((source) => source.source_id));
+  saveSelectedSourceIds();
 }
 
 function selectDefaultSources() {
-  state.selectedSourceIds = new Set(
-    (state.data?.sources || [])
-      .filter((source) => Boolean(source.selected_by_default))
-      .map((source) => source.source_id),
+  const availableSourceIds = new Set(
+    (state.data?.sources || []).map((source) => String(source.source_id || "")).filter(Boolean),
   );
+  const savedSourceIds = readSelectedSourceIds();
+  const defaults = (state.data?.sources || [])
+    .filter((source) => Boolean(source.selected_by_default))
+    .map((source) => source.source_id);
+  state.selectedSourceIds = new Set(
+    (savedSourceIds === null ? defaults : savedSourceIds)
+      .filter((sourceId) => availableSourceIds.has(sourceId)),
+  );
+}
+
+function sourceSelectionStorageKey() {
+  return `${SOURCE_SELECTION_STORAGE_KEY}:${state.profile || "default"}`;
+}
+
+function readSelectedSourceIds() {
+  try {
+    const raw = localStorage.getItem(sourceSelectionStorageKey());
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSelectedSourceIds() {
+  try {
+    localStorage.setItem(
+      sourceSelectionStorageKey(),
+      JSON.stringify([...state.selectedSourceIds]),
+    );
+  } catch {
+    // Selection remains usable for the current page when storage is unavailable.
+  }
 }
 
 function sourceStats() {
@@ -648,6 +735,7 @@ function renderDocumentSelector() {
         if (event.currentTarget.checked) state.selectedSourceIds.add(source.source_id);
         else state.selectedSourceIds.delete(source.source_id);
       }
+      saveSelectedSourceIds();
       renderDocumentSelector();
       if (state.query && state.latestRouteDecision?.needsRetrieval) rerunCurrentRetrieval();
     });
@@ -671,6 +759,7 @@ function renderDocumentSelector() {
         const sourceId = event.currentTarget.value;
         if (event.currentTarget.checked) state.selectedSourceIds.add(sourceId);
         else state.selectedSourceIds.delete(sourceId);
+        saveSelectedSourceIds();
         renderDocumentSelector();
         if (state.query && state.latestRouteDecision?.needsRetrieval) rerunCurrentRetrieval();
       });
@@ -998,8 +1087,9 @@ async function startNewConversation() {
   renderConversationHistory();
   elements.input.focus();
 
-  if (window.matchMedia("(max-width: 760px)").matches) {
+  if (window.matchMedia("(max-width: 899px)").matches) {
     elements.conversationRail.classList.add("is-collapsed");
+    syncPanelToggleState();
   }
 }
 
@@ -1049,6 +1139,13 @@ const adaptiveProgressSteps = [
 async function handleAdaptiveQuestion(rawQuestion) {
   const question = String(rawQuestion || "").trim();
   if (!question) return;
+  if ((state.data?.sources || []).length && state.selectedSourceIds.size === 0) {
+    elements.knowledgePanel.classList.remove("is-collapsed");
+    syncPanelToggleState();
+    setDocumentUploadStatus("請先在右側勾選至少一份文件或一個資料夾，再送出問題。", "error");
+    elements.input.focus();
+    return;
+  }
 
   const workflowId = ++state.workflowRequestId;
   state.query = question;
@@ -1091,11 +1188,21 @@ async function handleAdaptiveQuestion(rawQuestion) {
     updateProgressStep("answer", "active", "本機 Qwen 正在生成回答");
     const response = await askLiveAgent(null, { retrievalDecision: decision });
     if (workflowId !== state.workflowRequestId) return;
-    updateProgressStep("answer", response ? "done" : "error", response ? "回答完成" : "回答失敗");
+    updateProgressStep(
+      "answer",
+      response ? "done" : "error",
+      response ? qualityProgressLabel(response) : "回答失敗",
+    );
     return;
   }
 
-  updateProgressStep("rewrite", "done", decision.retrievalQuery || question);
+  updateProgressStep(
+    "rewrite",
+    "done",
+    decision.queryVariants?.length
+      ? `已拆解並建立 ${decision.queryVariants.length} 個檢索查詢`
+      : decision.retrievalQuery || question,
+  );
   updateProgressStep("retrieve", "active", "BM25 與 Embedding 正在取候選，接著進行 Rerank");
   await nextPaint();
 
@@ -1130,7 +1237,11 @@ async function handleAdaptiveQuestion(rawQuestion) {
   if (!result && response?.retrieval?.evidence_evaluation) {
     updateEvidenceProgress({ evidenceEvaluation: response.retrieval.evidence_evaluation });
   }
-  updateProgressStep("answer", response ? "done" : "error", response ? "回答完成" : "回答失敗");
+  updateProgressStep(
+    "answer",
+    response ? "done" : "error",
+    response ? qualityProgressLabel(response) : "回答失敗",
+  );
 }
 
 function startSearchProgress() {
@@ -1211,7 +1322,11 @@ async function rerunCurrentRetrieval() {
   updateEvidenceProgress(result);
   updateProgressStep("answer", "active", "本機 Qwen 正在重新生成回答");
   const response = await askLiveAgent(result, { retrievalDecision: state.latestRouteDecision });
-  updateProgressStep("answer", response ? "done" : "error", response ? "回答完成" : "回答失敗");
+  updateProgressStep(
+    "answer",
+    response ? "done" : "error",
+    response ? qualityProgressLabel(response) : "回答失敗",
+  );
 }
 
 function updateEvidenceProgress(result) {
@@ -1233,6 +1348,11 @@ async function runSearch(options = {}) {
   const result = await callHybridRetriever(hybridRetrievalEndpoint(), {
     question: state.query,
     retrieval_query: retrievalQuery,
+    query_variants: state.latestRouteDecision?.queryVariants || [],
+    evidence_query: [
+      retrievalQuery,
+      ...(state.latestRouteDecision?.subQuestions || []),
+    ].filter(Boolean).join(" "),
     profile: state.profile,
     source_ids: [...state.selectedSourceIds],
     top_k: state.topK,
@@ -1410,8 +1530,9 @@ async function openSavedConversation(conversationId) {
   renderConversationHistory();
   scrollChatToBottom();
 
-  if (window.matchMedia("(max-width: 760px)").matches) {
+  if (window.matchMedia("(max-width: 899px)").matches) {
     elements.conversationRail.classList.add("is-collapsed");
+    syncPanelToggleState();
   }
 }
 
@@ -1577,6 +1698,71 @@ function renderAgentResponse(response) {
       ${totalMs != null ? `模型總耗時 ${Number(totalMs).toFixed(0)} ms` : "無模型耗時資料"}
       ${warnings.length ? ` · 警告：${warnings.map(escapeHtml).join("、")}` : ""}
     </p>
+    ${renderQualityEvaluation(response.qualityEvaluation)}
+  `;
+}
+
+function qualityProgressLabel(response) {
+  const evaluation = response?.qualityEvaluation;
+  if (evaluation?.status === "completed") {
+    return `回答完成 · Claude 基準 100 · Qwen ${Number(evaluation.candidate?.score || 0)} 分`;
+  }
+  if (evaluation?.status === "unavailable") return "回答完成 · Claude 評分暫時無法使用";
+  return "回答完成";
+}
+
+function renderQualityEvaluation(evaluation) {
+  if (!evaluation) return "";
+  if (evaluation.status !== "completed") {
+    return `
+      <section class="quality-evaluation-card quality-evaluation-unavailable">
+        <div class="quality-score-head">
+          <div><span>Claude 品質基準</span><strong>尚未完成評分</strong></div>
+          <span class="quality-score-badge">—</span>
+        </div>
+        <p>${escapeHtml(evaluation.reason || "Claude 參考評測目前無法使用，Qwen 回答仍保留。")}</p>
+      </section>
+    `;
+  }
+
+  const reference = evaluation.reference || {};
+  const candidate = evaluation.candidate || {};
+  const dimensions = Array.isArray(evaluation.dimensions) ? evaluation.dimensions : [];
+  const improvements = Array.isArray(evaluation.improvements) ? evaluation.improvements : [];
+  const capReasons = Array.isArray(evaluation.score_cap?.reasons)
+    ? evaluation.score_cap.reasons
+    : [];
+  return `
+    <section class="quality-evaluation-card">
+      <div class="quality-score-head">
+        <div>
+          <span>Claude 參考答案 = 100 分</span>
+          <strong>Qwen 回答品質</strong>
+        </div>
+        <span class="quality-score-badge">${Number(candidate.score || 0)}<small>/100</small></span>
+      </div>
+      ${evaluation.summary ? `<p>${escapeHtml(evaluation.summary)}</p>` : ""}
+      <div class="quality-dimensions">
+        ${dimensions.map((item) => `
+          <div>
+            <span>${escapeHtml(item.label || item.id || "評分項目")}</span>
+            <strong>${Number(item.score || 0)}/${Number(item.max_score || 0)}</strong>
+            <small>${escapeHtml(item.reason || "")}</small>
+          </div>
+        `).join("")}
+      </div>
+      ${capReasons.length ? `<p class="quality-cap">分數上限：${capReasons.map(escapeHtml).join("；")}</p>` : ""}
+      ${improvements.length ? `
+        <div class="quality-improvements">
+          <strong>優先改善</strong>
+          <ul>${improvements.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+      ` : ""}
+      <details class="quality-reference-answer">
+        <summary>查看 Claude 參考答案（${escapeHtml(reference.model || "Claude")}）</summary>
+        <p>${escapeHtml(reference.answer || "")}</p>
+      </details>
+    </section>
   `;
 }
 

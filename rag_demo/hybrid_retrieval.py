@@ -20,6 +20,7 @@ from rag_demo.embeddings import (
 )
 from rag_demo.config import RagConfig
 from rag_demo.document_pipeline import DocumentStore
+from rag_demo.retrieval_planner import extract_focus_terms
 from rag_demo.retrieval_scope import RetrievalScope
 
 
@@ -258,6 +259,8 @@ class HybridRetriever:
         self,
         question: str,
         retrieval_query: str = "",
+        query_variants: Optional[Sequence[str]] = None,
+        evidence_query: str = "",
         source_ids: Optional[Sequence[str]] = None,
         top_k: Optional[int] = None,
         candidate_k: Optional[int] = None,
@@ -267,6 +270,8 @@ class HybridRetriever:
             return self._retrieve_locked(
                 question=question,
                 retrieval_query=retrieval_query,
+                query_variants=query_variants,
+                evidence_query=evidence_query,
                 source_ids=source_ids,
                 top_k=top_k,
                 candidate_k=candidate_k,
@@ -277,6 +282,8 @@ class HybridRetriever:
         self,
         question: str,
         retrieval_query: str = "",
+        query_variants: Optional[Sequence[str]] = None,
+        evidence_query: str = "",
         source_ids: Optional[Sequence[str]] = None,
         top_k: Optional[int] = None,
         candidate_k: Optional[int] = None,
@@ -299,49 +306,77 @@ class HybridRetriever:
         )
         allowed_indices = self._allowed_indices(source_ids, retrieval_scope)
         profile_expansions_enabled = self._profile_expansions_enabled(source_ids)
-        if not profile_expansions_enabled:
-            query_parts = [str(question or "").strip(), str(retrieval_query or "").strip()]
-            combined_query = " ".join(dict.fromkeys(part for part in query_parts if part))
-            added_terms = []
-            matched_aliases = []
-        else:
-            combined_query, added_terms, matched_aliases = expand_retrieval_query(
-                question,
-                retrieval_query,
-                self.aliases,
-                query_expansions=self.query_expansions,
+        planned_queries = list(
+            dict.fromkeys(
+                str(query).strip()
+                for query in [retrieval_query, *(query_variants or ()), question]
+                if str(query).strip()
             )
+        )
+        if not self.settings.multi_query_enabled:
+            planned_queries = planned_queries[:1]
+        else:
+            planned_queries = planned_queries[: self.settings.multi_query_max_variants]
+
+        combined_queries = []
+        added_terms = []
+        matched_aliases = []
+        for query in planned_queries:
+            if profile_expansions_enabled:
+                expanded_query, query_added_terms, query_aliases = expand_retrieval_query(
+                    question,
+                    query,
+                    self.aliases,
+                    query_expansions=self.query_expansions,
+                )
+                added_terms.extend(query_added_terms)
+                matched_aliases.extend(query_aliases)
+            else:
+                expanded_query = query
+            if expanded_query and expanded_query not in combined_queries:
+                combined_queries.append(expanded_query)
+        if not combined_queries:
+            combined_queries = [str(question or retrieval_query).strip()]
+        added_terms = list(dict.fromkeys(added_terms))
+        matched_aliases = list(dict.fromkeys(matched_aliases))
 
         bm25_started = perf_counter()
-        bm25_results = self.bm25.search(
-            combined_query,
-            top_k=candidate_k,
-            allowed_indices=allowed_indices,
-        )
+        bm25_result_sets = [
+            self.bm25.search(
+                query,
+                top_k=candidate_k,
+                allowed_indices=allowed_indices,
+            )
+            for query in combined_queries
+        ]
         bm25_ms = _elapsed_ms(bm25_started)
 
         embedding_started = perf_counter()
-        dense_results = self._embedding_search(
-            question=question,
-            retrieval_query=combined_query,
-            top_k=candidate_k,
-            allowed_indices=allowed_indices,
-        )
+        dense_result_sets = [
+            self._embedding_search(
+                question=question,
+                retrieval_query=query,
+                top_k=candidate_k,
+                allowed_indices=allowed_indices,
+            )
+            for query in combined_queries
+        ]
         embedding_ms = _elapsed_ms(embedding_started)
 
         fusion_started = perf_counter()
-        candidates = reciprocal_rank_fusion(
-            bm25_results=bm25_results,
-            embedding_results=dense_results,
+        candidates = reciprocal_rank_fusion_many(
+            bm25_result_sets=bm25_result_sets,
+            embedding_result_sets=dense_result_sets,
             rrf_k=self.settings.hybrid_rrf_k,
         )
         fusion_ms = _elapsed_ms(fusion_started)
 
         rerank_started = perf_counter()
+        answerability_query = str(evidence_query or "").strip() or " ".join(combined_queries)
         reranked = rerank_candidates(
             candidates=candidates,
             chunks=self.chunks,
-            query=combined_query,
+            query=answerability_query,
             top_k=top_k,
             settings=self.settings,
         )
@@ -373,13 +408,15 @@ class HybridRetriever:
         evidence_evaluation = evaluate_retrieval_evidence(
             contexts,
             settings=self.settings,
-            question=question,
+            question=answerability_query,
         )
 
         return {
             "variant": "bm25_embedding_rerank",
             "query": question,
-            "retrievalQuery": combined_query,
+            "retrievalQuery": combined_queries[0],
+            "retrievalQueries": combined_queries,
+            "evidenceQuery": answerability_query,
             "translation": {
                 "detectedLanguage": "zh-TW" if _contains_cjk(question) else "en",
                 "addedTerms": added_terms,
@@ -388,12 +425,16 @@ class HybridRetriever:
             "contexts": contexts,
             "pipeline": [
                 {
+                    "name": "Query Planning",
+                    "detail": f"Run {len(combined_queries)} complementary retrieval queries.",
+                },
+                {
                     "name": "BM25",
-                    "detail": f"Lexical candidate generation, top {len(bm25_results)}.",
+                    "detail": f"Lexical candidate generation across {len(bm25_result_sets)} queries.",
                 },
                 {
                     "name": "Embedding",
-                    "detail": f"{self.embedding_model}, cosine candidate generation, top {len(dense_results)}.",
+                    "detail": f"{self.embedding_model}, cosine candidates across {len(dense_result_sets)} queries.",
                 },
                 {
                     "name": "RRF Merge",
@@ -422,6 +463,7 @@ class HybridRetriever:
                 "embeddingModel": self.embedding_model,
                 "reranker": "weighted-hybrid-relevance-v1",
                 "candidateCount": len(candidates),
+                "queryCount": len(combined_queries),
                 "selectedSourceCount": len(set(source_ids or [])),
                 "profile": self.profile,
                 "profileExpansionsApplied": profile_expansions_enabled,
@@ -689,9 +731,28 @@ def reciprocal_rank_fusion(
     embedding_results: Sequence[dict],
     rrf_k: Optional[int] = None,
 ) -> List[dict]:
+    return reciprocal_rank_fusion_many(
+        bm25_result_sets=[bm25_results],
+        embedding_result_sets=[embedding_results],
+        rrf_k=rrf_k,
+    )
+
+
+def reciprocal_rank_fusion_many(
+    bm25_result_sets: Sequence[Sequence[dict]],
+    embedding_result_sets: Sequence[Sequence[dict]],
+    rrf_k: Optional[int] = None,
+) -> List[dict]:
+    """Fuse sparse and dense rankings from complementary query variants."""
+
     rrf_k = max(1, int(rrf_k or RagConfig.from_env().hybrid_rrf_k))
     candidates: Dict[int, dict] = {}
-    for branch, results in (("bm25", bm25_results), ("embedding", embedding_results)):
+    result_sets = [
+        ("bm25", results) for results in bm25_result_sets
+    ] + [
+        ("embedding", results) for results in embedding_result_sets
+    ]
+    for branch, results in result_sets:
         for rank, result in enumerate(results, start=1):
             index = int(result["index"])
             candidate = candidates.setdefault(
@@ -706,10 +767,23 @@ def reciprocal_rank_fusion(
             )
             candidate["fusion_score"] += 1.0 / (rrf_k + rank)
             if branch == "bm25":
-                candidate["bm25_score"] = float(result.get("score", 0.0))
-                candidate["matched_terms"] = list(result.get("matched_terms") or [])
+                candidate["bm25_score"] = max(
+                    candidate["bm25_score"],
+                    float(result.get("score", 0.0)),
+                )
+                candidate["matched_terms"] = list(
+                    dict.fromkeys(
+                        [
+                            *candidate["matched_terms"],
+                            *(result.get("matched_terms") or []),
+                        ]
+                    )
+                )
             else:
-                candidate["embedding_score"] = float(result.get("score", 0.0))
+                candidate["embedding_score"] = max(
+                    candidate["embedding_score"],
+                    float(result.get("score", 0.0)),
+                )
 
     return sorted(candidates.values(), key=lambda item: item["fusion_score"], reverse=True)
 
@@ -814,13 +888,41 @@ def evaluate_retrieval_evidence(
     ]
     matched_term_count = len(matched_terms)
     meaningful_term_count = len(meaningful_terms)
+    requires_answer_value = _requires_answer_value(question)
+    relaxed_mode = settings.evidence_gate_mode == "relaxed"
+    answer_bearing_evidence = (
+        _has_answer_bearing_evidence(contexts, question)
+        if requires_answer_value
+        else None
+    )
+    relaxed_relevance = (
+        _has_relaxed_relevance(contexts)
+        if relaxed_mode
+        else False
+    )
     lexical_match = (
         bm25_score >= settings.hybrid_min_bm25_score and meaningful_term_count > 0
     )
     strong_semantic_match = embedding_score >= settings.hybrid_high_embedding_score
     semantic_match = embedding_score >= settings.hybrid_min_embedding_score
 
-    if strong_semantic_match or (lexical_match and (semantic_match or meaningful_term_count >= 2)):
+    if requires_answer_value and not answer_bearing_evidence and not relaxed_relevance:
+        status = "ambiguous"
+        sufficient = False
+        confidence = "low"
+        reason = (
+            "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，"
+            "不足以回答精確門檻問題。"
+        )
+    elif relaxed_mode and relaxed_relevance:
+        status = "relevant"
+        sufficient = True
+        confidence = "medium"
+        reason = (
+            "放寬 Gate：前八個候選片段至少一個具有足夠的原始詞彙／語意相關性；"
+            "回答仍必須受檢索證據限制。"
+        )
+    elif strong_semantic_match or (lexical_match and (semantic_match or meaningful_term_count >= 2)):
         status = "relevant"
         sufficient = True
         confidence = "high"
@@ -851,8 +953,92 @@ def evaluate_retrieval_evidence(
             "embedding": round(embedding_score, 6),
             "matchedTerms": matched_term_count,
             "meaningfulMatchedTerms": meaningful_term_count,
+            "requiresAnswerValue": requires_answer_value,
+            "answerBearingEvidence": answer_bearing_evidence,
+            "gateMode": settings.evidence_gate_mode,
+            "relaxedRelevance": relaxed_relevance,
         },
     }
+
+
+def _requires_answer_value(question: str) -> bool:
+    return bool(
+        re.search(
+            r"(?:多少|幾(?:天|日|年|月|小時|分鐘|公里|公尺|人|項|次)|"
+            r"天數|上限|下限|期限|預告期|費率|比例|距離|時長|金額|數量|公式)",
+            str(question or ""),
+            flags=re.IGNORECASE,
+        )
+    )
+
+
+def _has_answer_bearing_evidence(contexts: Sequence[dict], question: str) -> bool:
+    anchors = [
+        term
+        for term in extract_focus_terms(question)
+        if 2 <= len(term) <= 16 and term not in _ANSWER_INTENT_TERMS
+    ]
+    if not anchors:
+        anchors = [
+            token for token in tokenize_bm25(question)
+            if len(token) >= 2 and token not in _ANSWER_INTENT_TERMS
+        ]
+    value_pattern = _answer_value_pattern(question)
+    for context in contexts[:8]:
+        text = re.sub(r"\s+", " ", str(context.get("content") or ""))
+        for anchor in anchors:
+            start = text.lower().find(anchor.lower())
+            while start >= 0:
+                window = text[max(0, start - 100) : start + len(anchor) + 140]
+                if re.search(value_pattern, window, flags=re.IGNORECASE):
+                    return True
+                start = text.lower().find(anchor.lower(), start + 1)
+    return False
+
+
+def _has_relaxed_relevance(contexts: Sequence[dict]) -> bool:
+    """Return whether any retained context has independent raw relevance.
+
+    The original gate only evaluates rank 1 and, for value questions, also
+    requires an answer value to occur in a narrow anchor window.  That is too
+    brittle for grouped rules, comparisons, and evidence whose useful clause
+    is rank 2/3.  Relaxed mode still rejects generic-only matches by requiring
+    both a meaningful matched term and a moderate lexical or embedding signal.
+    """
+    for context in contexts[:8]:
+        bm25 = _safe_float(context.get("bm25Score"))
+        embedding = _safe_float(context.get("embeddingScore"))
+        matched_terms = [str(term).strip().lower() for term in (context.get("matchedTerms") or [])]
+        meaningful_terms = [
+            term for term in matched_terms
+            if len(term) > 1 and term not in {
+                "資料", "資訊", "文件", "內容", "說明", "時間", "今天", "目前", "這份",
+                "問題", "什麼", "怎麼", "如何", "是否", "有沒有", "沒有", "可以", "使用", "請問",
+            }
+        ]
+        if len(meaningful_terms) >= 2 and (bm25 >= 0.4 or embedding >= 0.40):
+            return True
+    return False
+
+
+def _answer_value_pattern(question: str) -> str:
+    text = str(question or "")
+    if re.search(r"(?:天數|幾天|幾日|預告期|日數)", text):
+        return r"[零〇一二兩三四五六七八九十百千\d,.]+\s*(?:日|天)"
+    if re.search(r"(?:公里|公尺|距離)", text):
+        return r"[零〇一二兩三四五六七八九十百千萬億\d,.]+\s*(?:公里|公尺|km|m)\b"
+    if re.search(r"(?:幾年|幾月|期限|時長)", text):
+        return r"[零〇一二兩三四五六七八九十百千\d,.]+\s*(?:年|月|日|天|小時|分鐘)"
+    if re.search(r"(?:金額|費率|比例)", text):
+        return r"(?:新臺幣|台幣|NT\$|\$)?\s*[零〇一二兩三四五六七八九十百千萬億\d,.]+\s*(?:元|%|％|成|倍)?"
+    return r"[零〇一二兩三四五六七八九十百千萬億\d,.]+"
+
+
+_ANSWER_INTENT_TERMS = {
+    "規定", "相關", "相關規定", "天數", "天數上限", "上限", "下限",
+    "期限", "多少", "幾天", "幾日", "數量", "金額", "比例", "距離",
+    "內容", "條件", "方式", "方法", "程序", "流程", "要求", "標準",
+}
 
 
 def _load_valid_embedding_cache(

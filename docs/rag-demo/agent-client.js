@@ -87,6 +87,7 @@ export function validateAgentResponse(rawResponse) {
     groundingWarnings: rawResponse.grounding_warnings || [],
     retrieval: rawResponse.retrieval || { contexts: [] },
     model: rawResponse.model || { provider: "unknown", name: "unknown" },
+    qualityEvaluation: rawResponse.quality_evaluation || null,
     timings: rawResponse.timings || {},
   };
 }
@@ -357,17 +358,40 @@ function sourceTypeFromFilename(filename) {
 async function requestJson(endpoint, requestOptions, options = {}) {
   const endpointUrl = parseEndpointUrl(endpoint);
   const fetchImpl = options.fetchImpl || fetch;
-  const response = await fetchImpl(endpointUrl.href, requestOptions);
-  let body = {};
-  try {
-    body = await response.json();
-  } catch {
-    body = {};
+  const method = String(requestOptions?.method || "GET").toUpperCase();
+  const retries = Math.max(0, Number(options.retries ?? (method === "GET" ? 4 : 0)) || 0);
+  const retryDelayMs = Math.max(0, Number(options.retryDelayMs ?? 500) || 0);
+  let lastError;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const response = await fetchImpl(endpointUrl.href, requestOptions);
+      let body = {};
+      try {
+        body = await response.json();
+      } catch {
+        body = {};
+      }
+      if (!response.ok) {
+        if (response.status >= 500 && attempt < retries) {
+          await waitBeforeRetry(retryDelayMs, attempt);
+          continue;
+        }
+        throw new Error(String(body.error || `對話 API 回傳 HTTP ${response.status}`));
+      }
+      return body;
+    } catch (error) {
+      lastError = error;
+      if (attempt >= retries) throw error;
+      await waitBeforeRetry(retryDelayMs, attempt);
+    }
   }
-  if (!response.ok) {
-    throw new Error(String(body.error || `對話 API 回傳 HTTP ${response.status}`));
-  }
-  return body;
+  throw lastError;
+}
+
+function waitBeforeRetry(baseDelayMs, attempt) {
+  const delayMs = Math.min(2000, baseDelayMs * (2 ** attempt));
+  return new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
 export async function callAgentEndpoint(endpoint, payload, options = {}) {
@@ -422,6 +446,12 @@ export async function callRetrievalRouter(endpoint, payload, options = {}) {
       needsRetrieval: Boolean(body.needs_retrieval),
       reason: String(body.reason || ""),
       retrievalQuery: String(body.retrieval_query || payload.question || ""),
+      subQuestions: Array.isArray(body.sub_questions)
+        ? body.sub_questions.map((item) => String(item || "").trim()).filter(Boolean)
+        : [],
+      queryVariants: Array.isArray(body.query_variants)
+        ? body.query_variants.map((item) => String(item || "").trim()).filter(Boolean)
+        : [],
       timingMs: Number(body.timing_ms || 0),
     };
   } finally {

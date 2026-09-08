@@ -8,6 +8,8 @@ from rag_demo.query_rewriter import (
     extract_decision_reason,
     extract_needs_retrieval,
     extract_retrieval_query,
+    extract_retrieval_queries,
+    extract_sub_questions,
     rewrite_query_for_retrieval,
 )
 
@@ -32,13 +34,19 @@ class QueryRewriterDecisionTest(unittest.TestCase):
                 "語意理解：使用者想查 IFRS 17 定義。",
                 "是否需要檢索：是",
                 "判斷理由：問題涉及準則定義，需要 evidence。",
+                "子問題1：CSM 的完整名稱是什麼？",
+                "子問題2：CSM 在 IFRS 17 中代表什麼？",
                 "向量檢索用查詢：IFRS 17 定義 insurance contracts",
+                "檢索查詢1：IFRS 17 CSM 完整名稱",
+                "檢索查詢2：contractual service margin 定義",
             ]
         )
 
         self.assertTrue(extract_needs_retrieval(output))
         self.assertEqual(extract_decision_reason(output), "問題涉及準則定義，需要 evidence。")
         self.assertEqual(extract_retrieval_query(output), "IFRS 17 定義 insurance contracts")
+        self.assertEqual(len(extract_sub_questions(output)), 2)
+        self.assertEqual(len(extract_retrieval_queries(output)), 3)
 
     def test_extracts_no_retrieval_decision(self):
         output = "\n".join(
@@ -126,15 +134,25 @@ class QueryRewriterDecisionTest(unittest.TestCase):
         self.assertTrue(decision.needs_retrieval)
         self.assertIn("正常工時", decision.retrieval_query)
 
-    def test_duration_boundary_followup_retrieves_without_router_model(self):
-        with patch("rag_demo.query_rewriter.ask_model") as ask_model:
+    def test_duration_boundary_followup_is_planned_but_forced_to_retrieve(self):
+        output = "\n".join([
+            "語意理解：使用者追問滿三年的適用門檻。",
+            "是否需要檢索：否",
+            "判斷理由：模型誤判。",
+            "子問題1：滿三年的門檻結果是什麼？",
+            "向量檢索用查詢：滿三年 適用門檻 結果",
+            "檢索查詢1：滿三年 以上 未滿",
+        ])
+        with patch("rag_demo.query_rewriter.ask_model", return_value=output) as ask_model:
             decision = decide_and_rewrite_query_for_retrieval(
                 "那剛好滿三年呢？",
                 model="unused",
             )
 
-        ask_model.assert_not_called()
+        ask_model.assert_called_once()
         self.assertTrue(decision.needs_retrieval)
+        self.assertTrue(decision.sub_questions)
+        self.assertGreaterEqual(len(decision.query_variants), 2)
 
     def test_simple_arithmetic_skips_retrieval_without_calling_router_model(self):
         with patch("rag_demo.query_rewriter.ask_model") as ask_model:
@@ -148,27 +166,48 @@ class QueryRewriterDecisionTest(unittest.TestCase):
         self.assertFalse(decision.needs_retrieval)
         self.assertIn("基本算術", decision.reason)
 
-    def test_explicit_law_question_retrieves_without_calling_router_model(self):
-        with patch("rag_demo.query_rewriter.ask_model") as ask_model:
+    def test_explicit_law_question_is_decomposed_and_forced_to_retrieve(self):
+        output = "\n".join([
+            "語意理解：使用者查詢終止契約預告期。",
+            "是否需要檢索：是",
+            "判斷理由：需要法規證據。",
+            "子問題1：三年以上年資適用哪個預告區間？",
+            "子問題2：該區間需要提前幾天？",
+            "向量檢索用查詢：勞動基準法 三年以上 終止契約 預告期 天數",
+            "檢索查詢1：三年以上 預告 幾日",
+        ])
+        with patch("rag_demo.query_rewriter.ask_model", return_value=output) as ask_model:
             decision = decide_and_rewrite_query_for_retrieval(
                 "依勞動基準法，工作三年以上的終止契約預告期是幾天？",
                 model="unused",
             )
 
-        ask_model.assert_not_called()
+        ask_model.assert_called_once()
         self.assertTrue(decision.needs_retrieval)
         self.assertIn("法規", decision.reason)
+        self.assertEqual(len(decision.sub_questions), 2)
 
-    def test_precise_domain_value_retrieves_without_calling_router_model(self):
-        with patch("rag_demo.query_rewriter.ask_model") as ask_model:
+    def test_precise_domain_value_is_decomposed_and_forced_to_retrieve(self):
+        output = "\n".join([
+            "語意理解：使用者查詢火星巡航時間與距離。",
+            "是否需要檢索：否",
+            "判斷理由：模型誤判。",
+            "子問題1：巡航花費多少天？",
+            "子問題2：巡航距離多少公里？",
+            "向量檢索用查詢：毅力號 地球 火星 巡航 天數 距離 公里",
+            "檢索查詢1：Perseverance cruise duration days",
+            "檢索查詢2：Perseverance distance kilometers",
+        ])
+        with patch("rag_demo.query_rewriter.ask_model", return_value=output) as ask_model:
             decision = decide_and_rewrite_query_for_retrieval(
                 "毅力號從地球到火星的巡航約花多少天，距離約多少公里？",
                 model="unused",
             )
 
-        ask_model.assert_not_called()
+        ask_model.assert_called_once()
         self.assertTrue(decision.needs_retrieval)
         self.assertIn("精確", decision.reason)
+        self.assertEqual(len(decision.sub_questions), 2)
 
     def test_acronym_definition_overrides_a_direct_router_decision(self):
         model_output = "\n".join(

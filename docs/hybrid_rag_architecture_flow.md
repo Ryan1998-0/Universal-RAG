@@ -30,7 +30,8 @@ flowchart TD
   subgraph QUERY["B. Query / Retrieval 流程"]
     U["User Question<br/>中文 / English"]:::fixed
     UI["Query Controls<br/>KB Profile / Variant / top_k / QA Model<br/>[可抽換]"]:::swappable
-    QR["Translation / Query Rewrite Agent<br/>normalize terms / expand query<br/>[可抽換]"]:::swappable
+    QR["Question Analysis / Decomposition<br/>resolve intent / split evidence fields<br/>[可抽換]"]:::swappable
+    MQ["Multi-query Planner<br/>semantic / exact / answer-bearing queries<br/>[可抽換]"]:::swappable
     FILTER["Metadata Filter<br/>scope control / access control"]:::gate
     BM25["BM25 Retrieval<br/>keyword / exact term"]:::fixed
     DENSE["Dense Retrieval<br/>semantic similarity<br/>[可抽換]"]:::swappable
@@ -42,7 +43,7 @@ flowchart TD
     GATE["Evidence Quality Gate / Verifier<br/>check support strength"]:::gate
     TOP["Top Evidence Package<br/>chunks + citations + confidence"]:::output
 
-    U --> UI --> QR --> FILTER
+    U --> UI --> QR --> MQ --> FILTER
     FILTER --> BM25
     FILTER --> DENSE
     FILTER --> GRAPH
@@ -57,13 +58,14 @@ flowchart TD
   end
 
   subgraph ANSWER["C. Agent / Answer 流程"]
-    PROMPT["Prompt Builder<br/>question + evidence + rules<br/>[可抽換]"]:::swappable
+    ORDER["Evidence Attention Ordering<br/>strongest passages near prompt edges"]:::fixed
+    PROMPT["Evidence-only Prompt Builder<br/>question + trusted evidence + rules<br/>[可抽換]"]:::swappable
     LLM["QA Agent LLM<br/>local model / hosted model<br/>[可抽換]"]:::swappable
     TOOL["Tool / API Calling Layer<br/>function calling / MCP / backend API<br/>[可抽換]"]:::swappable
     OUT["Grounded Answer<br/>answer + citations + warnings"]:::output
     LOG["Evaluation / Logs<br/>retrieval accuracy / latency / user feedback"]:::fixed
 
-    TOP --> PROMPT --> LLM --> OUT
+    TOP --> ORDER --> PROMPT --> LLM --> OUT
     LLM <--> TOOL
     OUT --> LOG
     LOG -.-> UI
@@ -85,7 +87,8 @@ flowchart TD
 | Entity / Relation Extraction `[可抽換]` | 建立 Graph 前的實體與關係抽取策略。 |
 | Graph Store / Graph Schema `[可抽換]` | Graph 的資料庫與 schema，可依資料關係複雜度調整。 |
 | Query Controls `[可抽換]` | 可選 knowledge base profile、retrieval variant、top_k、QA model。 |
-| Translation / Query Rewrite Agent `[可抽換]` | 將口語問題、中文問題或不標準查詢改寫成更適合檢索的 query。 |
+| Question Analysis / Decomposition `[可抽換]` | 解析目前問題及必要的對話省略，拆出要由證據回答的對象、條件、數值、期間或程序。 |
+| Multi-query Planner `[可抽換]` | 產生完整語意、精確詞彙與答案承載詞等互補查詢，分別召回後再融合。 |
 | Metadata Filter | 先用文件類型、章節、時間、權限或 profile 縮小檢索範圍。 |
 | BM25 Retrieval | 保留關鍵字、條文號、專有名詞等 lexical signal。 |
 | Dense Retrieval `[可抽換]` | 補強語意相似、改寫題、同義詞與非原文措辭問題。 |
@@ -95,7 +98,8 @@ flowchart TD
 | Parent Chunk Expansion `[可抽換]` | 補上命中 chunk 的前後文，避免 evidence 被切太碎。 |
 | Graph Hub Guard | 壓低泛用 hub entity 造成的 graph noise。 |
 | Evidence Quality Gate / Verifier | 檢查 evidence 是否足以支撐回答，信心不足時可要求轉人工或回答不知道。 |
-| Prompt Builder `[可抽換]` | 組合問題、evidence、回答規範與輸出格式。 |
+| Evidence Attention Ordering | 不改模型權重；將最高排名證據交錯放到 prompt 前後緣，降低長上下文中段遺失。 |
+| Evidence-only Prompt Builder `[可抽換]` | 將檢索內容標成唯一可信證據，要求每個實質主張附直接支持的 rank；證據不足必須拒答。 |
 | QA Agent LLM `[可抽換]` | 最後生成答案的模型，可以換成本機模型、雲端模型或後端預設模型。 |
 | Tool / API Calling Layer `[可抽換]` | Agent 需要外部工具時，可透過 function calling、MCP 或 backend API 呼叫。 |
 | Evaluation / Logs | 記錄 retrieval accuracy、latency、使用者回饋，回頭調整各節點。 |

@@ -16,6 +16,7 @@ test("public frontend uses a generic Chinese identity", async () => {
   const source = await readFile(INDEX_PATH, "utf8");
 
   assert.match(source, /泛用 RAG 工作台/);
+  assert.match(source, /href="\.\/architecture\.html"/);
   assert.doesNotMatch(source, /IFRS\s*17|IFRS17-RAG|MaiGPT/i);
   assert.doesNotMatch(source, /<option value="en">/);
 });

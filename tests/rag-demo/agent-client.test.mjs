@@ -18,6 +18,7 @@ import {
   renameDocumentFolder,
   uploadDocument,
   uploadWordDocument,
+  validateAgentResponse,
 } from "../../docs/rag-demo/agent-client.js";
 
 test("Runtime config supplies profiles and models without frontend presets", async () => {
@@ -54,6 +55,38 @@ test("Runtime config supplies profiles and models without frontend presets", asy
   assert.equal(runtime.models[0].name, "local-model");
   assert.equal(runtime.retrieval.topK, 6);
   assert.equal(runtime.retrieval.candidateK, 18);
+});
+
+test("Runtime config retries transient startup fetch failures", async () => {
+  let calls = 0;
+  const runtime = await loadRuntimeConfig("/api/config", {
+    retries: 2,
+    retryDelayMs: 0,
+    fetchImpl: async () => {
+      calls += 1;
+      if (calls < 3) throw new TypeError("Failed to fetch");
+      return {
+        ok: true,
+        async json() {
+          return {
+            default_profile: "default",
+            default_model: "ollama:qwen2.5:7b",
+            profiles: [{ id: "default", label: "Default", sample_queries: [] }],
+            models: [{
+              id: "ollama:qwen2.5:7b",
+              provider: "ollama",
+              name: "qwen2.5:7b",
+              label: "Qwen",
+            }],
+            retrieval: { top_k: 8, candidate_k: 24, max_top_k: 12 },
+          };
+        },
+      };
+    },
+  });
+
+  assert.equal(calls, 3);
+  assert.equal(runtime.defaultProfile, "default");
 });
 
 test("Profile data supplies document metadata from the backend", async () => {
@@ -142,6 +175,24 @@ test("Agent query payload never forwards client evidence or routing decisions", 
   assert.equal("retrieval_decision" in payload, false);
 });
 
+test("Agent response preserves Claude reference evaluation for the UI", () => {
+  const response = validateAgentResponse({
+    schema_version: "rag-agent-response-v1",
+    answer: "Qwen answer",
+    model: { provider: "ollama", name: "qwen2.5:7b" },
+    retrieval: { contexts: [] },
+    quality_evaluation: {
+      status: "completed",
+      reference: { score: 100, answer: "Claude answer" },
+      candidate: { score: 82 },
+      dimensions: [],
+    },
+  });
+
+  assert.equal(response.qualityEvaluation.reference.score, 100);
+  assert.equal(response.qualityEvaluation.candidate.score, 82);
+});
+
 test("Conversation API creates, lists, and loads persistent conversations", async () => {
   const calls = [];
   const fetchImpl = async (url, options = {}) => {
@@ -196,6 +247,8 @@ test("Retrieval router normalizes the Self-RAG decision", async () => {
           needs_retrieval: false,
           reason: "一般寒暄",
           retrieval_query: "你好",
+          sub_questions: [],
+          query_variants: [],
           timing_ms: 3.2,
         };
       },
@@ -206,6 +259,8 @@ test("Retrieval router normalizes the Self-RAG decision", async () => {
     needsRetrieval: false,
     reason: "一般寒暄",
     retrievalQuery: "你好",
+    subQuestions: [],
+    queryVariants: [],
     timingMs: 3.2,
   });
 });

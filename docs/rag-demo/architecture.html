@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Universal RAG 架構工作台</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./assets/architecture-workbench.css?v=architecture-v3" />
+  </head>
+  <body>
+    <main class="architecture-app">
+      <header class="workbench-header">
+        <div class="brand-lockup">
+          <a class="back-button" href="./" aria-label="返回 RAG 問答">←</a>
+          <span class="brand-mark" aria-hidden="true">R</span>
+          <div>
+            <strong>架構工作台</strong>
+            <span>Universal RAG</span>
+          </div>
+        </div>
+
+        <nav class="architecture-breadcrumb" id="architectureBreadcrumb" aria-label="架構層級"></nav>
+
+        <div class="header-progress" aria-label="整體任務進度">
+          <div>
+            <span>整體進度</span>
+            <strong id="overallProgressText">0%</strong>
+          </div>
+          <div class="progress-track"><span id="overallProgressBar"></span></div>
+        </div>
+      </header>
+
+      <section class="workbench-body">
+        <section class="canvas-panel" aria-label="架構圖">
+          <div class="canvas-toolbar">
+            <div class="canvas-heading">
+              <button id="upLevel" class="up-level-button" type="button" hidden>← 上一層</button>
+              <div>
+                <p class="eyebrow" id="levelEyebrow">LEVEL 1 · SYSTEM OVERVIEW</p>
+                <h1 id="levelTitle">Universal RAG 整體架構</h1>
+              </div>
+            </div>
+            <div class="zoom-control" aria-label="畫布縮放">
+              <button id="zoomOut" type="button" aria-label="縮小畫布">−</button>
+              <input id="zoomRange" type="range" min="30" max="160" value="75" step="5" aria-label="畫布縮放比例" />
+              <output id="zoomValue" for="zoomRange">75%</output>
+              <button id="zoomIn" type="button" aria-label="放大畫布">＋</button>
+              <button id="fitCanvas" type="button" class="fit-button">符合視窗</button>
+            </div>
+          </div>
+
+          <p class="canvas-guide">滾輪以游標位置為中心縮放 · 拖曳空白處移動畫布 · 點選領域進入下一層</p>
+
+          <div class="canvas-viewport" id="canvasViewport" tabindex="0" aria-label="可捲動的架構畫布">
+            <div class="canvas-sizer" id="canvasSizer">
+              <div class="architecture-canvas" id="architectureCanvas">
+                <div class="group-layer" id="groupLayer"></div>
+                <svg class="connections" id="connectionLayer" aria-hidden="true"></svg>
+                <div id="nodeLayer"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="task-inspector" id="taskInspector" aria-live="polite">
+          <div class="inspector-empty" id="inspectorEmpty">
+            <span aria-hidden="true">◎</span>
+            <h2>選取一個節點</h2>
+            <p>查看節點責任、輸入輸出與可勾選的任務目標。</p>
+          </div>
+          <div id="inspectorContent" hidden></div>
+        </aside>
+      </section>
+    </main>
+
+    <script type="module" src="./assets/architecture-workbench.js?v=architecture-v3"></script>
+  </body>
+</html>

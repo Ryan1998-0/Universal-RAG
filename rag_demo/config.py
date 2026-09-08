@@ -24,16 +24,36 @@ class RagConfig:
     hybrid_max_top_k: int = 12
     hybrid_max_candidate_k: int = 80
     hybrid_rrf_k: int = 60
+    multi_query_enabled: bool = True
+    multi_query_max_variants: int = 4
     hybrid_bm25_k1: float = 1.4
     hybrid_bm25_b: float = 0.72
     hybrid_min_bm25_score: float = 1.0
     hybrid_min_embedding_score: float = 0.32
     hybrid_high_embedding_score: float = 0.48
+    # `strict` preserves the original fail-closed gate.  `relaxed` permits a
+    # high-signal context outside rank 1 to pass, while still requiring raw
+    # lexical/semantic evidence (it is not an evidence-free bypass).
+    evidence_gate_mode: str = "strict"
     rerank_fusion_weight: float = 0.30
     rerank_bm25_weight: float = 0.32
     rerank_embedding_weight: float = 0.26
     rerank_coverage_weight: float = 0.10
     rerank_phrase_weight: float = 0.02
+    evidence_focus_enabled: bool = False
+    evidence_focus_top_k: int = 4
+    evidence_focus_max_chars: int = 480
+    evidence_focus_keyword_weight: float = 0.80
+    evidence_focus_embedding_weight: float = 0.20
+    fine_evidence_enabled: bool = False
+    fine_evidence_chunk_chars: int = 240
+    fine_evidence_chunk_fraction: float = 1.0 / 3.0
+    fine_evidence_overlap_chars: int = 32
+    fine_evidence_top_k: int = 6
+    fine_evidence_max_groups: int = 3
+    fine_evidence_keyword_weight: float = 0.55
+    fine_evidence_embedding_weight: float = 0.45
+    fine_evidence_min_embedding_score: float = 0.45
 
     @classmethod
     def from_env(cls, env: Optional[Mapping[str, str]] = None) -> "RagConfig":
@@ -97,6 +117,16 @@ class RagConfig:
                 cls.hybrid_max_candidate_k,
             ),
             hybrid_rrf_k=_int_value(values, "RAG_HYBRID_RRF_K", cls.hybrid_rrf_k),
+            multi_query_enabled=_bool_value(
+                values,
+                "RAG_MULTI_QUERY_ENABLED",
+                cls.multi_query_enabled,
+            ),
+            multi_query_max_variants=_int_value(
+                values,
+                "RAG_MULTI_QUERY_MAX_VARIANTS",
+                cls.multi_query_max_variants,
+            ),
             hybrid_bm25_k1=_float_value(
                 values,
                 "RAG_HYBRID_BM25_K1",
@@ -122,6 +152,9 @@ class RagConfig:
                 "RAG_HYBRID_HIGH_EMBEDDING_SCORE",
                 cls.hybrid_high_embedding_score,
             ),
+            evidence_gate_mode=str(
+                values.get("RAG_EVIDENCE_GATE_MODE", cls.evidence_gate_mode)
+            ).strip().lower(),
             rerank_fusion_weight=_float_value(
                 values,
                 "RAG_RERANK_FUSION_WEIGHT",
@@ -146,6 +179,76 @@ class RagConfig:
                 values,
                 "RAG_RERANK_PHRASE_WEIGHT",
                 cls.rerank_phrase_weight,
+            ),
+            evidence_focus_enabled=_bool_value(
+                values,
+                "RAG_EVIDENCE_FOCUS_ENABLED",
+                cls.evidence_focus_enabled,
+            ),
+            evidence_focus_top_k=_int_value(
+                values,
+                "RAG_EVIDENCE_FOCUS_TOP_K",
+                cls.evidence_focus_top_k,
+            ),
+            evidence_focus_max_chars=_int_value(
+                values,
+                "RAG_EVIDENCE_FOCUS_MAX_CHARS",
+                cls.evidence_focus_max_chars,
+            ),
+            evidence_focus_keyword_weight=_float_value(
+                values,
+                "RAG_EVIDENCE_FOCUS_KEYWORD_WEIGHT",
+                cls.evidence_focus_keyword_weight,
+            ),
+            evidence_focus_embedding_weight=_float_value(
+                values,
+                "RAG_EVIDENCE_FOCUS_EMBEDDING_WEIGHT",
+                cls.evidence_focus_embedding_weight,
+            ),
+            fine_evidence_enabled=_bool_value(
+                values,
+                "RAG_FINE_EVIDENCE_ENABLED",
+                cls.fine_evidence_enabled,
+            ),
+            fine_evidence_chunk_chars=_int_value(
+                values,
+                "RAG_FINE_EVIDENCE_CHUNK_CHARS",
+                cls.fine_evidence_chunk_chars,
+            ),
+            fine_evidence_chunk_fraction=_float_value(
+                values,
+                "RAG_FINE_EVIDENCE_CHUNK_FRACTION",
+                cls.fine_evidence_chunk_fraction,
+            ),
+            fine_evidence_overlap_chars=_int_value(
+                values,
+                "RAG_FINE_EVIDENCE_OVERLAP_CHARS",
+                cls.fine_evidence_overlap_chars,
+            ),
+            fine_evidence_top_k=_int_value(
+                values,
+                "RAG_FINE_EVIDENCE_TOP_K",
+                cls.fine_evidence_top_k,
+            ),
+            fine_evidence_max_groups=_int_value(
+                values,
+                "RAG_FINE_EVIDENCE_MAX_GROUPS",
+                cls.fine_evidence_max_groups,
+            ),
+            fine_evidence_keyword_weight=_float_value(
+                values,
+                "RAG_FINE_EVIDENCE_KEYWORD_WEIGHT",
+                cls.fine_evidence_keyword_weight,
+            ),
+            fine_evidence_embedding_weight=_float_value(
+                values,
+                "RAG_FINE_EVIDENCE_EMBEDDING_WEIGHT",
+                cls.fine_evidence_embedding_weight,
+            ),
+            fine_evidence_min_embedding_score=_float_value(
+                values,
+                "RAG_FINE_EVIDENCE_MIN_EMBEDDING_SCORE",
+                cls.fine_evidence_min_embedding_score,
             ),
         ).normalized()
 
@@ -172,6 +275,22 @@ class RagConfig:
             rerank_weights = [0.30, 0.32, 0.26, 0.10, 0.02]
             rerank_total = 1.0
         rerank_weights = [weight / rerank_total for weight in rerank_weights]
+        evidence_focus_keyword_weight = max(0.0, float(self.evidence_focus_keyword_weight))
+        evidence_focus_embedding_weight = max(0.0, float(self.evidence_focus_embedding_weight))
+        evidence_focus_total = evidence_focus_keyword_weight + evidence_focus_embedding_weight
+        if evidence_focus_total <= 0:
+            evidence_focus_keyword_weight, evidence_focus_embedding_weight = 0.80, 0.20
+        else:
+            evidence_focus_keyword_weight /= evidence_focus_total
+            evidence_focus_embedding_weight /= evidence_focus_total
+        fine_evidence_keyword_weight = max(0.0, float(self.fine_evidence_keyword_weight))
+        fine_evidence_embedding_weight = max(0.0, float(self.fine_evidence_embedding_weight))
+        fine_evidence_total = fine_evidence_keyword_weight + fine_evidence_embedding_weight
+        if fine_evidence_total <= 0:
+            fine_evidence_keyword_weight, fine_evidence_embedding_weight = 0.55, 0.45
+        else:
+            fine_evidence_keyword_weight /= fine_evidence_total
+            fine_evidence_embedding_weight /= fine_evidence_total
         hybrid_max_top_k = max(1, int(self.hybrid_max_top_k))
         hybrid_max_candidate_k = max(hybrid_max_top_k, int(self.hybrid_max_candidate_k))
         return RagConfig(
@@ -196,6 +315,11 @@ class RagConfig:
             hybrid_max_top_k=hybrid_max_top_k,
             hybrid_max_candidate_k=hybrid_max_candidate_k,
             hybrid_rrf_k=max(1, int(self.hybrid_rrf_k)),
+            multi_query_enabled=bool(self.multi_query_enabled),
+            multi_query_max_variants=min(
+                max(2, int(self.multi_query_max_variants)),
+                8,
+            ),
             hybrid_bm25_k1=max(0.01, float(self.hybrid_bm25_k1)),
             hybrid_bm25_b=min(max(0.0, float(self.hybrid_bm25_b)), 1.0),
             hybrid_min_bm25_score=max(0.0, float(self.hybrid_min_bm25_score)),
@@ -207,11 +331,36 @@ class RagConfig:
                 max(float(self.hybrid_min_embedding_score), float(self.hybrid_high_embedding_score)),
                 1.0,
             ),
+            evidence_gate_mode=(
+                str(self.evidence_gate_mode).strip().lower()
+                if str(self.evidence_gate_mode).strip().lower() in {"strict", "relaxed"}
+                else "strict"
+            ),
             rerank_fusion_weight=rerank_weights[0],
             rerank_bm25_weight=rerank_weights[1],
             rerank_embedding_weight=rerank_weights[2],
             rerank_coverage_weight=rerank_weights[3],
             rerank_phrase_weight=rerank_weights[4],
+            evidence_focus_enabled=bool(self.evidence_focus_enabled),
+            evidence_focus_top_k=max(1, int(self.evidence_focus_top_k)),
+            evidence_focus_max_chars=max(120, int(self.evidence_focus_max_chars)),
+            evidence_focus_keyword_weight=evidence_focus_keyword_weight,
+            evidence_focus_embedding_weight=evidence_focus_embedding_weight,
+            fine_evidence_enabled=bool(self.fine_evidence_enabled),
+            fine_evidence_chunk_chars=max(80, int(self.fine_evidence_chunk_chars)),
+            fine_evidence_chunk_fraction=min(
+                1.0,
+                max(0.05, float(self.fine_evidence_chunk_fraction)),
+            ),
+            fine_evidence_overlap_chars=max(0, int(self.fine_evidence_overlap_chars)),
+            fine_evidence_top_k=max(1, int(self.fine_evidence_top_k)),
+            fine_evidence_max_groups=max(1, int(self.fine_evidence_max_groups)),
+            fine_evidence_keyword_weight=fine_evidence_keyword_weight,
+            fine_evidence_embedding_weight=fine_evidence_embedding_weight,
+            fine_evidence_min_embedding_score=min(
+                max(-1.0, float(self.fine_evidence_min_embedding_score)),
+                1.0,
+            ),
         )
 
 

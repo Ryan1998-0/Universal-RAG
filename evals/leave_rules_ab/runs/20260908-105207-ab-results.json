@@ -1,0 +1,2012 @@
+{
+  "benchmark_id": "taiwan-leave-rules-ab-v1",
+  "source_url": "https://laws.mol.gov.tw/FLAW/FLAWDAT0202.aspx?id=FL014935",
+  "model": "qwen2.5:7b",
+  "run_at": "2026-09-08T10:52:07+08:00",
+  "policy": {
+    "temperature": 0,
+    "seed": 42,
+    "max_answer_tokens": 180
+  },
+  "selection_rule": "oracle score >= 90 and oracle score > closed-book score; top delta first",
+  "results": [
+    {
+      "id": "family-care-hour-unit",
+      "question": "依台灣現行勞工請假規則，勞工為親自照顧家庭成員而請事假時，是否可以小時為請假單位？",
+      "article": "第7條",
+      "oracle_context_text": "勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。",
+      "closed_book": {
+        "answer": "依照台灣現行勞基法，事假的請假單位通常是半日或全日，並無規定可按小時請假。因此，勞工為親自照顧家庭成員而請事假時，無法以小時為請假單位。",
+        "wall_ms": 8179.51,
+        "ollama_total_ms": 8147.37,
+        "prompt_tokens": 91,
+        "answer_tokens": 55,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "得",
+                "可以",
+                "可"
+              ],
+              "matched": "可",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "小時"
+              ],
+              "matched": "小時",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "無法以小時"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "根據第7條規定，勞工為親自照顧家庭成員而請事假時，可以選擇以小時為請假單位。",
+        "wall_ms": 6741.89,
+        "ollama_total_ms": 6739.77,
+        "prompt_tokens": 151,
+        "answer_tokens": 31,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "得",
+                "可以",
+                "可"
+              ],
+              "matched": "可以",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "小時"
+              ],
+              "matched": "小時",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "family-care-attendance-bonus",
+      "question": "勞工為親自照顧家庭成員而依第7條請事假，雇主可以把它視為缺勤並影響全勤獎金嗎？",
+      "article": "第9條",
+      "oracle_context_text": "勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金：三、勞工因親自照顧家庭成員，依第七條規定請事假。",
+      "closed_book": {
+        "answer": "根據《勞動基準法》第七條規定，勞工因親自照顧家庭成員可請事假。然而，此類事假通常應由雇主酌情處理，而不應直接扣減全勤獎金或視為缺勤。若雇主這樣做，可能違反相關法令。建議確認當地勞動法規細則或諮詢法律專家以獲更確切指導。",
+        "wall_ms": 13778.49,
+        "ollama_total_ms": 13775.29,
+        "prompt_tokens": 89,
+        "answer_tokens": 85,
+        "done_reason": "stop",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "缺勤"
+              ],
+              "matched": "缺勤",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "全勤獎金"
+              ],
+              "matched": "全勤獎金",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "不可以。根據正確證據第9條第三點，勞工因親自照顧家庭成員而依第7條規定請事假時，雇主不得視為缺勤而影響其全勤獎金。",
+        "wall_ms": 8006.23,
+        "ollama_total_ms": 8003.92,
+        "prompt_tokens": 147,
+        "answer_tokens": 46,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "缺勤"
+              ],
+              "matched": "缺勤",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "全勤獎金"
+              ],
+              "matched": "全勤獎金",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "得視為缺勤"
+          ]
+        }
+      },
+      "delta": -66.7
+    },
+    {
+      "id": "miscarriage-attendance-bonus",
+      "question": "妊娠未滿三個月流產，未請產假而請普通傷病假，雇主可以影響其全勤獎金嗎？",
+      "article": "第9條",
+      "oracle_context_text": "勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金：二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。",
+      "closed_book": {
+        "answer": "根據勞動法規，雇主不得因員工請普通傷病假而影響其全勤獎金。因此，即使员工因流產請普通傷病假而非產假，雇主也不應扣減全勤獎金。但具体情况可能依公司政策有所不同，建议咨询法律意见以确认具体权益。",
+        "wall_ms": 9900.6,
+        "ollama_total_ms": 9898.22,
+        "prompt_tokens": 86,
+        "answer_tokens": 67,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "全勤獎金"
+              ],
+              "matched": "全勤獎金",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據正確證據第9條規定， Employer不得因勞工因妊娠未滿三個月流產未請產假，而請普通傷病假的情況下，影響其全勤獎金。因此，雇主不能影響該勞工的全勤獎金。",
+        "wall_ms": 10105.26,
+        "ollama_total_ms": 10102.59,
+        "prompt_tokens": 148,
+        "answer_tokens": 59,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "全勤獎金"
+              ],
+              "matched": "全勤獎金",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 0.0
+    },
+    {
+      "id": "ordinary-sick-bonus-proportional",
+      "question": "除特殊保護情形外，勞工請普通傷病假時，全勤獎金應如何扣發？",
+      "article": "第9條",
+      "oracle_context_text": "勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷病假日數依比例計算。但勞雇雙方另有優於法令之約定者，從其約定。",
+      "closed_book": {
+        "answer": "除特殊保護情形外，勞工請普通傷病假時，全勤獎金通常不予扣發。全勤獎金通常是為了鼓勵員工出滿勤而設立的獎勵，因此在一般情況下，即使勞工因傷病請假也不會扣除此獎金。",
+        "wall_ms": 10013.92,
+        "ollama_total_ms": 10010.93,
+        "prompt_tokens": 81,
+        "answer_tokens": 67,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "傷病假日數",
+                "病假日數"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "依比例",
+                "按比例"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "優於法令",
+                "更優約定",
+                "較優約定"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "除特殊保護情形外，勞工請普通傷病假時，全勤獎金應按請假日數依比例計算。但如果勞雇雙方有更優的約定，則依照雙方約定辦理。",
+        "wall_ms": 9635.58,
+        "ollama_total_ms": 9632.72,
+        "prompt_tokens": 154,
+        "answer_tokens": 50,
+        "done_reason": "stop",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "傷病假日數",
+                "病假日數"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "依比例",
+                "按比例"
+              ],
+              "matched": "依比例",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "優於法令",
+                "更優約定",
+                "較優約定"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 33.3
+    },
+    {
+      "id": "ten-day-adverse-action",
+      "question": "勞工一年內普通傷病假未超過幾日，雇主原則上不得因請假而為不利處分？",
+      "article": "第9-1條",
+      "oracle_context_text": "勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+      "closed_book": {
+        "answer": "根據勞動基準法第79條之2，勞工於一年內因普通傷病假未逾六日者，雇主不得因其請假而為不利處分。因此答案是六日。",
+        "wall_ms": 7785.89,
+        "ollama_total_ms": 7782.79,
+        "prompt_tokens": 83,
+        "answer_tokens": 47,
+        "done_reason": "stop",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "十日",
+                "10日",
+                "十天",
+                "10天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "勞工一年內普通傷病假日數未超過十日者，雇主原則上不得因請假而為不利處分。",
+        "wall_ms": 7573.58,
+        "ollama_total_ms": 7570.29,
+        "prompt_tokens": 152,
+        "answer_tokens": 29,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十日",
+                "10日",
+                "十天",
+                "10天"
+              ],
+              "matched": "十日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 33.3
+    },
+    {
+      "id": "adverse-action-proof-burden",
+      "question": "勞工因普通傷病假受到不利處分時，誰要證明該處分與請假無關？",
+      "article": "第9-1條",
+      "oracle_context_text": "勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通傷病假行為無關之事實，負舉證責任。",
+      "closed_book": {
+        "answer": "根據勞動法規，當勞工因普通傷病假受到不利處分時，雇主需負擔舉證責任，證明該處分與勞工的請假無關。",
+        "wall_ms": 6882.97,
+        "ollama_total_ms": 6880.94,
+        "prompt_tokens": 82,
+        "answer_tokens": 42,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "雇主"
+              ],
+              "matched": "雇主",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "舉證責任",
+                "負責舉證"
+              ],
+              "matched": "舉證責任",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "無關"
+              ],
+              "matched": "無關",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據正確證據第9-1條，雇主需要證明該不利處分與勞工請普通傷病假無關。",
+        "wall_ms": 6212.51,
+        "ollama_total_ms": 6210.16,
+        "prompt_tokens": 143,
+        "answer_tokens": 29,
+        "done_reason": "stop",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "雇主"
+              ],
+              "matched": "雇主",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "舉證責任",
+                "負責舉證"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "無關"
+              ],
+              "matched": "無關",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": -33.3
+    },
+    {
+      "id": "over-ten-day-evaluation",
+      "question": "普通傷病假超過一年十日後，雇主進行人事考核時可以只看請假日數嗎？應綜合考量哪些項目？",
+      "article": "第9-1條",
+      "oracle_context_text": "勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假日數作為考量因素。",
+      "closed_book": {
+        "answer": "根據勞動法規，雇主在進行人事考核時不能僅以員工的請假日數為唯一考量因素。應綜合考量包括但不限于以下項目：\n\n1. 工作表現：工作績效、職務能力等。\n2. 職場態度：積極性、團隊合作精神等。\n3. 維護公司利益：是否遵守公司規定，有無違規行為。\n\n請假日數僅為參考之一，不能成為決定性的考核標準。",
+        "wall_ms": 15081.9,
+        "ollama_total_ms": 15076.74,
+        "prompt_tokens": 86,
+        "answer_tokens": 101,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得僅",
+                "不可以只",
+                "不能只"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工作能力"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工作態度"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "實際績效"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "不可以只看請假日數。雇主應综合考量工作能力、工作态度及实际绩效等项目。",
+        "wall_ms": 5252.06,
+        "ollama_total_ms": 5249.7,
+        "prompt_tokens": 158,
+        "answer_tokens": 23,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得僅",
+                "不可以只",
+                "不能只"
+              ],
+              "matched": "不可以只",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工作能力"
+              ],
+              "matched": "工作能力",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工作態度"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "實際績效"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "可以只看"
+          ]
+        }
+      },
+      "delta": 0.0
+    },
+    {
+      "id": "amendment-effective-date",
+      "question": "勞工請假規則民國114年12月9日修正發布的條文，自何時施行？",
+      "article": "第12條",
+      "oracle_context_text": "本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+      "closed_book": {
+        "answer": "勞工請假規則於民國114年12月9日修正並發布，但未明確指出施行日期。通常這種情況下，新法會在公布後一段合理時間（如30天）開始施行，具體日期需查閱當時的公告文件確認。",
+        "wall_ms": 10153.46,
+        "ollama_total_ms": 10150.13,
+        "prompt_tokens": 85,
+        "answer_tokens": 66,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "民國115年1月1日",
+                "民國一百十五年一月一日",
+                "2026年1月1日"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "自民國115年1月1日起施行。",
+        "wall_ms": 3596.69,
+        "ollama_total_ms": 3593.98,
+        "prompt_tokens": 134,
+        "answer_tokens": 14,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "民國115年1月1日",
+                "民國一百十五年一月一日",
+                "2026年1月1日"
+              ],
+              "matched": "民國115年1月1日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "personal-leave-limit-pay",
+      "question": "事假一年內最多幾日？事假期間是否給薪？",
+      "article": "第7條",
+      "oracle_context_text": "勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。",
+      "closed_book": {
+        "answer": "一般來說，事假一年內最多可請30日。事假期間通常不會給薪，須自行負擔此期間的薪酬及福利。但具體規定可能因雇主而異，建議參閱公司人事政策或向人力資源部門確認。",
+        "wall_ms": 9004.14,
+        "ollama_total_ms": 9000.73,
+        "prompt_tokens": 72,
+        "answer_tokens": 57,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十四日",
+                "14日",
+                "十四天",
+                "14天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "一年內事假最多14日。事假期間不給工資。",
+        "wall_ms": 4311.14,
+        "ollama_total_ms": 4309.27,
+        "prompt_tokens": 123,
+        "answer_tokens": 18,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十四日",
+                "14日",
+                "十四天",
+                "14天"
+              ],
+              "matched": "14日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "sick-exhausted-unpaid-leave",
+      "question": "普通傷病假超過法定期限後仍未痊癒，要經過哪些假別抵充後才得留職停薪？留職停薪最長多久？",
+      "article": "第5條",
+      "oracle_context_text": "勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。",
+      "closed_book": {
+        "answer": "根據勞動法規，普通傷病假超過法定期限（通常為240日）仍未痊癒者，需先以特別傷病假、事假及年假等假別抵充後，方可申請留職停薪。留職停薪的最長期間依各公司規定而定，但一般來說最多可達一年，期滿後仍無法工作者，可能需要重新評估勞工狀況或考慮其他替代方案。",
+        "wall_ms": 16083.32,
+        "ollama_total_ms": 16080.26,
+        "prompt_tokens": 93,
+        "answer_tokens": 100,
+        "done_reason": "stop",
+        "score": {
+          "score": 75.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "事假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "特別休假",
+                "特休"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "留職停薪"
+              ],
+              "matched": "留職停薪",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一年"
+              ],
+              "matched": "一年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據正確證據，勞工普通傷病假超過法定期限後，需經事假或特別休假抵充仍未痊癒者，方可申請留職停薪。留職停薪期間最長一年。",
+        "wall_ms": 9279.47,
+        "ollama_total_ms": 9276.49,
+        "prompt_tokens": 161,
+        "answer_tokens": 48,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "事假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "特別休假",
+                "特休"
+              ],
+              "matched": "特別休假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "留職停薪"
+              ],
+              "matched": "留職停薪",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一年"
+              ],
+              "matched": "一年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 25.0
+    },
+    {
+      "id": "cancer-outpatient-classification",
+      "question": "經醫師診斷罹患癌症（含原位癌）並採門診治療，其休養期間應併入哪一類傷病假計算？",
+      "article": "第4條",
+      "oracle_context_text": "經醫師診斷，罹患癌症（含原位癌）採門診方式治療者，其治療或休養期間，併入住院傷病假計算。",
+      "closed_book": {
+        "answer": "根據勞動相關規定，經醫師診斷罹患癌症（含原位癌）並採門診治療的休養期間，應併入「一般疾病」類別計算傷病假日數。此類疾病通常不區分為住院或門診，皆以一般疾病假處理。",
+        "wall_ms": 10086.98,
+        "ollama_total_ms": 10084.87,
+        "prompt_tokens": 92,
+        "answer_tokens": 66,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "住院傷病假",
+                "住院病假"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據正確證據，經醫師診斷罹患癌症（含原位癌）並採門診治療，其休養期間應併入住院傷病假計算。",
+        "wall_ms": 7430.39,
+        "ollama_total_ms": 7428.19,
+        "prompt_tokens": 148,
+        "answer_tokens": 39,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "住院傷病假",
+                "住院病假"
+              ],
+              "matched": "住院傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "pregnancy-bedrest-classification",
+      "question": "懷孕期間需要安胎休養，其休養期間應併入哪一類傷病假計算？",
+      "article": "第4條",
+      "oracle_context_text": "經醫師診斷，懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。",
+      "closed_book": {
+        "answer": "懷孕期間的安胎休養通常並入「產前假」或「預防性休養假」計算，具體依公司規定及當地勞工法規而定。在台灣，《勞工健康保護规则》中有相關規定，但一般來說會歸類為產前保健假。",
+        "wall_ms": 10138.63,
+        "ollama_total_ms": 10136.48,
+        "prompt_tokens": 82,
+        "answer_tokens": 67,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "住院傷病假",
+                "住院病假"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "住院傷病假",
+        "wall_ms": 2406.28,
+        "ollama_total_ms": 2404.66,
+        "prompt_tokens": 132,
+        "answer_tokens": 5,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "住院傷病假",
+                "住院病假"
+              ],
+              "matched": "住院傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "emergency-application-proxy",
+      "question": "勞工遇到急病或緊急事故，無法事前親自請假時，可以委託他人代辦嗎？",
+      "article": "第10條",
+      "oracle_context_text": "勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。但遇有急病或緊急事故，得委託他人代辦請假手續。",
+      "closed_book": {
+        "answer": "可以。勞工因急病或緊急事故無法事先親自請假時，可委託他人代為辦理請假手續。雇主應予受理並准假。但最好仍盡快通知雇主實際情況及補正相關文件。",
+        "wall_ms": 8907.35,
+        "ollama_total_ms": 8904.76,
+        "prompt_tokens": 84,
+        "answer_tokens": 55,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "可以",
+                "得",
+                "可"
+              ],
+              "matched": "可以",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "委託他人",
+                "他人代辦"
+              ],
+              "matched": "委託他人",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "可以，勞工遇到急病或緊急事故無法事前親自請假時，可以委託他人代辦請假手續。",
+        "wall_ms": 7632.59,
+        "ollama_total_ms": 7625.37,
+        "prompt_tokens": 153,
+        "answer_tokens": 32,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "可以",
+                "得",
+                "可"
+              ],
+              "matched": "可以",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "委託他人",
+                "他人代辦"
+              ],
+              "matched": "委託他人",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 0.0
+    },
+    {
+      "id": "employer-proof-document",
+      "question": "辦理請假手續時，雇主可否要求勞工提出相關證明文件？",
+      "article": "第10條",
+      "oracle_context_text": "辦理請假手續時，雇主得要求勞工提出有關證明文件。",
+      "closed_book": {
+        "answer": "根據勞動法規，雇主在勞工請假時，通常僅能要求與請假事由相關的合理證明，以確認請假事實。例如：看醫生需附診斷書、參加婚喪喜慶需附邀請函等。但不得無理要求過多或不合理的證明文件。",
+        "wall_ms": 10493.0,
+        "ollama_total_ms": 10490.27,
+        "prompt_tokens": 75,
+        "answer_tokens": 70,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "可以",
+                "得",
+                "可"
+              ],
+              "matched": "得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "證明文件"
+              ],
+              "matched": "證明文件",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "可以，根據正確證據（第10條），雇主得要求勞工提出有關證明文件。",
+        "wall_ms": 4859.21,
+        "ollama_total_ms": 4857.17,
+        "prompt_tokens": 112,
+        "answer_tokens": 23,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "可以",
+                "得",
+                "可"
+              ],
+              "matched": "可以",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "證明文件"
+              ],
+              "matched": "證明文件",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 0.0
+    },
+    {
+      "id": "official-leave-pay-duration",
+      "question": "依法令應給予的公假是否給薪？假期長度如何決定？",
+      "article": "第8條",
+      "oracle_context_text": "勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。",
+      "closed_book": {
+        "answer": "公假通常不給薪，除非特別規定或個別勞資雙方另有協議。假期長度依不同法令而定，例如國定假日為1日，清明節、端午節和中秋節等傳統節日也是1日；部分特殊情形如喪假則為3日（可分段請假）。具体规定需参照相关劳动法规或咨询法律专业人士以获得准确信息。",
+        "wall_ms": 13159.82,
+        "ollama_total_ms": 13157.34,
+        "prompt_tokens": 74,
+        "answer_tokens": 88,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "實際需要"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "不給薪"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "是的，依法令應给予的公假會給薪。假期長度視實際需要而定。",
+        "wall_ms": 4952.15,
+        "ollama_total_ms": 4950.26,
+        "prompt_tokens": 117,
+        "answer_tokens": 24,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "實際需要"
+              ],
+              "matched": "實際需要",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "combined-sick-leave-limit",
+      "question": "未住院傷病假與住院傷病假合併計算時，法定上限是多少？",
+      "article": "第4條",
+      "oracle_context_text": "未住院傷病假與住院傷病假二年內合計不得超過一年。",
+      "closed_book": {
+        "answer": "未住院傷病假與住院傷病假合併計算時，法定上限為每年12周。此規定適用於勞動基準法相關條文。",
+        "wall_ms": 6303.44,
+        "ollama_total_ms": 6301.73,
+        "prompt_tokens": 77,
+        "answer_tokens": 38,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二年",
+                "2年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "一年",
+                "1年"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "未住院傷病假與住院傷病假二年內合併計算的法定上限是一年。",
+        "wall_ms": 4900.08,
+        "ollama_total_ms": 4898.03,
+        "prompt_tokens": 115,
+        "answer_tokens": 24,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二年",
+                "2年"
+              ],
+              "matched": "二年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一年",
+                "1年"
+              ],
+              "matched": "一年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "spouse-adoptive-parent-bereavement",
+      "question": "配偶的養父母喪亡，勞工依法可請幾日喪假？是否給薪？",
+      "article": "第3條",
+      "oracle_context_text": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。",
+      "closed_book": {
+        "answer": "依照勞動基準法，勞工因配偶之直系血親或姻屬 Relatives by marriage 之祖父母、父母、子女、兄弟姊妹死亡者，得請求给予公假。但對於配偶養父母之死並無明文規定可請公假。然而，各雇主可能會有內部規定允許這種情況下請假，因此具體的請假天數和是否給薪需視個別公司政策而定。若沒有相關規定，勞工可能無法依此理由請公假。",
+        "wall_ms": 18169.48,
+        "ollama_total_ms": 18165.78,
+        "prompt_tokens": 78,
+        "answer_tokens": 113,
+        "done_reason": "stop",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六日",
+                "6日",
+                "六天",
+                "6天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據證據，配偶的養父母喪亡，勞工依法可請六日喪假，工資照給。",
+        "wall_ms": 5375.62,
+        "ollama_total_ms": 5373.45,
+        "prompt_tokens": 128,
+        "answer_tokens": 27,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六日",
+                "6日",
+                "六天",
+                "6天"
+              ],
+              "matched": "六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 50.0
+    },
+    {
+      "id": "sibling-bereavement",
+      "question": "兄弟姊妹喪亡，勞工依法可請幾日喪假？是否給薪？",
+      "article": "第3條",
+      "oracle_context_text": "曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三日，工資照給。",
+      "closed_book": {
+        "answer": "依照勞動基準法，勞工因直系血親或配偶之死亡，得請求雇主给予3日以內之哀傷假，並應一次給與。此期間由雇主按該勞工實際工作日數發給薪酬。兄弟姊妹屬於旁系親屬，不在法定喪假適用範圍內。",
+        "wall_ms": 10747.19,
+        "ollama_total_ms": 10744.88,
+        "prompt_tokens": 76,
+        "answer_tokens": 72,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三日",
+                "3日",
+                "三天",
+                "3天"
+              ],
+              "matched": "3日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據證據，兄弟姊妹喪亡時，勞工可以請3日喪假，並且工資照給。",
+        "wall_ms": 5240.13,
+        "ollama_total_ms": 5238.33,
+        "prompt_tokens": 121,
+        "answer_tokens": 26,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三日",
+                "3日",
+                "三天",
+                "3天"
+              ],
+              "matched": "3日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 0.0
+    }
+  ],
+  "selected_for_c": [
+    {
+      "id": "amendment-effective-date",
+      "question": "勞工請假規則民國114年12月9日修正發布的條文，自何時施行？",
+      "article": "第12條",
+      "oracle_context_text": "本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一月一日施行。",
+      "closed_book": {
+        "answer": "勞工請假規則於民國114年12月9日修正並發布，但未明確指出施行日期。通常這種情況下，新法會在公布後一段合理時間（如30天）開始施行，具體日期需查閱當時的公告文件確認。",
+        "wall_ms": 10153.46,
+        "ollama_total_ms": 10150.13,
+        "prompt_tokens": 85,
+        "answer_tokens": 66,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "民國115年1月1日",
+                "民國一百十五年一月一日",
+                "2026年1月1日"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "自民國115年1月1日起施行。",
+        "wall_ms": 3596.69,
+        "ollama_total_ms": 3593.98,
+        "prompt_tokens": 134,
+        "answer_tokens": 14,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "民國115年1月1日",
+                "民國一百十五年一月一日",
+                "2026年1月1日"
+              ],
+              "matched": "民國115年1月1日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "cancer-outpatient-classification",
+      "question": "經醫師診斷罹患癌症（含原位癌）並採門診治療，其休養期間應併入哪一類傷病假計算？",
+      "article": "第4條",
+      "oracle_context_text": "經醫師診斷，罹患癌症（含原位癌）採門診方式治療者，其治療或休養期間，併入住院傷病假計算。",
+      "closed_book": {
+        "answer": "根據勞動相關規定，經醫師診斷罹患癌症（含原位癌）並採門診治療的休養期間，應併入「一般疾病」類別計算傷病假日數。此類疾病通常不區分為住院或門診，皆以一般疾病假處理。",
+        "wall_ms": 10086.98,
+        "ollama_total_ms": 10084.87,
+        "prompt_tokens": 92,
+        "answer_tokens": 66,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "住院傷病假",
+                "住院病假"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據正確證據，經醫師診斷罹患癌症（含原位癌）並採門診治療，其休養期間應併入住院傷病假計算。",
+        "wall_ms": 7430.39,
+        "ollama_total_ms": 7428.19,
+        "prompt_tokens": 148,
+        "answer_tokens": 39,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "住院傷病假",
+                "住院病假"
+              ],
+              "matched": "住院傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "combined-sick-leave-limit",
+      "question": "未住院傷病假與住院傷病假合併計算時，法定上限是多少？",
+      "article": "第4條",
+      "oracle_context_text": "未住院傷病假與住院傷病假二年內合計不得超過一年。",
+      "closed_book": {
+        "answer": "未住院傷病假與住院傷病假合併計算時，法定上限為每年12周。此規定適用於勞動基準法相關條文。",
+        "wall_ms": 6303.44,
+        "ollama_total_ms": 6301.73,
+        "prompt_tokens": 77,
+        "answer_tokens": 38,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二年",
+                "2年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "一年",
+                "1年"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "未住院傷病假與住院傷病假二年內合併計算的法定上限是一年。",
+        "wall_ms": 4900.08,
+        "ollama_total_ms": 4898.03,
+        "prompt_tokens": 115,
+        "answer_tokens": 24,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二年",
+                "2年"
+              ],
+              "matched": "二年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一年",
+                "1年"
+              ],
+              "matched": "一年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "family-care-hour-unit",
+      "question": "依台灣現行勞工請假規則，勞工為親自照顧家庭成員而請事假時，是否可以小時為請假單位？",
+      "article": "第7條",
+      "oracle_context_text": "勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假，並得擇定以小時為請假單位。",
+      "closed_book": {
+        "answer": "依照台灣現行勞基法，事假的請假單位通常是半日或全日，並無規定可按小時請假。因此，勞工為親自照顧家庭成員而請事假時，無法以小時為請假單位。",
+        "wall_ms": 8179.51,
+        "ollama_total_ms": 8147.37,
+        "prompt_tokens": 91,
+        "answer_tokens": 55,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "得",
+                "可以",
+                "可"
+              ],
+              "matched": "可",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "小時"
+              ],
+              "matched": "小時",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "無法以小時"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "根據第7條規定，勞工為親自照顧家庭成員而請事假時，可以選擇以小時為請假單位。",
+        "wall_ms": 6741.89,
+        "ollama_total_ms": 6739.77,
+        "prompt_tokens": 151,
+        "answer_tokens": 31,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "得",
+                "可以",
+                "可"
+              ],
+              "matched": "可以",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "小時"
+              ],
+              "matched": "小時",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "official-leave-pay-duration",
+      "question": "依法令應給予的公假是否給薪？假期長度如何決定？",
+      "article": "第8條",
+      "oracle_context_text": "勞工依法令規定應給予公假者，工資照給，其假期視實際需要定之。",
+      "closed_book": {
+        "answer": "公假通常不給薪，除非特別規定或個別勞資雙方另有協議。假期長度依不同法令而定，例如國定假日為1日，清明節、端午節和中秋節等傳統節日也是1日；部分特殊情形如喪假則為3日（可分段請假）。具体规定需参照相关劳动法规或咨询法律专业人士以获得准确信息。",
+        "wall_ms": 13159.82,
+        "ollama_total_ms": 13157.34,
+        "prompt_tokens": 74,
+        "answer_tokens": 88,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "實際需要"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "不給薪"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "是的，依法令應给予的公假會給薪。假期長度視實際需要而定。",
+        "wall_ms": 4952.15,
+        "ollama_total_ms": 4950.26,
+        "prompt_tokens": 117,
+        "answer_tokens": 24,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "實際需要"
+              ],
+              "matched": "實際需要",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "personal-leave-limit-pay",
+      "question": "事假一年內最多幾日？事假期間是否給薪？",
+      "article": "第7條",
+      "oracle_context_text": "勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。事假期間不給工資。",
+      "closed_book": {
+        "answer": "一般來說，事假一年內最多可請30日。事假期間通常不會給薪，須自行負擔此期間的薪酬及福利。但具體規定可能因雇主而異，建議參閱公司人事政策或向人力資源部門確認。",
+        "wall_ms": 9004.14,
+        "ollama_total_ms": 9000.73,
+        "prompt_tokens": 72,
+        "answer_tokens": 57,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十四日",
+                "14日",
+                "十四天",
+                "14天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "一年內事假最多14日。事假期間不給工資。",
+        "wall_ms": 4311.14,
+        "ollama_total_ms": 4309.27,
+        "prompt_tokens": 123,
+        "answer_tokens": 18,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十四日",
+                "14日",
+                "十四天",
+                "14天"
+              ],
+              "matched": "14日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "pregnancy-bedrest-classification",
+      "question": "懷孕期間需要安胎休養，其休養期間應併入哪一類傷病假計算？",
+      "article": "第4條",
+      "oracle_context_text": "經醫師診斷，懷孕期間需安胎休養者，其治療或休養期間，併入住院傷病假計算。",
+      "closed_book": {
+        "answer": "懷孕期間的安胎休養通常並入「產前假」或「預防性休養假」計算，具體依公司規定及當地勞工法規而定。在台灣，《勞工健康保護规则》中有相關規定，但一般來說會歸類為產前保健假。",
+        "wall_ms": 10138.63,
+        "ollama_total_ms": 10136.48,
+        "prompt_tokens": 82,
+        "answer_tokens": 67,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "住院傷病假",
+                "住院病假"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "住院傷病假",
+        "wall_ms": 2406.28,
+        "ollama_total_ms": 2404.66,
+        "prompt_tokens": 132,
+        "answer_tokens": 5,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "住院傷病假",
+                "住院病假"
+              ],
+              "matched": "住院傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "spouse-adoptive-parent-bereavement",
+      "question": "配偶的養父母喪亡，勞工依法可請幾日喪假？是否給薪？",
+      "article": "第3條",
+      "oracle_context_text": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六日，工資照給。",
+      "closed_book": {
+        "answer": "依照勞動基準法，勞工因配偶之直系血親或姻屬 Relatives by marriage 之祖父母、父母、子女、兄弟姊妹死亡者，得請求给予公假。但對於配偶養父母之死並無明文規定可請公假。然而，各雇主可能會有內部規定允許這種情況下請假，因此具體的請假天數和是否給薪需視個別公司政策而定。若沒有相關規定，勞工可能無法依此理由請公假。",
+        "wall_ms": 18169.48,
+        "ollama_total_ms": 18165.78,
+        "prompt_tokens": 78,
+        "answer_tokens": 113,
+        "done_reason": "stop",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六日",
+                "6日",
+                "六天",
+                "6天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據證據，配偶的養父母喪亡，勞工依法可請六日喪假，工資照給。",
+        "wall_ms": 5375.62,
+        "ollama_total_ms": 5373.45,
+        "prompt_tokens": 128,
+        "answer_tokens": 27,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六日",
+                "6日",
+                "六天",
+                "6天"
+              ],
+              "matched": "六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 50.0
+    },
+    {
+      "id": "ten-day-adverse-action",
+      "question": "勞工一年內普通傷病假未超過幾日，雇主原則上不得因請假而為不利處分？",
+      "article": "第9-1條",
+      "oracle_context_text": "勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+      "closed_book": {
+        "answer": "根據勞動基準法第79條之2，勞工於一年內因普通傷病假未逾六日者，雇主不得因其請假而為不利處分。因此答案是六日。",
+        "wall_ms": 7785.89,
+        "ollama_total_ms": 7782.79,
+        "prompt_tokens": 83,
+        "answer_tokens": 47,
+        "done_reason": "stop",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "十日",
+                "10日",
+                "十天",
+                "10天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "勞工一年內普通傷病假日數未超過十日者，雇主原則上不得因請假而為不利處分。",
+        "wall_ms": 7573.58,
+        "ollama_total_ms": 7570.29,
+        "prompt_tokens": 152,
+        "answer_tokens": 29,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十日",
+                "10日",
+                "十天",
+                "10天"
+              ],
+              "matched": "十日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 33.3
+    },
+    {
+      "id": "sick-exhausted-unpaid-leave",
+      "question": "普通傷病假超過法定期限後仍未痊癒，要經過哪些假別抵充後才得留職停薪？留職停薪最長多久？",
+      "article": "第5條",
+      "oracle_context_text": "勞工普通傷病假超過前條第一項規定之期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。但留職停薪期間以一年為限。",
+      "closed_book": {
+        "answer": "根據勞動法規，普通傷病假超過法定期限（通常為240日）仍未痊癒者，需先以特別傷病假、事假及年假等假別抵充後，方可申請留職停薪。留職停薪的最長期間依各公司規定而定，但一般來說最多可達一年，期滿後仍無法工作者，可能需要重新評估勞工狀況或考慮其他替代方案。",
+        "wall_ms": 16083.32,
+        "ollama_total_ms": 16080.26,
+        "prompt_tokens": 93,
+        "answer_tokens": 100,
+        "done_reason": "stop",
+        "score": {
+          "score": 75.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "事假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "特別休假",
+                "特休"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "留職停薪"
+              ],
+              "matched": "留職停薪",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一年"
+              ],
+              "matched": "一年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據正確證據，勞工普通傷病假超過法定期限後，需經事假或特別休假抵充仍未痊癒者，方可申請留職停薪。留職停薪期間最長一年。",
+        "wall_ms": 9279.47,
+        "ollama_total_ms": 9276.49,
+        "prompt_tokens": 161,
+        "answer_tokens": 48,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "事假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "特別休假",
+                "特休"
+              ],
+              "matched": "特別休假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "留職停薪"
+              ],
+              "matched": "留職停薪",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一年"
+              ],
+              "matched": "一年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 25.0
+    }
+  ]
+}

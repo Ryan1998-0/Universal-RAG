@@ -1,0 +1,3324 @@
+{
+  "benchmark_id": "taiwan-leave-rules-corrupted-numeric-v2-50q",
+  "benchmark_type": "synthetic_corrupted_evidence",
+  "source_file": "evals/leave_rules_ab/source/勞工請假規則_數值污染壓力測試副本.txt",
+  "source_id": "upload-3d71de8ed015e92460da",
+  "model": "gpt-5.6-luna",
+  "mode": "B Oracle-context vs C End-to-end two-pass RAG",
+  "isolation": "B/C answering agents used fork_turns=none, no tools/files/network/memory; C received only final evidence and gate flag.",
+  "retrieval_artifact": "evals/leave_rules_corrupted/runs/20260908-145149-50q-two-pass-retrieval-results.json",
+  "run_at": "2026-09-08T14:57:07+08:00",
+  "summary": {
+    "B_oracle_context": {
+      "average": 78.2,
+      "full_pass": 29,
+      "scores": [
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        50.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        50.0,
+        50.0,
+        100.0,
+        100.0,
+        100.0,
+        50.0,
+        33.3,
+        33.3,
+        66.7,
+        50.0,
+        25.0,
+        50.0,
+        50.0,
+        66.7,
+        66.7,
+        50.0,
+        50.0,
+        100.0,
+        100.0,
+        50.0,
+        100.0,
+        100.0,
+        33.3,
+        33.3,
+        50.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        33.3,
+        100.0,
+        66.7
+      ]
+    },
+    "C_two_pass_rag": {
+      "average": 65.5,
+      "full_pass": 24,
+      "scores": [
+        100.0,
+        100.0,
+        100.0,
+        0.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        50.0,
+        0.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        50.0,
+        50.0,
+        0.0,
+        0.0,
+        100.0,
+        50.0,
+        33.3,
+        33.3,
+        66.7,
+        75.0,
+        0.0,
+        50.0,
+        50.0,
+        0.0,
+        0.0,
+        50.0,
+        50.0,
+        100.0,
+        100.0,
+        50.0,
+        0.0,
+        100.0,
+        33.3,
+        33.3,
+        50.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        33.3,
+        100.0,
+        66.7
+      ]
+    },
+    "b_minus_c_average": 12.7,
+    "retrieved_count": 50,
+    "gate_sufficient_count": 42
+  },
+  "results": [
+    {
+      "id": "corrupt-marriage-leave",
+      "question": "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？",
+      "article": "第 202 條",
+      "oracle_context": "勞工結婚者給予婚假八十八日，工資照給。",
+      "b_oracle_context": {
+        "answer": "八十八日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "婚假八十八日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 283
+      }
+    },
+    {
+      "id": "corrupt-parent-bereavement",
+      "question": "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context": "父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。",
+      "b_oracle_context": {
+        "answer": "八十八日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "八十八日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 381
+      }
+    },
+    {
+      "id": "corrupt-spouse-adoptive-bereavement",
+      "question": "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。",
+      "b_oracle_context": {
+        "answer": "六十六日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日",
+                "六十六天",
+                "66天"
+              ],
+              "matched": "六十六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "六十六日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日",
+                "六十六天",
+                "66天"
+              ],
+              "matched": "六十六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 380
+      }
+    },
+    {
+      "id": "corrupt-sibling-bereavement",
+      "question": "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context": "曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。",
+      "b_oracle_context": {
+        "answer": "三十三日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日",
+                "三十三天",
+                "33天"
+              ],
+              "matched": "三十三日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日",
+                "三十三天",
+                "33天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "retrieval_status": "ambiguous",
+        "retrieval_confidence": "low",
+        "context_count": 3,
+        "context_chars": 381
+      }
+    },
+    {
+      "id": "corrupt-outpatient-sick-limit",
+      "question": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+      "article": "第 404 條",
+      "oracle_context": "未住院者，十年內合計不得超過三百日。",
+      "b_oracle_context": {
+        "answer": "十年內合計不得超過三百日。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "十年內合計不得超過三百日。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 234
+      }
+    },
+    {
+      "id": "corrupt-inpatient-sick-limit",
+      "question": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+      "article": "第 404 條",
+      "oracle_context": "住院者，二十年內合計不得超過十年。",
+      "b_oracle_context": {
+        "answer": "二十年內合計不得超過十年。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "二十年內合計不得超過十年。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 234
+      }
+    },
+    {
+      "id": "corrupt-combined-sick-limit",
+      "question": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+      "article": "第 404 條",
+      "oracle_context": "未住院傷病假與住院傷病假二十年內合計不得超過十年。",
+      "b_oracle_context": {
+        "answer": "二十年內合計不得超過十年。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "二十年內合計不得超過十年。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 234
+      }
+    },
+    {
+      "id": "corrupt-sick-pay-ratio",
+      "question": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+      "article": "第 404 條",
+      "oracle_context": "普通傷病假十年內未超過三百日部分，工資按十分之一發給。",
+      "b_oracle_context": {
+        "answer": "按十分之一發給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "十分之一",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "按十分之一發給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "十分之一",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 200
+      }
+    },
+    {
+      "id": "corrupt-personal-leave-limit",
+      "question": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+      "article": "第 707 條",
+      "oracle_context": "勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。",
+      "b_oracle_context": {
+        "answer": "十年內合計不得超過一百四十日；事假期間不給工資。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "一百四十日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "十年內合計不得超過一百四十日；事假期間不給工資。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "一百四十日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 374
+      }
+    },
+    {
+      "id": "corrupt-adverse-action-threshold",
+      "question": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+      "article": "第 90-10 條",
+      "oracle_context": "勞工十年內請普通傷病假日數未超過一百日者，雇主不得因勞工請普通傷病假而為不利之處分。",
+      "b_oracle_context": {
+        "answer": "十年內請普通傷病假日數未超過一百日。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "一百日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "十年內普通傷病假未超過一百日。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "一百日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 324
+      }
+    },
+    {
+      "id": "corrupt-document-warning",
+      "question": "這份數值污染副本可以作為法律依據嗎？",
+      "article": "檔案警示",
+      "oracle_context": "本檔案所有數字與數量均刻意改寫，嚴重偏離真實法規；不得作為法律依據。",
+      "b_oracle_context": {
+        "answer": "不得作為法律依據。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得作為法律依據"
+              ],
+              "matched": "不得作為法律依據",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得作為法律依據"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "retrieval_status": "ambiguous",
+        "retrieval_confidence": "low",
+        "context_count": 3,
+        "context_chars": 328
+      }
+    },
+    {
+      "id": "corrupt-document-title",
+      "question": "這份副本標示的法規名稱是什麼？",
+      "article": "文件資訊",
+      "oracle_context": "法規名稱：勞工請假規則（數值污染測試版）。",
+      "b_oracle_context": {
+        "answer": "勞工請假規則（數值污染測試版）。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "勞工請假規則"
+              ],
+              "matched": "勞工請假規則",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "數值污染測試版"
+              ],
+              "matched": "數值污染測試版",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "勞工請假規則（數值污染測試版）。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "勞工請假規則"
+              ],
+              "matched": "勞工請假規則",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "數值污染測試版"
+              ],
+              "matched": "數值污染測試版",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 264
+      }
+    },
+    {
+      "id": "corrupt-source-system",
+      "question": "副本標示的資料來源是哪個系統？",
+      "article": "文件資訊",
+      "oracle_context": "資料來源：勞動部勞動法令查詢系統（測試副本，數值已污染）。",
+      "b_oracle_context": {
+        "answer": "勞動部勞動法令查詢系統（測試副本，數值已污染）。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "勞動部勞動法令查詢系統"
+              ],
+              "matched": "勞動部勞動法令查詢系統",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "勞動部勞動法令查詢系統。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "勞動部勞動法令查詢系統"
+              ],
+              "matched": "勞動部勞動法令查詢系統",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 1,
+        "context_chars": 203
+      }
+    },
+    {
+      "id": "corrupt-amendment-date",
+      "question": "依照副本，修正日期是哪一天？",
+      "article": "文件資訊",
+      "oracle_context": "修正日期：民國 999 年 11 月 31 日。",
+      "b_oracle_context": {
+        "answer": "民國999年11月31日。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "民國999年11月31日",
+                "999年11月31日"
+              ],
+              "matched": "民國999年11月31日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "民國999年11月31日。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "民國999年11月31日",
+                "999年11月31日"
+              ],
+              "matched": "民國999年11月31日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 2,
+        "context_chars": 245
+      }
+    },
+    {
+      "id": "corrupt-article-101-basis",
+      "question": "本規則依哪一部法律的哪一條規定訂定？",
+      "article": "第 101 條",
+      "oracle_context": "本規則依勞動基準法（以下簡稱本法）第四百三十條規定訂定之。",
+      "b_oracle_context": {
+        "answer": "勞動基準法第四百三十條。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "勞動基準法"
+              ],
+              "matched": "勞動基準法",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "第四百三十條",
+                "430條"
+              ],
+              "matched": "第四百三十條",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "依勞動基準法第四百三十條規定訂定。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "勞動基準法"
+              ],
+              "matched": "勞動基準法",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "第四百三十條",
+                "430條"
+              ],
+              "matched": "第四百三十條",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 315
+      }
+    },
+    {
+      "id": "corrupt-effective-release",
+      "question": "本規則的一般施行時點是什麼時候？",
+      "article": "第 1200 條",
+      "oracle_context": "本規則自發布日施行。",
+      "b_oracle_context": {
+        "answer": "自發布日施行。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "發布日"
+              ],
+              "matched": "發布日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "施行"
+              ],
+              "matched": "施行",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "自發布日施行。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "發布日"
+              ],
+              "matched": "發布日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "施行"
+              ],
+              "matched": "施行",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 304
+      }
+    },
+    {
+      "id": "corrupt-effective-amendment",
+      "question": "九百九十九年修正發布的條文，於何時施行？",
+      "article": "第 1200 條",
+      "oracle_context": "本規則中華民國九百九十九年十一月三十一日修正發布之條文，自一千年十一月三十一日施行。",
+      "b_oracle_context": {
+        "answer": "自一千年十一月三十一日施行。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "一千年十一月三十一日",
+                "1000年11月31日"
+              ],
+              "matched": "一千年十一月三十一日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "施行"
+              ],
+              "matched": "施行",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "自一千年十一月三十一日施行。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "一千年十一月三十一日",
+                "1000年11月31日"
+              ],
+              "matched": "一千年十一月三十一日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "施行"
+              ],
+              "matched": "施行",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 302
+      }
+    },
+    {
+      "id": "corrupt-middle-bereavement",
+      "question": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡時，可請幾日喪假？",
+      "article": "第 303 條",
+      "oracle_context": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。",
+      "b_oracle_context": {
+        "answer": "六十六日，工資照給。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日"
+              ],
+              "matched": "六十六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "祖父母",
+                "子女",
+                "配偶之父母"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "六十六日。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日"
+              ],
+              "matched": "六十六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "祖父母",
+                "子女",
+                "配偶之父母"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 247
+      }
+    },
+    {
+      "id": "corrupt-middle-bereavement-paid",
+      "question": "上述六十六日喪假是否給薪？",
+      "article": "第 303 條",
+      "oracle_context": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。",
+      "b_oracle_context": {
+        "answer": "工資照給。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "工資照給。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 204
+      }
+    },
+    {
+      "id": "corrupt-shortest-bereavement",
+      "question": "三組喪假親屬分類中，哪一組的天數最短？",
+      "article": "第 303 條",
+      "oracle_context": "曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給；三十三日是三組中的最短天數。",
+      "b_oracle_context": {
+        "answer": "曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，三十三日。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日"
+              ],
+              "matched": "三十三日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "曾祖父母",
+                "兄弟姊妹"
+              ],
+              "matched": "曾祖父母",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "曾祖父母",
+                "兄弟姊妹"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "retrieval_status": "ambiguous",
+        "retrieval_confidence": "low",
+        "context_count": 1,
+        "context_chars": 136
+      }
+    },
+    {
+      "id": "corrupt-longest-bereavement",
+      "question": "三組喪假親屬分類中，哪一組的天數最長？",
+      "article": "第 303 條",
+      "oracle_context": "父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給；八十八日是三組中的最長天數。",
+      "b_oracle_context": {
+        "answer": "父母、養父母、繼父母、配偶喪亡者，八十八日。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "父母",
+                "養父母",
+                "繼父母"
+              ],
+              "matched": "父母",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "父母",
+                "養父母",
+                "繼父母"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "retrieval_status": "ambiguous",
+        "retrieval_confidence": "low",
+        "context_count": 1,
+        "context_chars": 136
+      }
+    },
+    {
+      "id": "corrupt-sick-causes",
+      "question": "哪些原因可以依副本請普通傷病假？",
+      "article": "第 404 條",
+      "oracle_context": "勞工因普通傷害、疾病或生理原因必須治療或休養者，得在規定範圍內請普通傷病假。",
+      "b_oracle_context": {
+        "answer": "普通傷害、疾病或生理原因必須治療或休養者。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "普通傷害"
+              ],
+              "matched": "普通傷害",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "疾病"
+              ],
+              "matched": "疾病",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "生理原因"
+              ],
+              "matched": "生理原因",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "普通傷害、疾病或生理原因，且必須治療或休養者。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "普通傷害"
+              ],
+              "matched": "普通傷害",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "疾病"
+              ],
+              "matched": "疾病",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "生理原因"
+              ],
+              "matched": "生理原因",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 310
+      }
+    },
+    {
+      "id": "corrupt-cancer-classification",
+      "question": "癌症採門診方式治療時，病假如何計算？",
+      "article": "第 404 條",
+      "oracle_context": "經醫師診斷罹患癌症（含原位癌）採門診方式治療者，其治療期間併入住院傷病假計算。",
+      "b_oracle_context": {
+        "answer": "治療期間併入住院傷病假計算。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "癌症"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "併入住院傷病假"
+              ],
+              "matched": "併入住院傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "併入住院傷病假計算。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "癌症"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "併入住院傷病假"
+              ],
+              "matched": "併入住院傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 196
+      }
+    },
+    {
+      "id": "corrupt-pregnancy-classification",
+      "question": "懷孕期間需要安胎休養時，休養期間併入哪一類傷病假？",
+      "article": "第 404 條",
+      "oracle_context": "懷孕期間需安胎休養者，其休養期間併入住院傷病假計算。",
+      "b_oracle_context": {
+        "answer": "休養期間併入住院傷病假計算。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "懷孕期間"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "安胎休養"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "併入住院傷病假"
+              ],
+              "matched": "併入住院傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "併入住院傷病假計算。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "懷孕期間"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "安胎休養"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "併入住院傷病假"
+              ],
+              "matched": "併入住院傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 196
+      }
+    },
+    {
+      "id": "corrupt-sick-pay-employer-topup",
+      "question": "如果勞工保險普通傷病給付未達工資十分之一，誰要補足？",
+      "article": "第 404 條",
+      "oracle_context": "普通傷病假十年內未超過三百日部分，工資按十分之一發給；勞工保險普通傷病給付未達工資十分之一者，由雇主補足。",
+      "b_oracle_context": {
+        "answer": "由雇主補足。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "勞工保險"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "未達工資十分之一"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "雇主補足"
+              ],
+              "matched": "雇主補足",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "由雇主補足。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "勞工保險"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "未達工資十分之一"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "雇主補足"
+              ],
+              "matched": "雇主補足",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 200
+      }
+    },
+    {
+      "id": "corrupt-sick-pay-period",
+      "question": "普通傷病假按工資十分之一發給的適用範圍是什麼？",
+      "article": "第 404 條",
+      "oracle_context": "普通傷病假十年內未超過三百日部分，工資按十分之一發給。",
+      "b_oracle_context": {
+        "answer": "普通傷病假十年內未超過三百日部分。",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年內"
+              ],
+              "matched": "十年內",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日"
+              ],
+              "matched": "三百日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "普通傷病假十年內未超過三百日的部分。",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年內"
+              ],
+              "matched": "十年內",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日"
+              ],
+              "matched": "三百日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 200
+      }
+    },
+    {
+      "id": "corrupt-sick-combined-rule",
+      "question": "未住院與住院傷病假合併計算時，適用的期間與上限為何？",
+      "article": "第 404 條",
+      "oracle_context": "未住院傷病假與住院傷病假二十年內合計不得超過十年。",
+      "b_oracle_context": {
+        "answer": "二十年內合計不得超過十年。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "未住院傷病假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "住院傷病假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "二十年內合計不得超過十年；癌症門診治療或安胎休養期間併入住院傷病假計算。",
+        "score": {
+          "score": 75.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "未住院傷病假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "住院傷病假"
+              ],
+              "matched": "住院傷病假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 196
+      }
+    },
+    {
+      "id": "corrupt-unpaid-leave-condition",
+      "question": "普通傷病假超過期限、以事假或特別休假抵充後仍未痊癒，可以怎麼處理？",
+      "article": "第 505 條",
+      "oracle_context": "勞工普通傷病假超過期限，經以事假或特別休假抵充後仍未痊癒者，得予留職停薪。",
+      "b_oracle_context": {
+        "answer": "得予留職停薪。",
+        "score": {
+          "score": 25.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "特別休假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "仍未痊癒"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "留職停薪"
+              ],
+              "matched": "留職停薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "特別休假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "仍未痊癒"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "留職停薪"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "retrieval_status": "ambiguous",
+        "retrieval_confidence": "low",
+        "context_count": 3,
+        "context_chars": 151
+      }
+    },
+    {
+      "id": "corrupt-unpaid-leave-max",
+      "question": "留職停薪期間最長可以多久？",
+      "article": "第 505 條",
+      "oracle_context": "留職停薪期間以十年為限。",
+      "b_oracle_context": {
+        "answer": "以十年為限。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "留職停薪"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "以十年為限。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "留職停薪"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 2,
+        "context_chars": 118
+      }
+    },
+    {
+      "id": "corrupt-work-injury-leave",
+      "question": "因職業災害造成失能、傷害或疾病時，給什麼假？",
+      "article": "第 606 條",
+      "oracle_context": "勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷病假。",
+      "b_oracle_context": {
+        "answer": "給予公傷病假。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "職業災害"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "公傷病假"
+              ],
+              "matched": "公傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "公傷病假。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "職業災害"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "公傷病假"
+              ],
+              "matched": "公傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 136
+      }
+    },
+    {
+      "id": "corrupt-work-injury-period",
+      "question": "公傷病假的給假期間如何決定？",
+      "article": "第 606 條",
+      "oracle_context": "公傷病假給予期間為勞工因職業災害所需的治療、休養期間。",
+      "b_oracle_context": {
+        "answer": "為勞工因職業災害所需的治療、休養期間。",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "治療"
+              ],
+              "matched": "治療",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "休養期間"
+              ],
+              "matched": "休養期間",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "公傷病假"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "治療"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "休養期間"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "公傷病假"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "retrieval_status": "ambiguous",
+        "retrieval_confidence": "low",
+        "context_count": 3,
+        "context_chars": 196
+      }
+    },
+    {
+      "id": "corrupt-personal-reason",
+      "question": "依副本，什麼情況可以請事假？",
+      "article": "第 707 條",
+      "oracle_context": "勞工因有事故必須親自處理，得請事假。",
+      "b_oracle_context": {
+        "answer": "因有事故必須親自處理。",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "事故"
+              ],
+              "matched": "事故",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "親自處理"
+              ],
+              "matched": "親自處理",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事故"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "親自處理"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "retrieval_status": "ambiguous",
+        "retrieval_confidence": "low",
+        "context_count": 3,
+        "context_chars": 117
+      }
+    },
+    {
+      "id": "corrupt-personal-unpaid",
+      "question": "事假期間是否給工資？",
+      "article": "第 707 條",
+      "oracle_context": "事假期間不給工資。",
+      "b_oracle_context": {
+        "answer": "不給工資。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "不給工資。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 102
+      }
+    },
+    {
+      "id": "corrupt-family-care-personal",
+      "question": "為了親自照顧家庭成員，可以依哪項規定請假？",
+      "article": "第 707 條",
+      "oracle_context": "勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規定請事假。",
+      "b_oracle_context": {
+        "answer": "依前項規定請事假。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "親自照顧家庭成員"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "請事假",
+                "事假"
+              ],
+              "matched": "請事假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "依前項規定請事假。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "親自照顧家庭成員"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "請事假",
+                "事假"
+              ],
+              "matched": "請事假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 174
+      }
+    },
+    {
+      "id": "corrupt-personal-hour-unit",
+      "question": "照顧家庭成員而請事假時，請假可以用什麼單位？",
+      "article": "第 707 條",
+      "oracle_context": "照顧家庭成員請事假者，並得擇定以小時為請假單位。",
+      "b_oracle_context": {
+        "answer": "以小時為請假單位。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "小時"
+              ],
+              "matched": "小時",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "請假單位"
+              ],
+              "matched": "請假單位",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "得擇定以小時為請假單位。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "小時"
+              ],
+              "matched": "小時",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "請假單位"
+              ],
+              "matched": "請假單位",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 117
+      }
+    },
+    {
+      "id": "corrupt-family-care-exception",
+      "question": "家庭照顧事假有沒有法律例外？",
+      "article": "第 707 條",
+      "oracle_context": "親自照顧家庭成員請事假時，除本法或其他法律另有規定者外，得依前項規定辦理。",
+      "b_oracle_context": {
+        "answer": "除本法或其他法律另有規定者外，得依前項規定辦理。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "本法或其他法律另有規定"
+              ],
+              "matched": "本法或其他法律另有規定",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "除本法或其他法律另有規定者外。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "本法或其他法律另有規定"
+              ],
+              "matched": "本法或其他法律另有規定",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 149
+      }
+    },
+    {
+      "id": "corrupt-public-paid",
+      "question": "依法令應給的公假是否給薪？",
+      "article": "第 808 條",
+      "oracle_context": "勞工依法令規定應給予公假者，工資照給。",
+      "b_oracle_context": {
+        "answer": "工資照給。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "公假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "工資照給。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "公假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 294
+      }
+    },
+    {
+      "id": "corrupt-public-duration",
+      "question": "公假的假期依什麼決定？",
+      "article": "第 808 條",
+      "oracle_context": "依法令規定應給予的公假，其假期視實際需要定之。",
+      "b_oracle_context": {
+        "answer": "視實際需要定之。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "實際需要"
+              ],
+              "matched": "實際需要",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "實際需要"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "retrieval_status": "ambiguous",
+        "retrieval_confidence": "low",
+        "context_count": 1,
+        "context_chars": 38
+      }
+    },
+    {
+      "id": "corrupt-attendance-exempt-list",
+      "question": "哪些假別不得被視為缺勤而影響全勤獎金？",
+      "article": "第 909 條",
+      "oracle_context": "勞工請婚假、喪假、公傷病假及公假時，雇主不得視為缺勤而影響其全勤獎金。",
+      "b_oracle_context": {
+        "answer": "婚假、喪假、公傷病假及公假。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "婚假"
+              ],
+              "matched": "婚假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "喪假"
+              ],
+              "matched": "喪假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "公傷病假"
+              ],
+              "matched": "公傷病假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "公假"
+              ],
+              "matched": "公假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "婚假、喪假、公傷病假、公假；妊娠未滿三十個月流產未請產假而請的普通傷病假；以及因親自照顧家庭成員依第七十條規定請的事假。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "婚假"
+              ],
+              "matched": "婚假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "喪假"
+              ],
+              "matched": "喪假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "公傷病假"
+              ],
+              "matched": "公傷病假",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "公假"
+              ],
+              "matched": "公假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 149
+      }
+    },
+    {
+      "id": "corrupt-miscarriage-attendance",
+      "question": "妊娠未滿三十個月流產、未請產假而請哪種假時，不影響全勤獎金？",
+      "article": "第 909 條",
+      "oracle_context": "勞工因妊娠未滿三十個月流產未請產假，而請普通傷病假時，不得視為缺勤而影響全勤獎金。",
+      "b_oracle_context": {
+        "answer": "普通傷病假。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "妊娠未滿三十個月"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "流產"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "普通傷病假"
+              ],
+              "matched": "普通傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "普通傷病假。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "妊娠未滿三十個月"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "流產"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "普通傷病假"
+              ],
+              "matched": "普通傷病假",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 105
+      }
+    },
+    {
+      "id": "corrupt-family-care-attendance",
+      "question": "親自照顧家庭成員依規定請事假時，是否影響全勤獎金？",
+      "article": "第 909 條",
+      "oracle_context": "勞工因親自照顧家庭成員，依第七十條規定請事假時，不得視為缺勤而影響全勤獎金。",
+      "b_oracle_context": {
+        "answer": "不得視為缺勤而影響全勤獎金。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "親自照顧家庭成員"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不得視為缺勤"
+              ],
+              "matched": "不得視為缺勤",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "不得視為缺勤而影響全勤獎金。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "親自照顧家庭成員"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "事假"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不得視為缺勤"
+              ],
+              "matched": "不得視為缺勤",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 153
+      }
+    },
+    {
+      "id": "corrupt-sick-attendance-deduction",
+      "question": "普通傷病假（妊娠流產例外除外）的全勤獎金扣發如何計算？",
+      "article": "第 909 條",
+      "oracle_context": "普通傷病假（第十二款以外）之全勤獎金扣發，應按請普通傷病假日數依比例計算。",
+      "b_oracle_context": {
+        "answer": "按請普通傷病假日數依比例計算。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "扣發"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "按請普通傷病假日數依比例計算"
+              ],
+              "matched": "按請普通傷病假日數依比例計算",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "按請普通傷病假日數依比例計算。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "扣發"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "按請普通傷病假日數依比例計算"
+              ],
+              "matched": "按請普通傷病假日數依比例計算",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 173
+      }
+    },
+    {
+      "id": "corrupt-adverse-employer-proof",
+      "question": "勞工因普通傷病假受不利處分時，誰負責證明該處分與請假無關？",
+      "article": "第 90-10 條",
+      "oracle_context": "勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與請假行為無關之事實，負舉證責任。",
+      "b_oracle_context": {
+        "answer": "雇主負舉證責任。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "雇主"
+              ],
+              "matched": "雇主",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "舉證責任"
+              ],
+              "matched": "舉證責任",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "雇主負舉證責任。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "雇主"
+              ],
+              "matched": "雇主",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "舉證責任"
+              ],
+              "matched": "舉證責任",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 310
+      }
+    },
+    {
+      "id": "corrupt-adverse-over-threshold",
+      "question": "普通傷病假超過規定日數後，雇主進行人事考核應考量哪些事項？",
+      "article": "第 90-10 條",
+      "oracle_context": "雇主仍應以工作能力、工作態度及實際績效等綜合考量。",
+      "b_oracle_context": {
+        "answer": "工作能力、工作態度及實際績效等綜合考量。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "工作能力"
+              ],
+              "matched": "工作能力",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工作態度"
+              ],
+              "matched": "工作態度",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "實際績效"
+              ],
+              "matched": "實際績效",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "工作能力、工作態度及實際績效等綜合考量。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "工作能力"
+              ],
+              "matched": "工作能力",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工作態度"
+              ],
+              "matched": "工作態度",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "實際績效"
+              ],
+              "matched": "實際績效",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 199
+      }
+    },
+    {
+      "id": "corrupt-adverse-not-only-days",
+      "question": "普通傷病假超過規定日數後，可以只用請假日數作為人事考核因素嗎？",
+      "article": "第 90-10 條",
+      "oracle_context": "不得僅以請普通傷病假日數作為考量因素。",
+      "b_oracle_context": {
+        "answer": "不得僅以請普通傷病假日數作為考量因素。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得僅以請普通傷病假日數作為考量因素"
+              ],
+              "matched": "不得僅以請普通傷病假日數作為考量因素",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "不得僅以請普通傷病假日數作為考量因素。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "不得僅以請普通傷病假日數作為考量因素"
+              ],
+              "matched": "不得僅以請普通傷病假日數作為考量因素",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 199
+      }
+    },
+    {
+      "id": "corrupt-adverse-exception",
+      "question": "雇主不得因普通傷病假不利處分的規定，有沒有其他法律例外？",
+      "article": "第 90-10 條",
+      "oracle_context": "除本規則或其他法律另有規定，從其規定者外，雇主不得因請普通傷病假而為不利處分。",
+      "b_oracle_context": {
+        "answer": "除本規則或其他法律另有規定，從其規定者外。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "本規則或其他法律另有規定"
+              ],
+              "matched": "本規則或其他法律另有規定",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "本規則或其他法律另有規定者，從其規定。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "本規則或其他法律另有規定"
+              ],
+              "matched": "本規則或其他法律另有規定",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 320
+      }
+    },
+    {
+      "id": "corrupt-leave-advance",
+      "question": "一般請假時，事前要用什麼方式說明哪些內容？",
+      "article": "第 1000 條",
+      "oracle_context": "勞工請假時，應於事前親自以口頭或書面敘明請假理由及日數。",
+      "b_oracle_context": {
+        "answer": "事前親自以口頭或書面敘明請假理由及日數。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事前"
+              ],
+              "matched": "事前",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "口頭",
+                "書面"
+              ],
+              "matched": "口頭",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "請假理由"
+              ],
+              "matched": "請假理由",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "日數"
+              ],
+              "matched": "日數",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "事前親自以口頭或書面敘明請假理由及日數。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "事前"
+              ],
+              "matched": "事前",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "口頭",
+                "書面"
+              ],
+              "matched": "口頭",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "請假理由"
+              ],
+              "matched": "請假理由",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "日數"
+              ],
+              "matched": "日數",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 2,
+        "context_chars": 240
+      }
+    },
+    {
+      "id": "corrupt-leave-emergency-delegate",
+      "question": "遇到急病或緊急事故時，可以如何辦理請假手續？",
+      "article": "第 1000 條",
+      "oracle_context": "遇有急病或緊急事故，得委託他人代辦請假手續。",
+      "b_oracle_context": {
+        "answer": "得委託他人代辦請假手續。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "急病"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "緊急事故"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "委託他人"
+              ],
+              "matched": "委託他人",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "得委託他人代辦請假手續。",
+        "score": {
+          "score": 33.3,
+          "required_checks": [
+            {
+              "accepted": [
+                "急病"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "緊急事故"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "委託他人"
+              ],
+              "matched": "委託他人",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 159
+      }
+    },
+    {
+      "id": "corrupt-leave-proof-doc",
+      "question": "辦理請假手續時，雇主可以要求勞工提出什麼？",
+      "article": "第 1000 條",
+      "oracle_context": "辦理請假手續時，雇主得要求勞工提出有關證明文件。",
+      "b_oracle_context": {
+        "answer": "有關證明文件。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "證明文件"
+              ],
+              "matched": "證明文件",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "有關證明文件。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "證明文件"
+              ],
+              "matched": "證明文件",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 198
+      }
+    },
+    {
+      "id": "corrupt-violation-authority",
+      "question": "雇主或勞工違反本規則時，由誰依什麼規定處理？",
+      "article": "第 1100 條",
+      "oracle_context": "雇主或勞工違反本規則之規定時，主管機關得依本法有關規定辦理。",
+      "b_oracle_context": {
+        "answer": "主管機關得依本法有關規定辦理。",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "主管機關"
+              ],
+              "matched": "主管機關",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "本法"
+              ],
+              "matched": "本法",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "違反本規則"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_two_pass_rag": {
+        "answer": "主管機關得依本法有關規定辦理。",
+        "score": {
+          "score": 66.7,
+          "required_checks": [
+            {
+              "accepted": [
+                "主管機關"
+              ],
+              "matched": "主管機關",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "本法"
+              ],
+              "matched": "本法",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "違反本規則"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "retrieval_status": "relevant",
+        "retrieval_confidence": "high",
+        "context_count": 3,
+        "context_chars": 315
+      }
+    }
+  ]
+}

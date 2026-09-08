@@ -1,0 +1,90 @@
+{
+  "benchmark_id": "taiwan-leave-rules-corrupted-numeric-v1",
+  "benchmark_type": "synthetic_corrupted_evidence",
+  "truth_status": "intentionally_false_numeric_values",
+  "source_file": "evals/leave_rules_ab/source/勞工請假規則_數值污染壓力測試副本.txt",
+  "source_url": "synthetic://leave-rules-numeric-corruption",
+  "corruption_note": "本 benchmark 的 expected_required 只代表污染副本中的數值，不代表現行法規；用於測試模型是否遵循提供證據及 RAG 是否命中污染內容。",
+  "items": [
+    {
+      "id": "corrupt-marriage-leave",
+      "question": "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？",
+      "article": "第 202 條",
+      "oracle_context": "勞工結婚者給予婚假八十八日，工資照給。",
+      "required": [["八十八日", "88日", "八十八天", "88天"], ["工資照給", "給薪", "有薪"]],
+      "forbidden": ["不給薪", "無薪", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-parent-bereavement",
+      "question": "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context": "父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。",
+      "required": [["八十八日", "88日", "八十八天", "88天"], ["工資照給", "給薪", "有薪"]],
+      "forbidden": ["不給薪", "無薪", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-spouse-adoptive-bereavement",
+      "question": "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。",
+      "required": [["六十六日", "66日", "六十六天", "66天"], ["工資照給", "給薪", "有薪"]],
+      "forbidden": ["不給薪", "無薪", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-sibling-bereavement",
+      "question": "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context": "曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。",
+      "required": [["三十三日", "33日", "三十三天", "33天"], ["工資照給", "給薪", "有薪"]],
+      "forbidden": ["不給薪", "無薪", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-outpatient-sick-limit",
+      "question": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+      "article": "第 404 條",
+      "oracle_context": "未住院者，十年內合計不得超過三百日。",
+      "required": [["十年", "10年"], ["三百日", "300日", "三百天", "300天"]],
+      "forbidden": ["一年", "1年", "三十日", "30日", "三十天", "30天", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-inpatient-sick-limit",
+      "question": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+      "article": "第 404 條",
+      "oracle_context": "住院者，二十年內合計不得超過十年。",
+      "required": [["二十年", "20年"], ["十年", "10年"]],
+      "forbidden": ["二年", "2年", "一年", "1年", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-combined-sick-limit",
+      "question": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+      "article": "第 404 條",
+      "oracle_context": "未住院傷病假與住院傷病假二十年內合計不得超過十年。",
+      "required": [["二十年", "20年"], ["十年", "10年"]],
+      "forbidden": ["二年", "2年", "一年", "1年", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-sick-pay-ratio",
+      "question": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+      "article": "第 404 條",
+      "oracle_context": "普通傷病假十年內未超過三百日部分，工資按十分之一發給。",
+      "required": [["十分之一", "1/10", "10%"]],
+      "forbidden": ["折半", "半數", "二分之一", "1/2", "50%", "三十日", "30日", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-personal-leave-limit",
+      "question": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+      "article": "第 707 條",
+      "oracle_context": "勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。",
+      "required": [["十年", "10年"], ["一百四十日", "140日", "一百四十天", "140天"], ["不給工資", "不給薪", "無薪"]],
+      "forbidden": ["一年", "1年", "十四日", "14日", "十四天", "14天", "工資照給", "給薪", "證據不足", "無法回答", "無法確定"]
+    },
+    {
+      "id": "corrupt-adverse-action-threshold",
+      "question": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+      "article": "第 90-10 條",
+      "oracle_context": "勞工十年內請普通傷病假日數未超過一百日者，雇主不得因勞工請普通傷病假而為不利之處分。",
+      "required": [["十年", "10年"], ["一百日", "100日", "一百天", "100天"], ["不得", "不可以", "不可"], ["不利處分", "不利之處分"]],
+      "forbidden": ["一年", "1年", "十日", "10日", "十天", "10天", "可以因請假處分", "證據不足", "無法回答", "無法確定"]
+    }
+  ]
+}

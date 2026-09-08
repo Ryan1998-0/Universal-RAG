@@ -5,19 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>泛用 RAG 工作台</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="./assets/styles.css?v=document-folders-1" />
+    <link rel="stylesheet" href="./assets/styles.css?v=demo-ui-v3" />
   </head>
   <body>
     <main class="app-shell">
-      <aside class="conversation-rail is-collapsed" id="conversationRail" aria-label="對話紀錄">
+      <aside class="conversation-rail" id="conversationRail" aria-label="對話紀錄">
         <div class="rail-icons" aria-label="主要導覽">
-          <button class="rail-icon-button" id="historyToggle" type="button" title="對話紀錄" aria-label="展開對話紀錄">
+          <button class="rail-icon-button" id="historyToggle" type="button" title="對話紀錄" aria-label="收合對話紀錄" aria-expanded="true" aria-controls="conversationList">
             <span class="collapse-icon" aria-hidden="true"><span></span><span></span></span>
           </button>
         </div>
         <div class="rail-content">
           <div class="rail-content-head">
-            <strong>對話紀錄</strong>
+            <div class="panel-title">
+              <span>RAG</span>
+              <strong>歷史對話</strong>
+            </div>
             <div class="rail-head-actions">
               <button class="new-chat-button" id="newChatButton" type="button" title="新增對話" aria-label="新增對話">＋</button>
               <button class="panel-close-button" id="historyClose" type="button" aria-label="收合對話紀錄">×</button>
@@ -29,14 +32,30 @@
 
       <section class="main-area">
         <header class="topbar">
-          <div class="plan-pill"><span id="dataStatus">正在載入知識庫...</span></div>
-          <button class="icon-button" id="knowledgeToggle" type="button" aria-label="展開文件選擇">☷</button>
+          <div class="workspace-status">
+            <span class="brand-mark" aria-hidden="true">R</span>
+            <div>
+              <strong>Universal RAG</strong>
+              <span id="dataStatus" role="status" aria-live="polite">正在載入知識庫...</span>
+            </div>
+          </div>
+          <a class="plan-pill" href="./architecture.html">架構工作台</a>
+          <button class="icon-button knowledge-trigger" id="knowledgeToggle" type="button" aria-label="收合文件選擇" aria-expanded="true" aria-controls="knowledgePanel">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M4.5 3.5h11v13h-11zM7.5 7h5M7.5 10h5M7.5 13h3" />
+            </svg>
+            <span>文件</span>
+          </button>
         </header>
 
         <section class="chat-pane" aria-label="RAG 對話">
           <div class="chat-scroll">
             <section class="home-panel" id="homePanel">
-              <h1>歡迎使用</h1>
+              <div class="home-copy">
+                <span class="home-mark" aria-hidden="true">R</span>
+                <h1>從你的文件開始提問</h1>
+                <p>從右側選取知識來源，回答會保留引用與檢索依據。</p>
+              </div>
               <div class="chips" id="questionChips"></div>
               <button class="demo-cta" id="demoCta" type="button" hidden>↑ 使用範例問題</button>
             </section>
@@ -125,7 +144,7 @@
                 name="query"
                 rows="2"
                 autocomplete="off"
-                placeholder="輸入問題"
+                placeholder="詢問已選取的文件…"
               ></textarea>
               <div class="prompt-footer">
                 <label class="model-picker">
@@ -140,10 +159,13 @@
         </section>
       </section>
 
-      <aside class="knowledge-panel is-collapsed" id="knowledgePanel" aria-label="知識庫、文件與設定">
+      <aside class="knowledge-panel" id="knowledgePanel" aria-label="知識庫、文件與設定">
         <div class="knowledge-content">
           <div class="knowledge-panel-head">
-            <strong>文件</strong>
+            <div class="panel-title">
+              <span>RAG</span>
+              <strong>知識與文件</strong>
+            </div>
             <button class="panel-close-button" id="knowledgeClose" type="button" aria-label="收合文件選擇">×</button>
           </div>
           <div class="top-actions">
@@ -160,7 +182,7 @@
           </div>
         <label class="file-search">
           <span>⌕</span>
-          <input id="fileSearchInput" type="search" autocomplete="off" placeholder="搜尋文件名稱..." />
+          <input id="fileSearchInput" type="search" autocomplete="off" placeholder="搜尋文件名稱" />
         </label>
         <div class="folder-toolbar">
           <label class="upload-folder-picker">
@@ -174,6 +196,7 @@
           </div>
         </div>
         <p class="upload-status" id="documentUploadStatus" role="status" hidden></p>
+        <p class="upload-hint">拖放檔案到這裡，或點擊上傳。支援 PDF、圖片、DOCX、TXT、MD 與 JSON。</p>
 
         <section class="file-list-section" id="fileListSection">
           <div class="file-list-head">
@@ -192,7 +215,7 @@
                 id="uploadDocument"
                 title="上傳 PDF、圖片、DOCX、TXT、MD 或 JSON"
                 aria-label="上傳文件"
-              ><span aria-hidden="true">↑</span></button>
+              ><span aria-hidden="true">＋</span><span>上傳</span></button>
               <button type="button" id="selectAllDocuments" data-i18n="selectAll">全選</button>
               <button type="button" id="clearDocuments" data-i18n="clear">清除選擇</button>
             </div>
@@ -259,6 +282,6 @@
       </form>
     </dialog>
 
-    <script type="module" src="./assets/app.js?v=canonical-pipeline-1"></script>
+    <script type="module" src="./assets/app.js?v=demo-ui-v5"></script>
   </body>
 </html>

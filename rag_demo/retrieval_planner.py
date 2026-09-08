@@ -9,13 +9,16 @@ class RetrievalPlan:
     query_variants: Tuple[str, ...]
     evidence_query: str
     intent_labels: Tuple[str, ...]
+    sub_questions: Tuple[str, ...] = ()
 
 
 def build_retrieval_plan(
     question: str,
     primary_query: str = "",
     rewritten_query: str = "",
-    max_variants: int = 10,
+    query_variants: Sequence[str] = (),
+    sub_questions: Sequence[str] = (),
+    max_variants: int = 4,
 ) -> RetrievalPlan:
     """Build an agent-style retrieval plan without adding another model call."""
 
@@ -27,6 +30,7 @@ def build_retrieval_plan(
     variants = _unique_nonempty(
         [
             primary_query,
+            *query_variants,
             question,
             rewritten_query,
             " ".join([*focus_terms, *intent_terms]),
@@ -44,6 +48,7 @@ def build_retrieval_plan(
                 question,
                 primary_query,
                 rewritten_query,
+                *sub_questions,
                 *focus_terms,
                 *intent_terms,
             ]
@@ -55,6 +60,7 @@ def build_retrieval_plan(
         query_variants=tuple(variants),
         evidence_query=evidence_query,
         intent_labels=tuple(intent["labels"]),
+        sub_questions=tuple(_unique_nonempty(sub_questions)[:4]),
     )
 
 
@@ -120,16 +126,16 @@ def _compound_subterms(terms: Iterable[str]) -> List[str]:
         compact = re.sub(r"\s+", "", str(term))
         if len(compact) < 4:
             continue
-        if compact.endswith("實驗"):
-            subterms.extend([compact[:-2], "實驗"])
-        if compact.endswith("模型"):
-            subterms.extend([compact[:-2], "模型"])
-        if compact.endswith("行動"):
-            subterms.extend([compact[:-2], "行動"])
-        if compact.endswith("材料"):
-            subterms.extend([compact[:-2], "材料"])
-        if compact.endswith("文明"):
-            subterms.extend([compact[:-2], "文明"])
+        for suffix in (
+            "相關規定", "適用範圍", "天數上限", "實驗", "模型", "行動",
+            "材料", "文明", "規定", "天數", "上限", "下限", "期限",
+            "流程", "程序", "方式", "方法", "條件", "定義", "內容",
+        ):
+            if compact.endswith(suffix) and len(compact) > len(suffix) + 1:
+                base = compact[: -len(suffix)]
+                subterms.extend([base, suffix])
+                subterms.extend(_compound_subterms([base]))
+                break
     return subterms
 
 
@@ -196,6 +202,8 @@ _STOP_PHRASES = (
     "最後",
     "當前",
     "目前",
+    "相關規定",
+    "規定",
     "所處",
     "面臨",
     "使用",

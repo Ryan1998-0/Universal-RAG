@@ -8,6 +8,8 @@ from uuid import uuid4
 
 from rag_demo.config import RagConfig
 from rag_demo.conversation_store import ConversationStore
+from rag_demo.evidence_focus import focus_retrieved_evidence
+from rag_demo.fine_evidence import retrieve_fine_evidence
 from rag_demo.general_answer import (
     CURRENT_DATETIME_REASON,
     answer_current_datetime_question,
@@ -18,6 +20,12 @@ from rag_demo.general_answer import (
 from rag_demo.hybrid_retrieval import evaluate_retrieval_evidence, get_hybrid_retriever
 from rag_demo.model_providers import ask_model, parse_model_spec
 from rag_demo.query_rewriter import QueryRewriteDecision, decide_and_rewrite_query_for_retrieval
+from rag_demo.reference_evaluation import (
+    claude_reference_evaluation_enabled,
+    evaluate_qwen_with_claude,
+    unavailable_reference_evaluation,
+)
+from rag_demo.retrieval_planner import build_retrieval_plan
 from rag_demo.retrieval_scope import RetrievalScope
 from rag_demo.threshold_evidence import resolve_threshold_evidence, render_threshold_answer
 
@@ -102,6 +110,8 @@ class RagPipeline:
         route_fn: Callable[..., object] = decide_and_rewrite_query_for_retrieval,
         evidence_fn: Callable[..., dict] = evaluate_retrieval_evidence,
         ask_model_fn: Callable[..., str] = ask_model,
+        quality_evaluator_fn: Callable[..., dict] = evaluate_qwen_with_claude,
+        quality_evaluation_enabled_fn: Callable[[], bool] = claude_reference_evaluation_enabled,
         datetime_answer_fn: Callable[[str], Optional[str]] = answer_current_datetime_question,
         run_id_fn: Optional[Callable[[], str]] = None,
     ):
@@ -111,6 +121,8 @@ class RagPipeline:
         self._route_fn = route_fn
         self._evidence_fn = evidence_fn
         self._ask_model_fn = ask_model_fn
+        self._quality_evaluator_fn = quality_evaluator_fn
+        self._quality_evaluation_enabled_fn = quality_evaluation_enabled_fn
         self._datetime_answer_fn = datetime_answer_fn
         self._run_id_fn = run_id_fn or (lambda: uuid4().hex)
 
@@ -153,8 +165,17 @@ class RagPipeline:
             store.add_message(conversation_id, "user", request.question)
 
         contexts: List[dict] = []
+        raw_contexts: List[dict] = []
+        evidence_focus = {
+            "enabled": False,
+            "candidateCount": 0,
+            "selectedCount": 0,
+        }
         evidence_evaluation = None
+        quality_evaluation = None
+        grounded_request: Dict[str, str] = {}
         retrieval_decision = None
+        retrieval_plan = None
         answer = ""
 
         direct_system_answer = self._datetime_answer_fn(request.question)
@@ -178,10 +199,24 @@ class RagPipeline:
             stage_timings["routeMs"] = _elapsed_ms(route_started)
 
             if retrieval_decision["needs_retrieval"]:
+                retrieval_plan = build_retrieval_plan(
+                    question=request.question,
+                    primary_query=retrieval_decision["retrieval_query"],
+                    rewritten_query=retrieval_decision["retrieval_query"],
+                    query_variants=retrieval_decision.get("query_variants") or (),
+                    sub_questions=retrieval_decision.get("sub_questions") or (),
+                    max_variants=(
+                        settings.multi_query_max_variants
+                        if settings.multi_query_enabled
+                        else 1
+                    ),
+                )
                 retrieval_started = perf_counter()
                 retrieval_result = self._retriever_factory(request.profile).retrieve(
                     question=request.question,
-                    retrieval_query=retrieval_decision["retrieval_query"],
+                    retrieval_query=retrieval_plan.primary_query,
+                    query_variants=retrieval_plan.query_variants,
+                    evidence_query=retrieval_plan.evidence_query,
                     source_ids=request.source_ids,
                     top_k=top_k,
                     candidate_k=settings.hybrid_candidate_k,
@@ -191,15 +226,49 @@ class RagPipeline:
                     retrieval_result.get("contexts"),
                     max_contexts=settings.hybrid_max_top_k,
                 )
+                if contexts and settings.fine_evidence_enabled:
+                    raw_contexts = [dict(context) for context in contexts]
+                    focus_started = perf_counter()
+                    contexts, evidence_focus = retrieve_fine_evidence(
+                        # Fine-grained semantic matching must use the user's
+                        # actual question. The expanded evidence query is
+                        # useful for recall, but dilutes cosine similarity when
+                        # it contains several sub-queries and metadata terms.
+                        question=request.question,
+                        contexts=contexts,
+                        settings=settings,
+                        chunk_fraction=settings.fine_evidence_chunk_fraction,
+                    )
+                    stage_timings["focusMs"] = _elapsed_ms(focus_started)
+                elif contexts and settings.evidence_focus_enabled:
+                    raw_contexts = [dict(context) for context in contexts]
+                    focus_started = perf_counter()
+                    contexts, evidence_focus = focus_retrieved_evidence(
+                        question=(
+                            retrieval_plan.evidence_query
+                            if retrieval_plan is not None
+                            else request.question
+                        ),
+                        contexts=contexts,
+                        settings=settings,
+                    )
+                    stage_timings["focusMs"] = _elapsed_ms(focus_started)
+                else:
+                    stage_timings["focusMs"] = 0.0
                 stage_timings["retrieveMs"] = _elapsed_ms(retrieval_started)
             else:
                 stage_timings["retrieveMs"] = 0.0
+                stage_timings["focusMs"] = 0.0
 
             if contexts:
                 evidence_evaluation = self._evidence_fn(
                     contexts,
                     settings=settings,
-                    question=request.question,
+                    question=(
+                        retrieval_plan.evidence_query
+                        if retrieval_plan is not None
+                        else request.question
+                    ),
                 )
 
             generation_started = perf_counter()
@@ -207,9 +276,14 @@ class RagPipeline:
                 not contexts
                 or (evidence_evaluation and not evidence_evaluation["sufficient"])
             ):
+                evidence_reason = (
+                    evidence_evaluation.get("reason", "")
+                    if evidence_evaluation
+                    else "檢索器沒有返回可用片段。"
+                )
                 answer = (
-                    "我已嘗試檢索，但目前可用資料與問題的相關性不足，"
-                    "無法根據知識庫可靠回答。請改寫問題或選擇其他文件後再試。"
+                    "根據目前檢索資料無法確認。"
+                    f"{evidence_reason}請補充或選擇含有直接答案的文件後再試。"
                 )
             elif contexts:
                 answer = answer_from_contexts(
@@ -219,6 +293,7 @@ class RagPipeline:
                     history=history,
                     memories=memories,
                     ask_model_fn=self._ask_model_fn,
+                    capture_request=grounded_request,
                 )
             else:
                 answer = self._ask_model_fn(
@@ -234,6 +309,29 @@ class RagPipeline:
                 )
             stage_timings["generateMs"] = _elapsed_ms(generation_started)
 
+        requested_model = parse_model_spec(request.model)
+        if (
+            grounded_request
+            and requested_model.provider == "ollama"
+            and self._quality_evaluation_enabled_fn()
+        ):
+            evaluation_started = perf_counter()
+            try:
+                quality_evaluation = self._quality_evaluator_fn(
+                    question=request.question,
+                    final_prompt=grounded_request["prompt"],
+                    system_prompt=grounded_request["system"],
+                    qwen_answer=answer,
+                    contexts=contexts,
+                )
+            except Exception as exc:
+                quality_evaluation = unavailable_reference_evaluation(
+                    f"{type(exc).__name__}: {str(exc)[:300]}"
+                )
+            stage_timings["evaluateMs"] = _elapsed_ms(evaluation_started)
+        else:
+            stage_timings["evaluateMs"] = 0.0
+
         if store is not None:
             store.add_message(
                 conversation_id,
@@ -243,10 +341,15 @@ class RagPipeline:
                     "run_id": run_id,
                     "retrieval_needed": retrieval_decision["needs_retrieval"],
                     "remembered": bool(remembered),
+                    "qwen_quality_score": (
+                        quality_evaluation.get("candidate", {}).get("score")
+                        if quality_evaluation
+                        else None
+                    ),
                 },
             )
 
-        spec = parse_model_spec(request.model)
+        spec = requested_model
         evidence_is_sufficient = (
             not evidence_evaluation or evidence_evaluation["sufficient"]
         )
@@ -283,10 +386,16 @@ class RagPipeline:
                 "needed": retrieval_decision["needs_retrieval"],
                 "reason": retrieval_decision["reason"],
                 "query": retrieval_decision["retrieval_query"],
+                "queries": list(retrieval_plan.query_variants) if retrieval_plan else [],
+                "sub_questions": list(retrieval_plan.sub_questions) if retrieval_plan else [],
+                "intent_labels": list(retrieval_plan.intent_labels) if retrieval_plan else [],
                 "contexts": contexts,
+                "raw_contexts": raw_contexts,
+                "evidence_focus": evidence_focus,
                 "evidence_evaluation": evidence_evaluation,
             },
             "model": {"provider": spec.provider, "name": spec.model},
+            "quality_evaluation": quality_evaluation,
             "timings": stage_timings,
         }
 
@@ -315,6 +424,8 @@ class RagPipeline:
             "needs_retrieval": bool(decision.needs_retrieval),
             "reason": str(decision.reason or ""),
             "retrieval_query": str(decision.retrieval_query or question).strip(),
+            "sub_questions": list(getattr(decision, "sub_questions", ()) or ()),
+            "query_variants": list(getattr(decision, "query_variants", ()) or ()),
         }
 
 
@@ -363,6 +474,7 @@ def answer_from_contexts(
     history=None,
     memories=None,
     ask_model_fn: Callable[..., str] = ask_model,
+    capture_request: Optional[dict] = None,
 ) -> str:
     threshold_evidence = resolve_threshold_evidence(
         question,
@@ -372,31 +484,114 @@ def answer_from_contexts(
     if threshold_evidence is not None:
         return render_threshold_answer(threshold_evidence)
 
+    request = build_grounded_answer_request(
+        question=question,
+        contexts=contexts,
+        history=history,
+        memories=memories,
+    )
+    if capture_request is not None:
+        capture_request.update(request)
+    answer = ask_model_fn(
+        request["prompt"],
+        model=model,
+        system=request["system"],
+    )
+    return enforce_grounded_answer_contract(answer, contexts)
+
+
+def build_grounded_answer_request(
+    question: str,
+    contexts: List[dict],
+    history=None,
+    memories=None,
+) -> Dict[str, str]:
+    ordered_contexts = attention_order_contexts(contexts)
     context_text = "\n\n".join(
-        f"[{context['rank']}] {context['title']} {context['page']}\n{context['content']}"
-        for context in contexts
+        "\n".join(
+            [
+                f'<evidence rank="{context["rank"]}">',
+                f'標題：{context["title"]}',
+                f'頁碼：{context["page"]}',
+                "內容：",
+                context["content"],
+                "</evidence>",
+            ]
+        )
+        for context in ordered_contexts
     )
     prompt = f"""{rag_conversation_context(history)}
 
-### 使用者問題
+### 唯一允許引用的本次檢索證據
+<trusted_evidence>
+{context_text}
+</trusted_evidence>
+
+### 目前使用者問題
 {question}
 
-### 檢索資料
-{context_text}
-
-### 回答要求
+### 強制回答契約
 請使用繁體中文回答。
-只能根據檢索資料回答；如果資料不足，請明確說資料不足。
+只能根據 <trusted_evidence> 回答；如果資料不足，請明確回答「根據目前檢索資料無法確認」，並列出缺少的證據。
 最近對話只用於解析代名詞，不是證據；不可重複或延續舊助理回答。
 目前問題中的數字與邊界條件優先；逐一核對「以上、未滿、以下」後再回答，不可套用相鄰區間。
 問題若要求公式，必須逐字列出檢索資料中的公式，不可只列計算範例。
 回答要精簡，但要保留關鍵原因。
-最後用「來源：」列出用到的 rank，例如 [1], [2]。
+每一個包含事實、數字、日期、條件、程序或結論的句子，都必須緊接直接支持它的 rank。
+最後用「來源：」列出實際使用的 rank，例如 [1], [2]；禁止列出沒有直接支持答案的來源。
+
+再次確認目前問題：{question}
 """
-    return ask_model_fn(
-        prompt,
-        model=model,
-        system=build_qwen_rag_system_prompt(memories=memories),
+    return {
+        "prompt": prompt,
+        "system": build_qwen_rag_system_prompt(memories=memories),
+    }
+
+
+def attention_order_contexts(contexts: Sequence[dict]) -> List[dict]:
+    """Place the strongest passages near prompt edges without duplicating them.
+
+    The hosted Ollama API does not expose per-token attention bias. Edge-aware
+    ordering is therefore an input-level mitigation: rank 1 is placed first,
+    rank 2 last, rank 3 second, and so on.
+    """
+
+    ranked = [dict(context) for context in contexts]
+    left = []
+    right = []
+    for index, context in enumerate(ranked):
+        if index % 2 == 0:
+            left.append(context)
+        else:
+            right.insert(0, context)
+    return [*left, *right]
+
+
+def enforce_grounded_answer_contract(answer: str, contexts: Sequence[dict]) -> str:
+    """Fail closed when a generated factual answer has no valid evidence marker."""
+
+    text = str(answer or "").strip()
+    insufficient_markers = (
+        "根據目前檢索資料無法確認",
+        "目前檢索資料不足",
+        "資料不足",
+    )
+    if any(marker in text for marker in insufficient_markers):
+        return text
+
+    valid_ranks = {
+        int(context.get("rank") or index)
+        for index, context in enumerate(contexts, start=1)
+    }
+    referenced_ranks = {
+        int(rank) for rank in re.findall(r"\[(\d+)\]", text)
+    }
+    if referenced_ranks and referenced_ranks.issubset(valid_ranks):
+        return text
+
+    return (
+        "根據目前檢索資料無法確認。模型產生的答案沒有通過來源約束檢查，"
+        "因此系統未顯示未受證據支持的內容。"
     )
 
 

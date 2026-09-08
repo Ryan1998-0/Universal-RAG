@@ -11,6 +11,7 @@ venv/
 .pytest_cache/
 .mypy_cache/
 .local/
+tmp/
 
 # IFRS Foundation source PDFs and extracted text are intentionally not tracked.
 profiles/ifrs17/source_pdfs/*.pdf

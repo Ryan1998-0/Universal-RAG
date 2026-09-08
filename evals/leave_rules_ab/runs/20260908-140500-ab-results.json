@@ -1,0 +1,1266 @@
+{
+  "benchmark_id": "taiwan-leave-rules-corrupted-numeric-v1",
+  "source_url": "synthetic://leave-rules-numeric-corruption",
+  "model": "qwen2.5:7b",
+  "run_at": "2026-09-08T14:05:00+08:00",
+  "policy": {
+    "temperature": 0,
+    "seed": 42,
+    "max_answer_tokens": 180
+  },
+  "selection_rule": "oracle score >= 90 and oracle score > closed-book score; top delta first",
+  "results": [
+    {
+      "id": "corrupt-marriage-leave",
+      "question": "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？",
+      "article": "第 202 條",
+      "oracle_context_text": "勞工結婚者給予婚假八十八日，工資照給。",
+      "closed_book": {
+        "answer": "根據台灣勞動法，勞工結婚可請5日婚假，且這5日婚假通常是給薪的。但具体規定可能因雇主政策而有所不同，建議確認當前雇主的相關規定或勞資雙方的協議細則。",
+        "wall_ms": 4899.57,
+        "ollama_total_ms": 4879.68,
+        "prompt_tokens": 80,
+        "answer_tokens": 58,
+        "done_reason": "stop",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據提供的正確證據，勞工結婚可以請88日婚假，並且婚假期間工資照給。",
+        "wall_ms": 2274.5,
+        "ollama_total_ms": 2273.05,
+        "prompt_tokens": 121,
+        "answer_tokens": 28,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "88日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "8日"
+          ]
+        }
+      },
+      "delta": -50.0
+    },
+    {
+      "id": "corrupt-parent-bereavement",
+      "question": "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context_text": "父母、養父母、繼父母、配偶喪亡者，給予喪假八十八日，工資照給。",
+      "closed_book": {
+        "answer": "依照勞動基準法，父母、養父母、繼父母或配偶喪亡時，可以請3日的喪假。這期間通常是給薪的，但具體規定可能依雇主政策而有所不同。建議確認公司內部規定以獲得最準確資訊。",
+        "wall_ms": 3570.01,
+        "ollama_total_ms": 3568.5,
+        "prompt_tokens": 87,
+        "answer_tokens": 59,
+        "done_reason": "stop",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "可以請88日喪假，並且工資照給。",
+        "wall_ms": 1697.44,
+        "ollama_total_ms": 1695.99,
+        "prompt_tokens": 136,
+        "answer_tokens": 15,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "88日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "8日"
+          ]
+        }
+      },
+      "delta": -50.0
+    },
+    {
+      "id": "corrupt-spouse-adoptive-bereavement",
+      "question": "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context_text": "祖父母、子女、配偶之父母、配偶之養父母或繼父母喪亡者，給予喪假六十六日，工資照給。",
+      "closed_book": {
+        "answer": "依照勞動基準法，配偶的養父母或繼父母喪亡時，可以請3日之喪假，且應予全額給薪。但具體規定可能依各雇主內部規定略有不同，建議確認公司政策。",
+        "wall_ms": 3329.82,
+        "ollama_total_ms": 3327.8,
+        "prompt_tokens": 85,
+        "answer_tokens": 53,
+        "done_reason": "stop",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日",
+                "六十六天",
+                "66天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據證據，配偶的養父母或繼父母喪亡時，可以請六十六日喪假，並且工資照給。",
+        "wall_ms": 2464.66,
+        "ollama_total_ms": 2463.48,
+        "prompt_tokens": 141,
+        "answer_tokens": 30,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日",
+                "六十六天",
+                "66天"
+              ],
+              "matched": "六十六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "六日"
+          ]
+        }
+      },
+      "delta": -50.0
+    },
+    {
+      "id": "corrupt-sibling-bereavement",
+      "question": "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "oracle_context_text": "曾祖父母、兄弟姊妹、配偶之祖父母喪亡者，給予喪假三十三日，工資照給。",
+      "closed_book": {
+        "answer": "依照一般企業規定，兄弟姊妹喪亡時通常可以請3至5日的喪假，但是否給薪則視不同公司政策而定。有些公司會提供給薪喪假，但也有可能是不給薪的私人哀傷假期。建議確認具體公司的規定。",
+        "wall_ms": 3734.84,
+        "ollama_total_ms": 3733.57,
+        "prompt_tokens": 80,
+        "answer_tokens": 62,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日",
+                "三十三天",
+                "33天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "不給薪"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "根據證據，兄弟姊妹喪亡時，可以請三十三日喪假，並且工資照給。",
+        "wall_ms": 2033.66,
+        "ollama_total_ms": 2032.51,
+        "prompt_tokens": 131,
+        "answer_tokens": 25,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日",
+                "三十三天",
+                "33天"
+              ],
+              "matched": "三十三日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "三日"
+          ]
+        }
+      },
+      "delta": 0.0
+    },
+    {
+      "id": "corrupt-outpatient-sick-limit",
+      "question": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+      "article": "第 404 條",
+      "oracle_context_text": "未住院者，十年內合計不得超過三百日。",
+      "closed_book": {
+        "answer": "根據勞動部相關規定，未住院的普通伤病假，在一個月內合計不得超過9日。若超出此限額，雇主可視為旷工處理。但具體規定可能依不同公司或團體勞資協約有所調整，建議以實際適用之勞資雙方協議為準。",
+        "wall_ms": 4159.26,
+        "ollama_total_ms": 4157.05,
+        "prompt_tokens": 80,
+        "answer_tokens": 70,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據提供的正確證據，未住院的普通傷病假在十年內合計不得超過三百日。",
+        "wall_ms": 1986.4,
+        "ollama_total_ms": 1985.19,
+        "prompt_tokens": 117,
+        "answer_tokens": 24,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-inpatient-sick-limit",
+      "question": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+      "article": "第 404 條",
+      "oracle_context_text": "住院者，二十年內合計不得超過十年。",
+      "closed_book": {
+        "answer": "根據我所知的勞動相關規定，並沒有特定提到「住院普通傷病假」在多長時間內合計不得超過幾年的明確限制。通常對於病假的累積期間或總時數會有較為詳細的規定，但具體內容可能依不同雇主的內部政策或當地勞工法規而有所不同。建議直接查閱相關雇主的手冊或當地勞動法規以獲得準確資訊。",
+        "wall_ms": 5639.91,
+        "ollama_total_ms": 5638.38,
+        "prompt_tokens": 78,
+        "answer_tokens": 97,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據提供的正確證據，住院者在二十年內合計不得超過十年。但此規定並未區分傷病種類，因此無法確定住院普通傷病假的具體限制年限。證據不足，無法回答。",
+        "wall_ms": 3393.67,
+        "ollama_total_ms": 3392.15,
+        "prompt_tokens": 113,
+        "answer_tokens": 51,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-combined-sick-limit",
+      "question": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+      "article": "第 404 條",
+      "oracle_context_text": "未住院傷病假與住院傷病假二十年內合計不得超過十年。",
+      "closed_book": {
+        "answer": "根據勞工保險條例第43條之2規定，未住院與住院傷病假合併計算時，於1個公歷年度內合計不得逾90日。此為數值污染副本的相關規定。",
+        "wall_ms": 3264.62,
+        "ollama_total_ms": 3263.18,
+        "prompt_tokens": 84,
+        "answer_tokens": 53,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據第 404 條正確證據，未住院與住院傷病假二十年內合計不得超過十年。",
+        "wall_ms": 2234.89,
+        "ollama_total_ms": 2233.61,
+        "prompt_tokens": 126,
+        "answer_tokens": 29,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-sick-pay-ratio",
+      "question": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+      "article": "第 404 條",
+      "oracle_context_text": "普通傷病假十年內未超過三百日部分，工資按十分之一發給。",
+      "closed_book": {
+        "answer": "根據勞動基準法第24條之1規定，普通傷病假在十年內未超過三百日的部分，工資應照給7成。",
+        "wall_ms": 2407.67,
+        "ollama_total_ms": 2406.22,
+        "prompt_tokens": 84,
+        "answer_tokens": 36,
+        "done_reason": "stop",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據第 404 條規定，普通傷病假在十年內未超過三百日的部分，工資應按十分之一發給。",
+        "wall_ms": 2487.61,
+        "ollama_total_ms": 2486.15,
+        "prompt_tokens": 128,
+        "answer_tokens": 34,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "十分之一",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 50.0
+    },
+    {
+      "id": "corrupt-personal-leave-limit",
+      "question": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+      "article": "第 707 條",
+      "oracle_context_text": "勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。",
+      "closed_book": {
+        "answer": "根據勞動基準法，事假於一個月內合計不得超過4日，且一年內合計不得超過8日。事假期間不給薪。但具體規定可能依雇主與員工之約定有所不同，建議確認雙方的勞使協定或詳細工作規則。",
+        "wall_ms": 3968.32,
+        "ollama_total_ms": 3966.76,
+        "prompt_tokens": 82,
+        "answer_tokens": 67,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "一年",
+            "給薪"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "根據第707條規定，勞工因事故請事假，十年內合計不得超過一百四十日。事假期間不給工資。",
+        "wall_ms": 2711.84,
+        "ollama_total_ms": 2710.36,
+        "prompt_tokens": 139,
+        "answer_tokens": 35,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "一百四十日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-adverse-action-threshold",
+      "question": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+      "article": "第 90-10 條",
+      "oracle_context_text": "勞工十年內請普通傷病假日數未超過一百日者，雇主不得因勞工請普通傷病假而為不利之處分。",
+      "closed_book": {
+        "answer": "根據《勞動基準法》第59條之2規定，勞工於一年內普通傷病假未逾10日者，雇主不得以請假為理由對勞工作出不利處分。此期間通常指一年的時間範圍。",
+        "wall_ms": 3516.09,
+        "ollama_total_ms": 3514.69,
+        "prompt_tokens": 88,
+        "answer_tokens": 58,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "一年",
+            "10日"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "根據正確證據，勞工十年內請普通傷病假日數未超過一百日者，雇主不得因勞工請普通傷病假而為不利之處分。因此答案是十年內未超過一百日。",
+        "wall_ms": 3665.64,
+        "ollama_total_ms": 3661.48,
+        "prompt_tokens": 147,
+        "answer_tokens": 49,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "一百日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利之處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    }
+  ],
+  "selected_for_c": [
+    {
+      "id": "corrupt-adverse-action-threshold",
+      "question": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+      "article": "第 90-10 條",
+      "oracle_context_text": "勞工十年內請普通傷病假日數未超過一百日者，雇主不得因勞工請普通傷病假而為不利之處分。",
+      "closed_book": {
+        "answer": "根據《勞動基準法》第59條之2規定，勞工於一年內普通傷病假未逾10日者，雇主不得以請假為理由對勞工作出不利處分。此期間通常指一年的時間範圍。",
+        "wall_ms": 3516.09,
+        "ollama_total_ms": 3514.69,
+        "prompt_tokens": 88,
+        "answer_tokens": 58,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "一年",
+            "10日"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "根據正確證據，勞工十年內請普通傷病假日數未超過一百日者，雇主不得因勞工請普通傷病假而為不利之處分。因此答案是十年內未超過一百日。",
+        "wall_ms": 3665.64,
+        "ollama_total_ms": 3661.48,
+        "prompt_tokens": 147,
+        "answer_tokens": 49,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "一百日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利之處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-combined-sick-limit",
+      "question": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+      "article": "第 404 條",
+      "oracle_context_text": "未住院傷病假與住院傷病假二十年內合計不得超過十年。",
+      "closed_book": {
+        "answer": "根據勞工保險條例第43條之2規定，未住院與住院傷病假合併計算時，於1個公歷年度內合計不得逾90日。此為數值污染副本的相關規定。",
+        "wall_ms": 3264.62,
+        "ollama_total_ms": 3263.18,
+        "prompt_tokens": 84,
+        "answer_tokens": 53,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據第 404 條正確證據，未住院與住院傷病假二十年內合計不得超過十年。",
+        "wall_ms": 2234.89,
+        "ollama_total_ms": 2233.61,
+        "prompt_tokens": 126,
+        "answer_tokens": 29,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-inpatient-sick-limit",
+      "question": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+      "article": "第 404 條",
+      "oracle_context_text": "住院者，二十年內合計不得超過十年。",
+      "closed_book": {
+        "answer": "根據我所知的勞動相關規定，並沒有特定提到「住院普通傷病假」在多長時間內合計不得超過幾年的明確限制。通常對於病假的累積期間或總時數會有較為詳細的規定，但具體內容可能依不同雇主的內部政策或當地勞工法規而有所不同。建議直接查閱相關雇主的手冊或當地勞動法規以獲得準確資訊。",
+        "wall_ms": 5639.91,
+        "ollama_total_ms": 5638.38,
+        "prompt_tokens": 78,
+        "answer_tokens": 97,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據提供的正確證據，住院者在二十年內合計不得超過十年。但此規定並未區分傷病種類，因此無法確定住院普通傷病假的具體限制年限。證據不足，無法回答。",
+        "wall_ms": 3393.67,
+        "ollama_total_ms": 3392.15,
+        "prompt_tokens": 113,
+        "answer_tokens": 51,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-outpatient-sick-limit",
+      "question": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+      "article": "第 404 條",
+      "oracle_context_text": "未住院者，十年內合計不得超過三百日。",
+      "closed_book": {
+        "answer": "根據勞動部相關規定，未住院的普通伤病假，在一個月內合計不得超過9日。若超出此限額，雇主可視為旷工處理。但具體規定可能依不同公司或團體勞資協約有所調整，建議以實際適用之勞資雙方協議為準。",
+        "wall_ms": 4159.26,
+        "ollama_total_ms": 4157.05,
+        "prompt_tokens": 80,
+        "answer_tokens": 70,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據提供的正確證據，未住院的普通傷病假在十年內合計不得超過三百日。",
+        "wall_ms": 1986.4,
+        "ollama_total_ms": 1985.19,
+        "prompt_tokens": 117,
+        "answer_tokens": 24,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-personal-leave-limit",
+      "question": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+      "article": "第 707 條",
+      "oracle_context_text": "勞工因有事故必須親自處理，得請事假，十年內合計不得超過一百四十日。事假期間不給工資。",
+      "closed_book": {
+        "answer": "根據勞動基準法，事假於一個月內合計不得超過4日，且一年內合計不得超過8日。事假期間不給薪。但具體規定可能依雇主與員工之約定有所不同，建議確認雙方的勞使協定或詳細工作規則。",
+        "wall_ms": 3968.32,
+        "ollama_total_ms": 3966.76,
+        "prompt_tokens": 82,
+        "answer_tokens": 67,
+        "done_reason": "stop",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "一年",
+            "給薪"
+          ]
+        }
+      },
+      "oracle_context": {
+        "answer": "根據第707條規定，勞工因事故請事假，十年內合計不得超過一百四十日。事假期間不給工資。",
+        "wall_ms": 2711.84,
+        "ollama_total_ms": 2710.36,
+        "prompt_tokens": 139,
+        "answer_tokens": 35,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "一百四十日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 100.0
+    },
+    {
+      "id": "corrupt-sick-pay-ratio",
+      "question": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+      "article": "第 404 條",
+      "oracle_context_text": "普通傷病假十年內未超過三百日部分，工資按十分之一發給。",
+      "closed_book": {
+        "answer": "根據勞動基準法第24條之1規定，普通傷病假在十年內未超過三百日的部分，工資應照給7成。",
+        "wall_ms": 2407.67,
+        "ollama_total_ms": 2406.22,
+        "prompt_tokens": 84,
+        "answer_tokens": 36,
+        "done_reason": "stop",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "oracle_context": {
+        "answer": "根據第 404 條規定，普通傷病假在十年內未超過三百日的部分，工資應按十分之一發給。",
+        "wall_ms": 2487.61,
+        "ollama_total_ms": 2486.15,
+        "prompt_tokens": 128,
+        "answer_tokens": 34,
+        "done_reason": "stop",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "十分之一",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "delta": 50.0
+    }
+  ]
+}

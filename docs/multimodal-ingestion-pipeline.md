@@ -30,21 +30,21 @@
 | --- | --- | --- |
 | PDF | `.pdf` | 優先讀文字層；低文字量頁面轉圖後 OCR |
 | Image | `.png`, `.jpg`, `.jpeg`, `.webp`, `.tif`, `.tiff`, `.bmp`, `.heic` | macOS Vision OCR；Tesseract fallback |
-| Word | `.docx` | 解析 OOXML 段落、標題與表格 |
+| Word | `.docx` | 解析 OOXML 段落、標題與表格；內嵌圖片依文件順序執行 OCR，設定 `RAG_VLM_MODEL` 時再加入本機 VLM 畫面說明 |
 | Text | `.txt` | 自動嘗試 UTF-8、UTF-16、CP950、Big5、GB18030 |
 | Markdown | `.md`, `.markdown` | 依標題分段 |
 | JSON | `.json` | 驗證 JSON 後轉成 JSON path/value 文字 |
 
 舊式 `.doc` 不直接解析，需先另存為 `.docx`。
 
-圖片目前提供「文件文字 OCR」，可處理表格截圖、發票、掃描文件等有文字的圖片；它不是通用視覺理解模型，因此不會可靠描述純照片、場景或圖表趨勢。
+獨立圖片目前提供「文件文字 OCR」，可處理表格截圖、發票、掃描文件等有文字的圖片。DOCX 內嵌圖片除了 OCR，還可透過 `RAG_VLM_MODEL=qwen3-vl:4b-instruct` 啟用 Ollama 本機視覺模型，補充介面動作、欄位配置與圖表內容。VLM 預設以 `RAG_OLLAMA_VISION_KEEP_ALIVE=30m` 保持載入，減少批次圖片間的模型重載。OCR 或 VLM 單一階段失敗時會保留警告，並繼續索引另一階段成功取得的內容。
 
 ## Pipeline
 
 ```mermaid
 flowchart LR
     A["Upload + target folder"] --> B["Detect format"]
-    B --> C["Extract text or OCR"]
+    B --> C["Extract text, OCR, or DOCX image VLM"]
     C --> D["Normalize"]
     D --> E["Chunk"]
     E --> F["Embedding"]
@@ -58,6 +58,7 @@ flowchart LR
 
 - `rag_demo/document_pipeline.py`：格式偵測、parser、OCR、chunk、Embedding、原子化持久化。
 - `scripts/macos_vision_ocr.swift`：macOS Vision OCR bridge，優先繁中、簡中與英文。
+- `rag_demo/ollama_client.py`：將 DOCX 圖片以 base64 傳給本機 Ollama VLM。
 - `rag_demo/hybrid_retrieval.py`：載入持久化文件並套用 `source_ids` query-time filter。
 - `rag_demo/web_app.py`：通用上傳、清單、下載與檢索 API。
 - `docs/rag-demo/agent-client.js`：瀏覽器端格式與大小驗證。
@@ -91,6 +92,7 @@ flowchart LR
 - TXT、MD、JSON：單檔 10 MB。
 - PDF：最多 200 頁。
 - 單份文件：最多 5,000,000 個可索引字元。
+- DOCX：最多 500 張內嵌圖片；VLM 預設關閉，透過 `RAG_VLM_MODEL` 啟用。
 - JSON：最多 100,000 個 leaf entries、最深 24 層。
 - 明確傳入 `source_ids: []` 時必須返回零片段，不能退回全資料庫。
 

@@ -8,10 +8,11 @@
 
 ## 核心功能
 
-- 自適應路由：簡單問題直接回答，需要文件證據時才進行檢索。
-- 混合檢索：BM25、Embedding、RRF 融合與 Rerank。
+- 自適應路由：簡單問題直接回答，需要文件證據時先分析、拆成子問題與多個互補查詢。
+- 多查詢混合檢索：每個 query 分別執行 BM25、Embedding，再以 RRF 融合與 Rerank。
+- 可選的第二階段證據聚焦：對初次召回的 chunk 切句／雙句視窗，以 lexical 80% + embedding 20% 縮小送給模型的證據範圍。
 - 多格式匯入：PDF、圖片、DOCX、TXT、Markdown、JSON。
-- OCR、父子分塊、來源引用與證據不足拒答。
+- 圖片與掃描 PDF OCR、DOCX 內嵌圖片 OCR／本機 VLM、父子分塊、來源引用與證據不足拒答。
 - 知識庫、資料夾與文件選取，不同領域可分開管理。
 - SQLite 對話紀錄與長期記憶。
 - 預設透過 Ollama 執行 `qwen2.5:7b`，模型可由設定替換。
@@ -22,8 +23,15 @@
 使用者問題
   -> 判斷是否需要檢索
      -> 直接回答或日期時間工具
-     -> 查詢改寫 -> BM25 + Embedding -> RRF -> Rerank
-        -> 證據檢查 -> 生成附來源回答
+     -> 問題分析與拆解 -> 多個查詢 -> 各自執行 BM25 + Embedding
+        -> 跨查詢 RRF -> Rerank -> 證據檢查
+        -> 證據優先排序 -> 僅根據證據生成附來源回答
+
+若初次召回的 chunk 雜訊較多，可設定 `RAG_EVIDENCE_FOCUS_ENABLED=1` 啟用第二階段證據聚焦；
+`RAG_EVIDENCE_FOCUS_TOP_K`、`RAG_EVIDENCE_FOCUS_MAX_CHARS`、
+`RAG_EVIDENCE_FOCUS_KEYWORD_WEIGHT` 與 `RAG_EVIDENCE_FOCUS_EMBEDDING_WEIGHT` 可調整聚焦範圍與權重。
+
+若要測試更細的語意證據流程，可改用 `RAG_FINE_EVIDENCE_ENABLED=1`：系統會把初次召回的 parent chunk 再切成相對於各 parent chunk 約 `RAG_FINE_EVIDENCE_CHUNK_FRACTION`（預設 1/3）的細片段（至少 80 字元），重新計算 embedding，以 lexical coverage + 絕對 cosine 門檻篩選，最後只合併同一條文或相鄰的相關片段。`RAG_FINE_EVIDENCE_CHUNK_CHARS` 仍是未指定比例時的固定長度相容設定。這是實驗性流程，預設關閉。
 
 上傳文件
   -> 格式驗證 -> 文字解析或 OCR -> 標準化
@@ -43,10 +51,19 @@ source .venv/bin/activate
 pip install -r requirements.lock
 
 ollama pull qwen2.5:7b
-python -m rag_demo.web_app
+ollama pull qwen3-vl:4b-instruct
+RAG_VLM_MODEL=qwen3-vl:4b-instruct python -m rag_demo.web_app
 ```
 
+若要把同一份最終 RAG prompt 交給 Claude 建立 100 分相對基準，並自動評估 Qwen，請先確定 Claude Code CLI 已登入，再設定 `RAG_CLAUDE_REFERENCE_EVALUATION=1`。固定 rubric、重大錯誤分數上限與資料傳輸邊界見 [Qwen / Claude RAG 回答品質評分](docs/qwen-claude-quality-evaluation.md)。
+
+`RAG_VLM_MODEL` 可省略；省略時 DOCX 內嵌圖片仍會執行 OCR，但不產生畫面語意說明。
+
 開啟 [http://127.0.0.1:8765/](http://127.0.0.1:8765/)，上傳文件並勾選本次問答要使用的資料。
+
+### RAG 專案管理器
+
+架構與任務管理入口為 [http://127.0.0.1:8765/architecture.html](http://127.0.0.1:8765/architecture.html)。macOS 可直接雙擊專案根目錄的 `開啟_RAG_專案管理器.command`；它會在需要時啟動本機服務並開啟工作台。詳細說明見 [RAG 專案管理器](RAG_專案管理器.md)。
 
 ## 驗證
 

@@ -1,0 +1,1018 @@
+{
+  "benchmark_id": "taiwan-leave-rules-corrupted-numeric-v1",
+  "benchmark_type": "synthetic_corrupted_evidence",
+  "source_file": "evals/leave_rules_ab/source/勞工請假規則_數值污染壓力測試副本.txt",
+  "source_id": "upload-3d71de8ed015e92460da",
+  "model": "gpt-5.6-luna",
+  "answering_agents": {
+    "A": "isolated fork_turns=none, questions only, no tool calls",
+    "B": "isolated fork_turns=none, per-question oracle context only, no tool calls",
+    "C": "isolated fork_turns=none, actual retrieval context pool plus evidence gate, no tool calls"
+  },
+  "retrieval_artifact": "evals/leave_rules_corrupted/runs/20260908-141303-retrieval-results.json",
+  "run_at": "2026-09-08T14:18:21+08:00",
+  "summary": {
+    "A_closed_book": {
+      "average": 20.0,
+      "full_pass": 0,
+      "scores": [
+        50.0,
+        50.0,
+        50.0,
+        50.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "B_oracle_context": {
+      "average": 100.0,
+      "full_pass": 10,
+      "scores": [
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0
+      ]
+    },
+    "C_end_to_end_luna": {
+      "average": 90.0,
+      "full_pass": 9,
+      "scores": [
+        100.0,
+        100.0,
+        100.0,
+        0.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        100.0
+      ]
+    }
+  },
+  "results": [
+    {
+      "id": "corrupt-marriage-leave",
+      "question": "依照數值污染副本，勞工結婚可以請幾日婚假？婚假是否給薪？",
+      "article": "第 202 條",
+      "a_closed_book": {
+        "answer": "8日；給薪。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "b_oracle_context": {
+        "answer": "婚假八十八日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "婚假八十八日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-parent-bereavement",
+      "question": "依照數值污染副本，父母、養父母、繼父母或配偶喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "a_closed_book": {
+        "answer": "8日；給薪。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "b_oracle_context": {
+        "answer": "父母、養父母、繼父母或配偶喪亡時，可請喪假八十八日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "父母、養父母、繼父母或配偶喪亡時，可請喪假八十八日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "八十八日",
+                "88日",
+                "八十八天",
+                "88天"
+              ],
+              "matched": "八十八日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-spouse-adoptive-bereavement",
+      "question": "依照數值污染副本，配偶的養父母或繼父母喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "a_closed_book": {
+        "answer": "6日；給薪。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日",
+                "六十六天",
+                "66天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "b_oracle_context": {
+        "answer": "配偶的養父母或繼父母喪亡時，可請喪假六十六日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日",
+                "六十六天",
+                "66天"
+              ],
+              "matched": "六十六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "配偶之養父母或繼父母喪亡時，可請喪假六十六日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "六十六日",
+                "66日",
+                "六十六天",
+                "66天"
+              ],
+              "matched": "六十六日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-sibling-bereavement",
+      "question": "依照數值污染副本，兄弟姊妹喪亡時，可請幾日喪假？是否給薪？",
+      "article": "第 303 條",
+      "a_closed_book": {
+        "answer": "3日；給薪。",
+        "score": {
+          "score": 50.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日",
+                "三十三天",
+                "33天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "b_oracle_context": {
+        "answer": "兄弟姊妹喪亡時，可請喪假三十三日，工資照給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日",
+                "三十三天",
+                "33天"
+              ],
+              "matched": "三十三日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "工資照給",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "證據不足，無法回答",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "三十三日",
+                "33日",
+                "三十三天",
+                "33天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "工資照給",
+                "給薪",
+                "有薪"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "證據不足",
+            "無法回答"
+          ]
+        },
+        "retrieval_sufficient": false,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-outpatient-sick-limit",
+      "question": "依照數值污染副本，未住院的普通傷病假，在多久內合計不得超過幾日？",
+      "article": "第 404 條",
+      "a_closed_book": {
+        "answer": "1年內合計不得超過30日。",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "1年",
+            "30日"
+          ]
+        }
+      },
+      "b_oracle_context": {
+        "answer": "未住院的普通傷病假，十年內合計不得超過三百日。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "未住院者十年內合計不得超過三百日。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "三百日",
+                "300日",
+                "三百天",
+                "300天"
+              ],
+              "matched": "三百日",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-inpatient-sick-limit",
+      "question": "依照數值污染副本，住院普通傷病假在多久內合計不得超過幾年？",
+      "article": "第 404 條",
+      "a_closed_book": {
+        "answer": "2年內合計不得超過1年。",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "2年",
+            "1年"
+          ]
+        }
+      },
+      "b_oracle_context": {
+        "answer": "住院普通傷病假，二十年內合計不得超過十年。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "住院者二十年內合計不得超過十年。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-combined-sick-limit",
+      "question": "依照數值污染副本，未住院與住院傷病假合併計算時，多久內合計不得超過多久？",
+      "article": "第 404 條",
+      "a_closed_book": {
+        "answer": "2年內合計不得超過1年。",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "2年",
+            "1年"
+          ]
+        }
+      },
+      "b_oracle_context": {
+        "answer": "未住院與住院傷病假合併計算時，二十年內合計不得超過十年。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "未住院傷病假與住院傷病假合併計算時，二十年內合計不得超過十年。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "二十年",
+                "20年"
+              ],
+              "matched": "二十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-sick-pay-ratio",
+      "question": "依照數值污染副本，普通傷病假在十年內未超過三百日的部分，工資按什麼比例發給？",
+      "article": "第 404 條",
+      "a_closed_book": {
+        "answer": "工資按半數發給。",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "半數"
+          ]
+        }
+      },
+      "b_oracle_context": {
+        "answer": "普通傷病假十年內未超過三百日的部分，工資按十分之一發給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "十分之一",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "普通傷病假十年內未超過三百日部分，工資按十分之一發給。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十分之一",
+                "1/10",
+                "10%"
+              ],
+              "matched": "十分之一",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-personal-leave-limit",
+      "question": "依照數值污染副本，事假在多久內合計不得超過幾日？事假期間是否給薪？",
+      "article": "第 707 條",
+      "a_closed_book": {
+        "answer": "1年內合計不得超過14日；不給薪。",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給薪",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": [
+            "1年",
+            "14日",
+            "給薪"
+          ]
+        }
+      },
+      "b_oracle_context": {
+        "answer": "事假十年內合計不得超過一百四十日；事假期間不給工資。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "一百四十日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "事假十年內合計不得超過一百四十日；事假期間不給工資。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百四十日",
+                "140日",
+                "一百四十天",
+                "140天"
+              ],
+              "matched": "一百四十日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不給工資",
+                "不給薪",
+                "無薪"
+              ],
+              "matched": "不給工資",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    },
+    {
+      "id": "corrupt-adverse-action-threshold",
+      "question": "依照數值污染副本，勞工在多久內普通傷病假未超過幾日，雇主不得因請假而為不利處分？",
+      "article": "第 90-10 條",
+      "a_closed_book": {
+        "answer": "1年內普通傷病假未超過10日。",
+        "score": {
+          "score": 0.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "",
+              "pass": false
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "",
+              "pass": false
+            }
+          ],
+          "forbidden_hits": [
+            "1年",
+            "10日"
+          ]
+        }
+      },
+      "b_oracle_context": {
+        "answer": "勞工十年內普通傷病假日數未超過一百日，雇主不得因請假而為不利處分。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "一百日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        }
+      },
+      "c_end_to_end_luna": {
+        "answer": "勞工十年內請普通傷病假日數未超過一百日者，雇主不得因勞工請普通傷病假而為不利之處分。",
+        "score": {
+          "score": 100.0,
+          "required_checks": [
+            {
+              "accepted": [
+                "十年",
+                "10年"
+              ],
+              "matched": "十年",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "一百日",
+                "100日",
+                "一百天",
+                "100天"
+              ],
+              "matched": "一百日",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不得",
+                "不可以",
+                "不可"
+              ],
+              "matched": "不得",
+              "pass": true
+            },
+            {
+              "accepted": [
+                "不利處分",
+                "不利之處分"
+              ],
+              "matched": "不利之處分",
+              "pass": true
+            }
+          ],
+          "forbidden_hits": []
+        },
+        "retrieval_sufficient": true,
+        "context_count": 2
+      }
+    }
+  ]
+}

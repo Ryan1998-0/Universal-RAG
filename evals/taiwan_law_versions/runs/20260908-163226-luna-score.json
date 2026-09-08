@@ -1,0 +1,649 @@
+{
+  "benchmark_id": "taiwan-labor-leave-version-comparison-v1",
+  "answer_file": "evals/taiwan_law_versions/runs/20260908-163226-luna-answers.json",
+  "scoring": "comparison-fact coverage; deterministic lexical audit, not a model judge",
+  "run_at": "2026-09-08T16:34:36+08:00",
+  "summary": {
+    "question_count": 20,
+    "answered_count": 20,
+    "full_pass": 15,
+    "average_score": 84.6
+  },
+  "results": [
+    {
+      "id": "q01-article6-term",
+      "question": "第6條的職業災害用語，2016版與2026版分別使用什麼詞？",
+      "answer": "2016版使用「殘廢」；2026版使用「失能」。兩版其餘均寫職業災害致該情形、傷害或疾病。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "殘廢"
+          ],
+          "matched": "殘廢"
+        },
+        {
+          "accepted": [
+            "失能"
+          ],
+          "matched": "失能"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q02-article6-period",
+      "question": "兩個版本第6條對公傷病假的期間判定是否相同？請比較共同條件。",
+      "answer": "相同的共同條件是：勞工因職業災害而致殘廢／失能、傷害或疾病，於治療、休養期間給予公傷病假；證據未顯示第6條期間判定另有差異。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "治療",
+            "休養期間"
+          ],
+          "matched": "治療"
+        },
+        {
+          "accepted": [
+            "相同",
+            "一致",
+            "都"
+          ],
+          "matched": "相同"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q03-personal-limit",
+      "question": "2016版與2026版事假一年上限各是多少？是否改變？",
+      "answer": "證據不足：所提供的2016版與2026版證據沒有載明「事假」一年上限，不能據此判定兩版各是多少或是否改變。",
+      "citations": [],
+      "evidence_sufficient": false,
+      "checks": [
+        {
+          "accepted": [
+            "十四日"
+          ],
+          "matched": ""
+        },
+        {
+          "accepted": [
+            "相同",
+            "一致",
+            "未改變",
+            "沒有改變"
+          ],
+          "matched": ""
+        }
+      ],
+      "score": 0.0,
+      "full_pass": false
+    },
+    {
+      "id": "q04-family-care",
+      "question": "2026版相較2016版，事假新增了哪一種照顧情境？",
+      "answer": "2026版新增「親自照顧家庭成員」而依第七條請事假的情境；2016版所示僅為因事故必須親自處理，未見家庭照顧情境。[2016-2][2026-3]",
+      "citations": [
+        "2016-2",
+        "2026-3"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "親自照顧家庭成員"
+          ],
+          "matched": "親自照顧家庭成員"
+        },
+        {
+          "accepted": [
+            "2026",
+            "新增"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q05-family-care-hour",
+      "question": "哪一個版本明文允許家庭照顧事假以小時為請假單位？",
+      "answer": "2026版明文規定家庭照顧事假得擇定以小時為請假單位；2016版提供的證據沒有這項規定。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "小時"
+          ],
+          "matched": "小時"
+        },
+        {
+          "accepted": [
+            "2026",
+            "新增"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q06-family-care-condition",
+      "question": "2026版家庭照顧事假受到哪些法律例外限制？2016版是否有這段？",
+      "answer": "2026版限制為「除本法或其他法律另有規定者外」，並依前項規定請事假；2016版所示證據沒有這段家庭照顧事假例外限制。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "本法或其他法律另有規定"
+          ],
+          "matched": "本法或其他法律另有規定"
+        },
+        {
+          "accepted": [
+            "2016",
+            "沒有",
+            "未有"
+          ],
+          "matched": "2016"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q07-attendance-scope",
+      "question": "2016版第9條與2026版第9條，在全勤獎金保護的列舉方式上有何差異？",
+      "answer": "2016版直接列舉婚假、喪假、公傷病假及公假，規定不得扣發全勤獎金。[2016-1] 2026版證據只顯示改為「有下列情形」的列舉架構，未提供完整各款內容，因此無法僅依現有證據完整比較其列舉項目。[2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": false,
+      "checks": [
+        {
+          "accepted": [
+            "婚假",
+            "喪假",
+            "公傷病假",
+            "公假"
+          ],
+          "matched": "婚假"
+        },
+        {
+          "accepted": [
+            "2026",
+            "擴大",
+            "列舉",
+            "增加"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q08-miscarriage",
+      "question": "妊娠未滿三個月流產而請普通傷病假，哪一版開始明文保護全勤獎金？",
+      "answer": "2026版開始有明文：妊娠未滿三個月流產、未請產假而請普通傷病假列入保護情形；2016版證據未見此明文。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "妊娠未滿三個月流產",
+            "普通傷病假"
+          ],
+          "matched": "妊娠未滿三個月流產"
+        },
+        {
+          "accepted": [
+            "2026",
+            "新增",
+            "2016",
+            "沒有"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q09-family-care-attendance",
+      "question": "家庭照顧事假不得影響全勤獎金的規定，兩版是否都有？請指出版本差異。",
+      "answer": "不是兩版都有。2026版明文列出因親自照顧家庭成員依第七條請事假，不得視為缺勤而影響全勤獎金；2016版第9條所示保護列舉沒有家庭照顧事假。[2016-1][2026-2]",
+      "citations": [
+        "2016-1",
+        "2026-2"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "親自照顧家庭成員",
+            "不得視為缺勤"
+          ],
+          "matched": "親自照顧家庭成員"
+        },
+        {
+          "accepted": [
+            "2026",
+            "新增",
+            "2016",
+            "沒有"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q10-sick-attendance-deduction",
+      "question": "2026版對普通傷病假全勤獎金扣發採取什麼計算方式？2016版有沒有相同規定？",
+      "answer": "2026版規定，前項第二款以外的普通傷病假，全勤獎金扣發按請普通傷病假日數比例計算；2016版提供的證據沒有相同規定。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "按請普通傷病假日數依比例計算",
+            "依比例"
+          ],
+          "matched": ""
+        },
+        {
+          "accepted": [
+            "2026",
+            "新增",
+            "2016",
+            "沒有"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 50.0,
+      "full_pass": false
+    },
+    {
+      "id": "q11-better-agreement",
+      "question": "2026版第9條是否保留勞雇雙方較優約定的例外？2016版呢？",
+      "answer": "2026版明文規定勞雇雙方另有優於法令之約定者，從其約定。[2026-1] 2016版提供的證據未載明同樣例外，因此無法確認2016版是否保留。[2016-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": false,
+      "checks": [
+        {
+          "accepted": [
+            "勞雇雙方另有優於法令之約定"
+          ],
+          "matched": "勞雇雙方另有優於法令之約定"
+        },
+        {
+          "accepted": [
+            "2026",
+            "2016",
+            "都",
+            "相同"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q12-article9-1",
+      "question": "第9-1條在2016版與2026版的存在情況為何？",
+      "answer": "2026版有第9-1條，規定一年內普通傷病假未超過十日者不得因此受不利處分；2016版提供的證據沒有第9-1條內容。[2016-1][2026-2]",
+      "citations": [
+        "2016-1",
+        "2026-2"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "第9-1條",
+            "9-1"
+          ],
+          "matched": "第9-1條"
+        },
+        {
+          "accepted": [
+            "2026",
+            "新增",
+            "2016",
+            "沒有"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q13-adverse-threshold",
+      "question": "2026版普通傷病假未超過幾日，雇主不得因此為不利處分？2016版是否有同樣門檻？",
+      "answer": "2026版門檻是一年內普通傷病假未超過十日；2016版所示證據沒有同樣的十日不利處分門檻。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "十日"
+          ],
+          "matched": "十日"
+        },
+        {
+          "accepted": [
+            "2026",
+            "2016",
+            "沒有",
+            "新增"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q14-burden-proof",
+      "question": "2026版對普通傷病假造成不利處分時，雇主負擔什麼舉證責任？2016版有沒有？",
+      "answer": "2026版規定，勞工因請普通傷病假受不利處分時，雇主須就該不利處分與請假行為無關的事實負舉證責任；2016版證據沒有這項責任規定。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "負舉證責任"
+          ],
+          "matched": "負舉證責任"
+        },
+        {
+          "accepted": [
+            "2026",
+            "2016",
+            "沒有",
+            "新增"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q15-performance-review",
+      "question": "2026版對普通傷病假超過十日後的人事考核，有何限制？2016版有沒有？",
+      "answer": "2026版要求人事考核綜合考量工作能力、工作態度及實際績效，不得僅以普通傷病假日數作為考量；2016版證據沒有這項限制。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "不得僅以請普通傷病假日數作為考量因素",
+            "不得僅以",
+            "工作能力",
+            "工作態度",
+            "實際績效"
+          ],
+          "matched": "不得僅以"
+        },
+        {
+          "accepted": [
+            "2026",
+            "2016",
+            "沒有",
+            "新增"
+          ],
+          "matched": "2026"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q16-article12-effective",
+      "question": "2026版第12條新增的施行日期規定是什麼？2016版第12條有沒有？",
+      "answer": "2026版新增：2025年12月9日修正發布的條文，自2026年1月1日施行；2016版第12條僅載明本規則自發布日施行，沒有這段特定修正條文施行日期。[2016-2][2026-2]",
+      "citations": [
+        "2016-2",
+        "2026-2"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "一百十五年一月一日",
+            "115年1月1日",
+            "2026-01-01"
+          ],
+          "matched": ""
+        },
+        {
+          "accepted": [
+            "2016",
+            "沒有",
+            "新增"
+          ],
+          "matched": "2016"
+        }
+      ],
+      "score": 50.0,
+      "full_pass": false
+    },
+    {
+      "id": "q17-marriage-unchanged",
+      "question": "婚假日數與工資照給的規定，2016版與2026版是否一致？",
+      "answer": "一致：兩版均為婚假八日，工資照給。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "婚假八日",
+            "八日"
+          ],
+          "matched": "婚假八日"
+        },
+        {
+          "accepted": [
+            "工資照給"
+          ],
+          "matched": "工資照給"
+        },
+        {
+          "accepted": [
+            "相同",
+            "一致",
+            "未改變"
+          ],
+          "matched": "一致"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q18-sick-limits-unchanged",
+      "question": "普通傷病假未住院、住院及合計上限，兩版是否有改變？請列出數值。",
+      "answer": "就證據所示數值沒有改變：未住院一年內合計不得超過三十日；住院二年內合計不得超過一年；未住院與住院二年內合計不得超過一年。[2016-1][2026-1][2026-2]",
+      "citations": [
+        "2016-1",
+        "2026-1",
+        "2026-2"
+      ],
+      "evidence_sufficient": true,
+      "checks": [
+        {
+          "accepted": [
+            "三十日"
+          ],
+          "matched": "三十日"
+        },
+        {
+          "accepted": [
+            "二年"
+          ],
+          "matched": "二年"
+        },
+        {
+          "accepted": [
+            "一年"
+          ],
+          "matched": "一年"
+        },
+        {
+          "accepted": [
+            "相同",
+            "一致",
+            "未改變"
+          ],
+          "matched": ""
+        }
+      ],
+      "score": 75.0,
+      "full_pass": false
+    },
+    {
+      "id": "q19-advance-notice-unchanged",
+      "question": "請假事前通知、緊急事故委託代辦及證明文件要求，兩版是否一致？",
+      "answer": "兩版均明文載有：遇急病或緊急事故得委託他人代辦請假手續，且辦理請假手續時雇主得要求提出證明文件。[2016-1][2026-1] 但所提供證據未包含一般「事前通知」要求，因此該部分無法確認是否一致。",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": false,
+      "checks": [
+        {
+          "accepted": [
+            "事前"
+          ],
+          "matched": "事前"
+        },
+        {
+          "accepted": [
+            "委託他人"
+          ],
+          "matched": "委託他人"
+        },
+        {
+          "accepted": [
+            "證明文件"
+          ],
+          "matched": "證明文件"
+        },
+        {
+          "accepted": [
+            "相同",
+            "一致",
+            "未改變"
+          ],
+          "matched": "一致"
+        }
+      ],
+      "score": 100.0,
+      "full_pass": true
+    },
+    {
+      "id": "q20-overall-diff",
+      "question": "整體比較兩份文件：哪些條文有實質文字變更或新增？哪些核心給假數值維持不變？",
+      "answer": "證據不足，無法完成整體文件層級盤點。現有片段僅能確認2026版新增第12條特定修正條文自2026年1月1日施行的規定；2016版片段則顯示未住院與住院傷病假二年內合計不得超過一年，但不足以據此列出全部實質變更、新增條文及所有維持不變的核心給假數值。[2016-1][2026-1]",
+      "citations": [
+        "2016-1",
+        "2026-1"
+      ],
+      "evidence_sufficient": false,
+      "checks": [
+        {
+          "accepted": [
+            "第9-1條",
+            "9-1"
+          ],
+          "matched": ""
+        },
+        {
+          "accepted": [
+            "第7條",
+            "第7"
+          ],
+          "matched": ""
+        },
+        {
+          "accepted": [
+            "第9條",
+            "第9"
+          ],
+          "matched": ""
+        },
+        {
+          "accepted": [
+            "第12條",
+            "第12"
+          ],
+          "matched": "第12條"
+        },
+        {
+          "accepted": [
+            "十四日"
+          ],
+          "matched": ""
+        },
+        {
+          "accepted": [
+            "三十日"
+          ],
+          "matched": ""
+        }
+      ],
+      "score": 16.7,
+      "full_pass": false
+    }
+  ]
+}

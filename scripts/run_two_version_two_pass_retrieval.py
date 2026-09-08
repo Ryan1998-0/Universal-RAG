@@ -106,7 +106,7 @@ def main() -> None:
             {
                 "id": item["id"],
                 "question": item["question"],
-                "comparison_articles": item["comparison_articles"],
+                "comparison_articles": item.get("comparison_articles") or item.get("changed_articles") or [],
                 "oracle_2016": item["oracle_2016"],
                 "oracle_2026": item["oracle_2026"],
                 "retrieval_2016": r2016,

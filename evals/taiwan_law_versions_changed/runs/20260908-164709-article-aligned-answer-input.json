@@ -1,0 +1,3090 @@
+{
+  "benchmark_id": "taiwan-labor-leave-confirmed-changes-v2",
+  "mode": "answer-input-article-aligned-evidence-only",
+  "source_files": {
+    "2016": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+    "2026": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md"
+  },
+  "two_pass_policy": {
+    "pass_1": "full-document article-number index; select changed article pair",
+    "pass_2": "fine evidence re-embedding within selected article units",
+    "chunk_fraction": 0.3333333333333333
+  },
+  "items": [
+    {
+      "id": "c01-article6-term",
+      "question": "第6條由2016版到2026版，職業災害致身體狀況的用語改了哪一個詞？",
+      "changed_articles": [
+        "第 6 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第6條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第6條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第6條",
+          "content": "第6條 勞工因職業災害而致殘廢、傷害或疾病者，其治療、休養期間，給予公傷 病假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.68578,
+          "bm25Score": 0.715,
+          "embeddingScore": 0.650067,
+          "rerankScore": 0.68578,
+          "matchedTerms": [
+            "6",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因職",
+            "職業",
+            "業災",
+            "災害",
+            "害而",
+            "而致",
+            "致殘",
+            "殘廢",
+            "勞工因",
+            "工因職",
+            "因職業",
+            "職業災",
+            "業災害",
+            "災害而",
+            "害而致"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第6條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第6條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第6條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第6條",
+          "content": "第6條 勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷 病假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.689002,
+          "bm25Score": 0.715,
+          "embeddingScore": 0.657226,
+          "rerankScore": 0.689002,
+          "matchedTerms": [
+            "6",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因職",
+            "職業",
+            "業災",
+            "災害",
+            "害而",
+            "而致",
+            "致失",
+            "失能",
+            "勞工因",
+            "工因職",
+            "因職業",
+            "職業災",
+            "業災害",
+            "災害而",
+            "害而致"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第6條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第6條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第6條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c02-article6-meaning",
+      "question": "比較第6條兩版，除了用語變更外，公傷病假的給假期間與觸發條件是否仍相同？",
+      "changed_articles": [
+        "第 6 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第6條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第6條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第6條",
+          "content": "第6條 勞工因職業災害而致殘廢、傷害或疾病者，其治療、休養期間，給予公傷 病假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.533158,
+          "bm25Score": 0.57566,
+          "embeddingScore": 0.48121,
+          "rerankScore": 0.533158,
+          "matchedTerms": [
+            "6",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因職",
+            "職業",
+            "業災",
+            "災害",
+            "害而",
+            "而致",
+            "致殘",
+            "殘廢",
+            "勞工因",
+            "工因職",
+            "因職業",
+            "職業災",
+            "業災害",
+            "災害而",
+            "害而致"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第6條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第6條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第6條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第6條",
+          "content": "第6條 勞工因職業災害而致失能、傷害或疾病者，其治療、休養期間，給予公傷 病假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.536397,
+          "bm25Score": 0.57566,
+          "embeddingScore": 0.488409,
+          "rerankScore": 0.536397,
+          "matchedTerms": [
+            "6",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因職",
+            "職業",
+            "業災",
+            "災害",
+            "害而",
+            "而致",
+            "致失",
+            "失能",
+            "勞工因",
+            "工因職",
+            "因職業",
+            "職業災",
+            "業災害",
+            "災害而",
+            "害而致"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第6條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第6條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第6條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c03-article7-wording",
+      "question": "第7條第一句在2016版與2026版的文字有何細微修改？請指出刪除或保留的語助詞。",
+      "changed_articles": [
+        "第 7 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理者，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.290868,
+          "bm25Score": 0.326,
+          "embeddingScore": 0.24793,
+          "rerankScore": 0.290868,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "理者",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.293757,
+          "bm25Score": 0.326,
+          "embeddingScore": 0.25435,
+          "rerankScore": 0.293757,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必",
+            "故必須"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 2,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 3,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c04-article7-family-care",
+      "question": "2026版第7條新增了哪一種事假使用情境？請與2016版原有事由比較。",
+      "changed_articles": [
+        "第 7 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理者，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.396667,
+          "bm25Score": 0.537692,
+          "embeddingScore": 0.224302,
+          "rerankScore": 0.396667,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "理者",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.397612,
+          "bm25Score": 0.537692,
+          "embeddingScore": 0.226403,
+          "rerankScore": 0.397612,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必",
+            "故必須"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 2,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 3,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c05-article7-family-exception",
+      "question": "2026版家庭照顧事假之前的法律例外條件是什麼？這段在修法中增加了什麼限制語意？",
+      "changed_articles": [
+        "第 7 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理者，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.365924,
+          "bm25Score": 0.372581,
+          "embeddingScore": 0.357789,
+          "rerankScore": 0.365924,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "理者",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第7條",
+          "content": "勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規 定請事假，並得擇定以小時為請假單位。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.529863,
+          "bm25Score": 0.530323,
+          "embeddingScore": 0.529302,
+          "rerankScore": 0.529863,
+          "matchedTerms": [
+            "勞工",
+            "工為",
+            "為親",
+            "親自",
+            "自照",
+            "照顧",
+            "顧家",
+            "家庭",
+            "庭成",
+            "成員",
+            "勞工為",
+            "工為親",
+            "為親自",
+            "親自照",
+            "自照顧",
+            "照顧家",
+            "顧家庭",
+            "家庭成",
+            "庭成員",
+            "除本"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第7條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.364893,
+          "bm25Score": 0.372581,
+          "embeddingScore": 0.355497,
+          "rerankScore": 0.364893,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必",
+            "故必須"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 2,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 3,
+          "selectedUnitCount": 2,
+          "groupCount": 2,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c06-article7-hour-unit",
+      "question": "2026版第7條新增的請假單位選擇是什麼？它適用於哪一種新增情境？",
+      "changed_articles": [
+        "第 7 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理者，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.288719,
+          "bm25Score": 0.301818,
+          "embeddingScore": 0.272709,
+          "rerankScore": 0.288719,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "理者",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第7條",
+          "content": "勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規 定請事假，並得擇定以小時為請假單位。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.439456,
+          "bm25Score": 0.629091,
+          "embeddingScore": 0.207681,
+          "rerankScore": 0.439456,
+          "matchedTerms": [
+            "勞工",
+            "工為",
+            "為親",
+            "親自",
+            "自照",
+            "照顧",
+            "顧家",
+            "家庭",
+            "庭成",
+            "成員",
+            "勞工為",
+            "工為親",
+            "為親自",
+            "親自照",
+            "自照顧",
+            "照顧家",
+            "顧家庭",
+            "家庭成",
+            "庭成員",
+            "除本"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 2,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 3,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c07-article7-limit-carryover",
+      "question": "家庭照顧事假依第7條前項規定辦理時，2026版如何承接原有事假一年14日規則？",
+      "changed_articles": [
+        "第 7 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理者，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.572119,
+          "bm25Score": 0.622,
+          "embeddingScore": 0.511154,
+          "rerankScore": 0.572119,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "理者",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第7條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第7條",
+          "content": "勞工為親自照顧家庭成員，除本法或其他法律另有規定者外，得依前項規 定請事假，並得擇定以小時為請假單位。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.597045,
+          "bm25Score": 0.666,
+          "embeddingScore": 0.512766,
+          "rerankScore": 0.597045,
+          "matchedTerms": [
+            "勞工",
+            "工為",
+            "為親",
+            "親自",
+            "自照",
+            "照顧",
+            "顧家",
+            "家庭",
+            "庭成",
+            "成員",
+            "勞工為",
+            "工為親",
+            "為親自",
+            "親自照",
+            "自照顧",
+            "照顧家",
+            "顧家庭",
+            "家庭成",
+            "庭成員",
+            "除本"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第7條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第7條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第7條",
+          "content": "第7條 勞工因有事故必須親自處理，得請事假，一年內合計不得超過十四日。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.575407,
+          "bm25Score": 0.622,
+          "embeddingScore": 0.518461,
+          "rerankScore": 0.575407,
+          "matchedTerms": [
+            "7",
+            "第",
+            "條",
+            "勞工",
+            "工因",
+            "因有",
+            "有事",
+            "事故",
+            "故必",
+            "必須",
+            "須親",
+            "親自",
+            "自處",
+            "處理",
+            "勞工因",
+            "工因有",
+            "因有事",
+            "有事故",
+            "事故必",
+            "故必須"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第7條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第7條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 2,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 3,
+          "selectedUnitCount": 2,
+          "groupCount": 2,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c08-article9-opening",
+      "question": "第9條開頭從2016版的『不得扣發』改成2026版的什麼全勤獎金保護表述？",
+      "changed_articles": [
+        "第 9 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第9條",
+          "content": "第9條 雇主不得因勞工請婚假、喪假、公傷病假及公假，扣發全勤獎金。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.675155,
+          "bm25Score": 0.82,
+          "embeddingScore": 0.498123,
+          "rerankScore": 0.675155,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "雇主",
+            "主不",
+            "不得",
+            "得因",
+            "因勞",
+            "勞工",
+            "工請",
+            "請婚",
+            "婚假",
+            "雇主不",
+            "主不得",
+            "不得因",
+            "得因勞",
+            "因勞工",
+            "勞工請",
+            "工請婚",
+            "請婚假"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "第9條 勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.670653,
+          "bm25Score": 0.781111,
+          "embeddingScore": 0.535648,
+          "rerankScore": 0.670653,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "勞工",
+            "工有",
+            "有下",
+            "下列",
+            "列情",
+            "情形",
+            "勞工有",
+            "工有下",
+            "有下列",
+            "下列情",
+            "列情形",
+            "雇主",
+            "主不",
+            "不得",
+            "得視",
+            "視為",
+            "為缺"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷 病假日數依比例計算。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.582688,
+          "bm25Score": 0.703333,
+          "embeddingScore": 0.435232,
+          "rerankScore": 0.582688,
+          "matchedTerms": [
+            "勞工",
+            "工請",
+            "請前",
+            "前項",
+            "項第",
+            "第二",
+            "二款",
+            "款以",
+            "以外",
+            "外之",
+            "之普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "勞工請",
+            "工請前",
+            "請前項",
+            "前項第",
+            "項第二"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第七條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 6,
+          "selectedUnitCount": 2,
+          "groupCount": 2,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c09-article9-miscarriage",
+      "question": "2026版第9條新增的流產與普通傷病假情境，具體保護了什麼？",
+      "changed_articles": [
+        "第 9 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第9條",
+          "content": "第9條 雇主不得因勞工請婚假、喪假、公傷病假及公假，扣發全勤獎金。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.419036,
+          "bm25Score": 0.50359,
+          "embeddingScore": 0.315692,
+          "rerankScore": 0.419036,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "雇主",
+            "主不",
+            "不得",
+            "得因",
+            "因勞",
+            "勞工",
+            "工請",
+            "請婚",
+            "婚假",
+            "雇主不",
+            "主不得",
+            "不得因",
+            "得因勞",
+            "因勞工",
+            "勞工請",
+            "工請婚",
+            "請婚假"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.582147,
+          "bm25Score": 0.637179,
+          "embeddingScore": 0.514885,
+          "rerankScore": 0.582147,
+          "matchedTerms": [
+            "二",
+            "勞工",
+            "工因",
+            "因妊",
+            "妊娠",
+            "娠未",
+            "未滿",
+            "滿三",
+            "三個",
+            "個月",
+            "月流",
+            "流產",
+            "產未",
+            "未請",
+            "請產",
+            "產假",
+            "勞工因",
+            "工因妊",
+            "因妊娠",
+            "妊娠未"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷 病假日數依比例計算。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.535554,
+          "bm25Score": 0.721282,
+          "embeddingScore": 0.308553,
+          "rerankScore": 0.535554,
+          "matchedTerms": [
+            "勞工",
+            "工請",
+            "請前",
+            "前項",
+            "項第",
+            "第二",
+            "二款",
+            "款以",
+            "以外",
+            "外之",
+            "之普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "勞工請",
+            "工請前",
+            "請前項",
+            "前項第",
+            "項第二"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第七條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 6,
+          "selectedUnitCount": 2,
+          "groupCount": 2,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c10-article9-family-attendance",
+      "question": "2026版第9條新增家庭照顧事假列舉後，雇主不得將該假如何處理？",
+      "changed_articles": [
+        "第 9 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第9條",
+          "content": "第9條 雇主不得因勞工請婚假、喪假、公傷病假及公假，扣發全勤獎金。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.620377,
+          "bm25Score": 0.665349,
+          "embeddingScore": 0.565412,
+          "rerankScore": 0.620377,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "雇主",
+            "主不",
+            "不得",
+            "得因",
+            "因勞",
+            "勞工",
+            "工請",
+            "請婚",
+            "婚假",
+            "雇主不",
+            "主不得",
+            "不得因",
+            "得因勞",
+            "因勞工",
+            "勞工請",
+            "工請婚",
+            "請婚假"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "第9條 勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金； 其他法律另有規 定者，從其規定： 一、勞工請婚假、喪假、公傷病假及公假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.616642,
+          "bm25Score": 0.665349,
+          "embeddingScore": 0.557111,
+          "rerankScore": 0.616642,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "勞工",
+            "工有",
+            "有下",
+            "下列",
+            "列情",
+            "情形",
+            "勞工有",
+            "工有下",
+            "有下列",
+            "下列情",
+            "列情形",
+            "雇主",
+            "主不",
+            "不得",
+            "得視",
+            "視為",
+            "為缺"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 2,
+          "fineArticleKey": "第9條",
+          "fineGrouped": true,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "三、勞工因親自照顧家庭成員，依第七條規定請事假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.476745,
+          "bm25Score": 0.337674,
+          "embeddingScore": 0.64672,
+          "rerankScore": 0.476745,
+          "matchedTerms": [
+            "三",
+            "勞工",
+            "工因",
+            "因親",
+            "親自",
+            "自照",
+            "照顧",
+            "顧家",
+            "家庭",
+            "庭成",
+            "成員",
+            "勞工因",
+            "工因親",
+            "因親自",
+            "親自照",
+            "自照顧",
+            "照顧家",
+            "顧家庭",
+            "家庭成",
+            "庭成員"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第七條",
+          "fineGrouped": false,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9條::fine-evidence-3",
+          "rank": 3,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "但勞雇雙方另有優於法令之約定者，從其約定。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.255448,
+          "bm25Score": 0.0,
+          "embeddingScore": 0.567661,
+          "rerankScore": 0.255448,
+          "matchedTerms": [
+            "但勞",
+            "勞雇",
+            "雇雙",
+            "雙方",
+            "方另",
+            "另有",
+            "有優",
+            "優於",
+            "於法",
+            "法令",
+            "令之",
+            "之約",
+            "約定",
+            "定者",
+            "但勞雇",
+            "勞雇雙",
+            "雇雙方",
+            "雙方另",
+            "方另有",
+            "另有優"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第七條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 6,
+          "selectedUnitCount": 4,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c11-article9-proportional",
+      "question": "2026版第9條對普通傷病假全勤獎金扣發新增了什麼計算方式？",
+      "changed_articles": [
+        "第 9 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第9條",
+          "content": "第9條 雇主不得因勞工請婚假、喪假、公傷病假及公假，扣發全勤獎金。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.62042,
+          "bm25Score": 0.788182,
+          "embeddingScore": 0.415379,
+          "rerankScore": 0.62042,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "雇主",
+            "主不",
+            "不得",
+            "得因",
+            "因勞",
+            "勞工",
+            "工請",
+            "請婚",
+            "婚假",
+            "雇主不",
+            "主不得",
+            "不得因",
+            "得因勞",
+            "因勞工",
+            "勞工請",
+            "工請婚",
+            "請婚假"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷 病假日數依比例計算。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.796369,
+          "bm25Score": 0.915455,
+          "embeddingScore": 0.65082,
+          "rerankScore": 0.796369,
+          "matchedTerms": [
+            "勞工",
+            "工請",
+            "請前",
+            "前項",
+            "項第",
+            "第二",
+            "二款",
+            "款以",
+            "以外",
+            "外之",
+            "之普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "勞工請",
+            "工請前",
+            "請前項",
+            "前項第",
+            "項第二"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第七條",
+          "fineGrouped": false,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "第9條 勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金；",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.583557,
+          "bm25Score": 0.660909,
+          "embeddingScore": 0.489015,
+          "rerankScore": 0.583557,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "勞工",
+            "工有",
+            "有下",
+            "下列",
+            "列情",
+            "情形",
+            "勞工有",
+            "工有下",
+            "有下列",
+            "下列情",
+            "列情形",
+            "雇主",
+            "主不",
+            "不得",
+            "得視",
+            "視為",
+            "為缺"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9條::fine-evidence-3",
+          "rank": 3,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "二、勞工因妊娠未滿三個月流產未請產假，而請普通傷病假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.435721,
+          "bm25Score": 0.572727,
+          "embeddingScore": 0.268268,
+          "rerankScore": 0.435721,
+          "matchedTerms": [
+            "二",
+            "勞工",
+            "工因",
+            "因妊",
+            "妊娠",
+            "娠未",
+            "未滿",
+            "滿三",
+            "三個",
+            "個月",
+            "月流",
+            "流產",
+            "產未",
+            "未請",
+            "請產",
+            "產假",
+            "勞工因",
+            "工因妊",
+            "因妊娠",
+            "妊娠未"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 6,
+          "selectedUnitCount": 3,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c12-article9-better-agreement",
+      "question": "2026版第9條對勞雇雙方另有較優約定，新增了什麼保留條款？",
+      "changed_articles": [
+        "第 9 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第9條",
+          "content": "第9條 雇主不得因勞工請婚假、喪假、公傷病假及公假，扣發全勤獎金。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.38142,
+          "bm25Score": 0.155897,
+          "embeddingScore": 0.657059,
+          "rerankScore": 0.38142,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "雇主",
+            "主不",
+            "不得",
+            "得因",
+            "因勞",
+            "勞工",
+            "工請",
+            "請婚",
+            "婚假",
+            "雇主不",
+            "主不得",
+            "不得因",
+            "得因勞",
+            "因勞工",
+            "勞工請",
+            "工請婚",
+            "請婚假"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷 病假日數依比例計算。 但勞雇雙方另有優於法令之約定者，從其約定。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.715518,
+          "bm25Score": 0.708974,
+          "embeddingScore": 0.723515,
+          "rerankScore": 0.715518,
+          "matchedTerms": [
+            "勞工",
+            "工請",
+            "請前",
+            "前項",
+            "項第",
+            "第二",
+            "二款",
+            "款以",
+            "以外",
+            "外之",
+            "之普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "勞工請",
+            "工請前",
+            "請前項",
+            "前項第",
+            "項第二"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 2,
+          "fineArticleKey": "第七條",
+          "fineGrouped": true,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "第9條 勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金； 其他法律另有規 定者，從其規定： 一、勞工請婚假、喪假、公傷病假及公假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.396172,
+          "bm25Score": 0.155897,
+          "embeddingScore": 0.689841,
+          "rerankScore": 0.396172,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "勞工",
+            "工有",
+            "有下",
+            "下列",
+            "列情",
+            "情形",
+            "勞工有",
+            "工有下",
+            "有下列",
+            "下列情",
+            "列情形",
+            "雇主",
+            "主不",
+            "不得",
+            "得視",
+            "視為",
+            "為缺"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 2,
+          "fineArticleKey": "第9條",
+          "fineGrouped": true,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 6,
+          "selectedUnitCount": 4,
+          "groupCount": 2,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c13-article9-other-law",
+      "question": "2026版第9條在全勤獎金保護列舉後新增哪一個法律衝突處理語句？",
+      "changed_articles": [
+        "第 9 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第9條",
+          "content": "第9條 雇主不得因勞工請婚假、喪假、公傷病假及公假，扣發全勤獎金。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.576586,
+          "bm25Score": 0.645,
+          "embeddingScore": 0.492969,
+          "rerankScore": 0.576586,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "雇主",
+            "主不",
+            "不得",
+            "得因",
+            "因勞",
+            "勞工",
+            "工請",
+            "請婚",
+            "婚假",
+            "雇主不",
+            "主不得",
+            "不得因",
+            "得因勞",
+            "因勞工",
+            "勞工請",
+            "工請婚",
+            "請婚假"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "第9條 勞工有下列情形，雇主不得視為缺勤而影響其全勤獎金； 其他法律另有規 定者，從其規定： 一、勞工請婚假、喪假、公傷病假及公假。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.598064,
+          "bm25Score": 0.645,
+          "embeddingScore": 0.5517,
+          "rerankScore": 0.598064,
+          "matchedTerms": [
+            "9",
+            "第",
+            "條",
+            "勞工",
+            "工有",
+            "有下",
+            "下列",
+            "列情",
+            "情形",
+            "勞工有",
+            "工有下",
+            "有下列",
+            "下列情",
+            "列情形",
+            "雇主",
+            "主不",
+            "不得",
+            "得視",
+            "視為",
+            "為缺"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 2,
+          "fineArticleKey": "第9條",
+          "fineGrouped": true,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第9條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9條",
+          "content": "勞工請前項第二款以外之普通傷病假，其全勤獎金之扣發，應按請普通傷 病假日數依比例計算。 但勞雇雙方另有優於法令之約定者，從其約定。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.49846,
+          "bm25Score": 0.615833,
+          "embeddingScore": 0.530067,
+          "rerankScore": 0.49846,
+          "matchedTerms": [
+            "勞工",
+            "工請",
+            "請前",
+            "前項",
+            "項第",
+            "第二",
+            "二款",
+            "款以",
+            "以外",
+            "外之",
+            "之普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "勞工請",
+            "工請前",
+            "請前項",
+            "前項第",
+            "項第二"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 2,
+          "fineArticleKey": "第七條",
+          "fineGrouped": true,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 6,
+          "selectedUnitCount": 4,
+          "groupCount": 2,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c14-article91-new",
+      "question": "2026版新增第9-1條的核心保護對象與普通傷病假日數門檻是什麼？",
+      "changed_articles": [
+        "第 9-1 條"
+      ],
+      "evidence_2016": [],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9-1條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9-1條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9-1條",
+          "content": "第9-1條 勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規 定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。 勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通 傷病假行為無關之事實，負舉證責任。 勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應 以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假 日數作為考量因素。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.807497,
+          "bm25Score": 1.0,
+          "embeddingScore": 0.572215,
+          "rerankScore": 0.807497,
+          "matchedTerms": [
+            "9",
+            "1",
+            "第",
+            "條",
+            "勞工",
+            "工一",
+            "一年",
+            "年內",
+            "內請",
+            "請普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "假日",
+            "日數",
+            "數未",
+            "未超",
+            "超過",
+            "過十"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 3,
+          "fineArticleKey": "第9-1條",
+          "fineGrouped": true,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [],
+          "missing_articles": [
+            "第9-1條"
+          ],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9-1條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 0,
+          "selectedUnitCount": 0,
+          "groupCount": 0,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": true
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 3,
+          "selectedUnitCount": 3,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c15-article91-burden",
+      "question": "第9-1條新增的雇主舉證責任，要求證明哪兩者之間沒有關聯？",
+      "changed_articles": [
+        "第 9-1 條"
+      ],
+      "evidence_2016": [],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9-1條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9-1條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9-1條",
+          "content": "第9-1條 勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規 定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。 勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通 傷病假行為無關之事實，負舉證責任。 勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應 以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假 日數作為考量因素。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.592665,
+          "bm25Score": 0.545349,
+          "embeddingScore": 0.650497,
+          "rerankScore": 0.592665,
+          "matchedTerms": [
+            "9",
+            "1",
+            "第",
+            "條",
+            "勞工",
+            "工一",
+            "一年",
+            "年內",
+            "內請",
+            "請普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "假日",
+            "日數",
+            "數未",
+            "未超",
+            "超過",
+            "過十"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 3,
+          "fineArticleKey": "第9-1條",
+          "fineGrouped": true,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [],
+          "missing_articles": [
+            "第9-1條"
+          ],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9-1條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 0,
+          "selectedUnitCount": 0,
+          "groupCount": 0,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": true
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 3,
+          "selectedUnitCount": 3,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c16-article91-appraisal",
+      "question": "第9-1條對普通傷病假超過門檻後的人事考核，新增哪些不得只看單一因素的要求？",
+      "changed_articles": [
+        "第 9-1 條"
+      ],
+      "evidence_2016": [],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第9-1條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第9-1條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9-1條",
+          "content": "第9-1條 勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規 定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。 勞工因請普通傷病假而受有不利處分者，雇主對於該不利處分與其請普通 傷病假行為無關之事實，負舉證責任。 勞工請普通傷病假超過第一項規定日數者，雇主為相關人事考核時，仍應 以其工作能力、工作態度及實際績效等綜合考量，不得僅以請普通傷病假 日數作為考量因素。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.816599,
+          "bm25Score": 0.89541,
+          "embeddingScore": 0.735301,
+          "rerankScore": 0.816599,
+          "matchedTerms": [
+            "9",
+            "1",
+            "第",
+            "條",
+            "勞工",
+            "工一",
+            "一年",
+            "年內",
+            "內請",
+            "請普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "假日",
+            "日數",
+            "數未",
+            "未超",
+            "超過",
+            "過十"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 3,
+          "fineArticleKey": "第9-1條",
+          "fineGrouped": true,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [],
+          "missing_articles": [
+            "第9-1條"
+          ],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第9-1條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 0,
+          "selectedUnitCount": 0,
+          "groupCount": 0,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": true
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 3,
+          "selectedUnitCount": 3,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c17-article12-effective",
+      "question": "2026版第12條新增的修正條文施行日期是哪一天？2016版第12條原本只保留什麼一般規定？",
+      "changed_articles": [
+        "第 12 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第12條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第12條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第12條",
+          "content": "第12條 本規則自發布日施行。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.478874,
+          "bm25Score": 0.331852,
+          "embeddingScore": 0.658568,
+          "rerankScore": 0.478874,
+          "matchedTerms": [
+            "12",
+            "第",
+            "條",
+            "本規",
+            "規則",
+            "則自",
+            "自發",
+            "發布",
+            "布日",
+            "日施",
+            "施行",
+            "本規則",
+            "規則自",
+            "則自發",
+            "自發布",
+            "發布日",
+            "布日施",
+            "日施行"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第12條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第12條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第12條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第12條",
+          "content": "第12條 本規則自發布日施行。 本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一 月一日施行。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.604892,
+          "bm25Score": 0.587778,
+          "embeddingScore": 0.658568,
+          "rerankScore": 0.604892,
+          "matchedTerms": [
+            "12",
+            "第",
+            "條",
+            "本規",
+            "規則",
+            "則自",
+            "自發",
+            "發布",
+            "布日",
+            "日施",
+            "施行",
+            "本規則",
+            "規則自",
+            "則自發",
+            "自發布",
+            "發布日",
+            "布日施",
+            "日施行",
+            "則中",
+            "中華"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 2,
+          "fineArticleKey": "第12條",
+          "fineGrouped": true,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第12條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第12條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 2,
+          "selectedUnitCount": 2,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c18-article12-scope",
+      "question": "第12條從2016版到2026版，新增施行日期句子的法律效果是什麼？",
+      "changed_articles": [
+        "第 12 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第12條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第12條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第12條",
+          "content": "第12條 本規則自發布日施行。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.505535,
+          "bm25Score": 0.396667,
+          "embeddingScore": 0.638597,
+          "rerankScore": 0.505535,
+          "matchedTerms": [
+            "12",
+            "第",
+            "條",
+            "本規",
+            "規則",
+            "則自",
+            "自發",
+            "發布",
+            "布日",
+            "日施",
+            "施行",
+            "本規則",
+            "規則自",
+            "則自發",
+            "自發布",
+            "發布日",
+            "布日施",
+            "日施行"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第12條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第12條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第12條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第12條",
+          "content": "第12條 本規則自發布日施行。 本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一 月一日施行。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.505535,
+          "bm25Score": 0.396667,
+          "embeddingScore": 0.638597,
+          "rerankScore": 0.505535,
+          "matchedTerms": [
+            "12",
+            "第",
+            "條",
+            "本規",
+            "規則",
+            "則自",
+            "自發",
+            "發布",
+            "布日",
+            "日施",
+            "施行",
+            "本規則",
+            "規則自",
+            "則自發",
+            "自發布",
+            "發布日",
+            "布日施",
+            "日施行",
+            "則中",
+            "中華"
+          ],
+          "originalRank": 1,
+          "fineUnitCount": 2,
+          "fineArticleKey": "第12條",
+          "fineGrouped": true,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第12條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第12條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 1,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 2,
+          "selectedUnitCount": 2,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c19-changed-articles",
+      "question": "依兩份全文的條號對照，確定有實質變更或新增內容的條文有哪些？請列出條號。",
+      "changed_articles": [
+        "第 6 條",
+        "第 7 條",
+        "第 9 條",
+        "第 9-1 條",
+        "第 12 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第12條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第12條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第12條",
+          "content": "第12條 本規則自發布日施行。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.200406,
+          "bm25Score": 0.12,
+          "embeddingScore": 0.298681,
+          "rerankScore": 0.200406,
+          "matchedTerms": [
+            "12",
+            "第",
+            "條",
+            "本規",
+            "規則",
+            "則自",
+            "自發",
+            "發布",
+            "布日",
+            "日施",
+            "施行",
+            "本規則",
+            "規則自",
+            "則自發",
+            "自發布",
+            "發布日",
+            "布日施",
+            "日施行"
+          ],
+          "originalRank": 5,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第12條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第12條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第12條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第12條",
+          "content": "本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一 月一日施行。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.319438,
+          "bm25Score": 0.375455,
+          "embeddingScore": 0.250972,
+          "rerankScore": 0.319438,
+          "matchedTerms": [
+            "本規",
+            "規則",
+            "則中",
+            "中華",
+            "華民",
+            "民國",
+            "國一",
+            "一百",
+            "百十",
+            "十四",
+            "四年",
+            "年十",
+            "十二",
+            "二月",
+            "月九",
+            "九日",
+            "日修",
+            "修正",
+            "正發",
+            "發布"
+          ],
+          "originalRank": 5,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第12條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第6條",
+            "第7條",
+            "第9條",
+            "第12條"
+          ],
+          "missing_articles": [
+            "第9-1條"
+          ],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第6條",
+            "第7條",
+            "第9條",
+            "第9-1條",
+            "第12條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 5,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 15,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "c20-change-summary",
+      "question": "綜合比較第6、7、9、9-1、12條，請分別概括：用語變更、新增請假情境、全勤保護、舉證／考核限制、施行日期變更。",
+      "changed_articles": [
+        "第 6 條",
+        "第 7 條",
+        "第 9 條",
+        "第 9-1 條",
+        "第 12 條"
+      ],
+      "evidence_2016": [
+        {
+          "id": "aligned-2016-第12條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2016全文分條.md | 第12條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2016全文分條.md",
+          "page": "第12條",
+          "content": "第12條 本規則自發布日施行。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.452669,
+          "bm25Score": 0.439245,
+          "embeddingScore": 0.469075,
+          "rerankScore": 0.452669,
+          "matchedTerms": [
+            "12",
+            "第",
+            "條",
+            "本規",
+            "規則",
+            "則自",
+            "自發",
+            "發布",
+            "布日",
+            "日施",
+            "施行",
+            "本規則",
+            "規則自",
+            "則自發",
+            "自發布",
+            "發布日",
+            "布日施",
+            "日施行"
+          ],
+          "originalRank": 5,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第12條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "evidence_2026": [
+        {
+          "id": "aligned-2026-第12條::fine-evidence-1",
+          "rank": 1,
+          "title": "勞工請假規則_2026全文分條.md | 第12條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第12條",
+          "content": "第12條 本規則自發布日施行。 本規則中華民國一百十四年十二月九日修正發布之條文，自一百十五年一 月一日施行。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.452669,
+          "bm25Score": 0.439245,
+          "embeddingScore": 0.469075,
+          "rerankScore": 0.452669,
+          "matchedTerms": [
+            "12",
+            "第",
+            "條",
+            "本規",
+            "規則",
+            "則自",
+            "自發",
+            "發布",
+            "布日",
+            "日施",
+            "施行",
+            "本規則",
+            "規則自",
+            "則自發",
+            "自發布",
+            "發布日",
+            "布日施",
+            "日施行",
+            "則中",
+            "中華"
+          ],
+          "originalRank": 5,
+          "fineUnitCount": 2,
+          "fineArticleKey": "第12條",
+          "fineGrouped": true,
+          "focus": true
+        },
+        {
+          "id": "aligned-2026-第9-1條::fine-evidence-2",
+          "rank": 2,
+          "title": "勞工請假規則_2026全文分條.md | 第9-1條 / fine evidence",
+          "source": "evals/taiwan_law_versions_changed/source/勞工請假規則_2026全文分條.md",
+          "page": "第9-1條",
+          "content": "第9-1條 勞工一年內請普通傷病假日數未超過十日者，除本規則或其他法律另有規 定，從其規定者外，雇主不得因勞工請普通傷病假而為不利之處分。",
+          "branch": "Fine-grained embedding evidence",
+          "score": 0.416334,
+          "bm25Score": 0.429245,
+          "embeddingScore": 0.400553,
+          "rerankScore": 0.416334,
+          "matchedTerms": [
+            "9",
+            "1",
+            "第",
+            "條",
+            "勞工",
+            "工一",
+            "一年",
+            "年內",
+            "內請",
+            "請普",
+            "普通",
+            "通傷",
+            "傷病",
+            "病假",
+            "假日",
+            "日數",
+            "數未",
+            "未超",
+            "超過",
+            "過十"
+          ],
+          "originalRank": 4,
+          "fineUnitCount": 1,
+          "fineArticleKey": "第9-1條",
+          "fineGrouped": false,
+          "focus": true
+        }
+      ],
+      "article_alignment": {
+        "2016": {
+          "available_articles": [
+            "第6條",
+            "第7條",
+            "第9條",
+            "第12條"
+          ],
+          "missing_articles": [
+            "第9-1條"
+          ],
+          "article_recall": true
+        },
+        "2026": {
+          "available_articles": [
+            "第6條",
+            "第7條",
+            "第9條",
+            "第9-1條",
+            "第12條"
+          ],
+          "missing_articles": [],
+          "article_recall": true
+        }
+      },
+      "retrieval_trace": {
+        "2016": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 5,
+          "selectedUnitCount": 1,
+          "groupCount": 1,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        },
+        "2026": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 15,
+          "selectedUnitCount": 3,
+          "groupCount": 2,
+          "chunkChars": 240,
+          "chunkFraction": 0.3333333333333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    }
+  ]
+}

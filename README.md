@@ -65,6 +65,8 @@ RAG_VLM_MODEL=qwen3-vl:4b-instruct python -m rag_demo.web_app
 
 架構與任務管理入口為 [http://127.0.0.1:8765/architecture.html](http://127.0.0.1:8765/architecture.html)。macOS 可直接雙擊專案根目錄的 `開啟_RAG_專案管理器.command`；它會在需要時啟動本機服務並開啟工作台。詳細說明見 [RAG 專案管理器](RAG_專案管理器.md)。
 
+OCR 品質 Gate、人工校正、版本化金標資料、候選模型評測與 Shadow／灰度發布的受控自我訓練閉環，見 [OCR 受控自我訓練架構](docs/ocr_self_training_architecture.md)。
+
 ## 驗證
 
 ```bash

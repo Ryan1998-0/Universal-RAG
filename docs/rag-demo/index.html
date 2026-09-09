@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>泛用 RAG 工作台</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="./assets/styles.css?v=demo-ui-v3" />
+    <link rel="stylesheet" href="./assets/styles.css?v=demo-ui-v6" />
   </head>
   <body>
     <main class="app-shell">
@@ -179,6 +179,11 @@
               <span>知識庫</span>
               <select id="knowledgeBaseSelect" aria-label="知識庫"></select>
             </label>
+            <label class="access-picker">
+              <span>查詢身分</span>
+              <select id="accessProfileSelect" aria-label="查詢身分"></select>
+            </label>
+            <p class="access-notice" id="accessNotice" hidden></p>
           </div>
         <label class="file-search">
           <span>⌕</span>
@@ -282,6 +287,20 @@
       </form>
     </dialog>
 
-    <script type="module" src="./assets/app.js?v=demo-ui-v5"></script>
+    <dialog class="confirm-dialog access-dialog" id="accessPolicyDialog" aria-labelledby="accessPolicyTitle">
+      <form method="dialog">
+        <h2 id="accessPolicyTitle">文件查詢權限</h2>
+        <p id="accessPolicyDocument"></p>
+        <p class="access-dialog-note">檢索前會由後端過濾未授權文件；模型不會收到其片段。</p>
+        <div class="access-role-list" id="accessRoleList"></div>
+        <p class="dialog-error" id="accessPolicyError" hidden></p>
+        <div class="confirm-dialog-actions">
+          <button class="dialog-cancel-button" type="submit" value="cancel">取消</button>
+          <button class="dialog-save-button" id="saveAccessPolicyButton" type="button">儲存權限</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./assets/app.js?v=demo-ui-v6"></script>
   </body>
 </html>

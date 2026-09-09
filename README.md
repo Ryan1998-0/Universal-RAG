@@ -6,6 +6,8 @@
 
 > 線上版本用來展示介面。若要使用文件上傳、OCR、本機模型、對話紀錄與持久化索引，請啟動本機服務。
 
+> 想先掌握目前範圍、驗證結果與入口，請看精簡版[專案總覽](docs/project_overview_zh.md)。
+
 ## 核心功能
 
 - 自適應路由：簡單問題直接回答，需要文件證據時先分析、拆成子問題與多個互補查詢。
@@ -14,6 +16,7 @@
 - 多格式匯入：PDF、圖片、DOCX、TXT、Markdown、JSON。
 - 圖片與掃描 PDF OCR、DOCX 內嵌圖片 OCR／本機 VLM、父子分塊、來源引用與證據不足拒答。
 - 知識庫、資料夾與文件選取，不同領域可分開管理。
+- 文件查詢 ACL：角色對文件來源授權，後端檢索前強制過濾，未授權證據不會交給模型。
 - SQLite 對話紀錄與長期記憶。
 - 預設透過 Ollama 執行 `qwen2.5:7b`，模型可由設定替換。
 
@@ -66,6 +69,8 @@ RAG_VLM_MODEL=qwen3-vl:4b-instruct python -m rag_demo.web_app
 架構與任務管理入口為 [http://127.0.0.1:8765/architecture.html](http://127.0.0.1:8765/architecture.html)。macOS 可直接雙擊專案根目錄的 `開啟_RAG_專案管理器.command`；它會在需要時啟動本機服務並開啟工作台。詳細說明見 [RAG 專案管理器](RAG_專案管理器.md)。
 
 OCR 品質 Gate、人工校正、版本化金標資料、候選模型評測與 Shadow／灰度發布的受控自我訓練閉環，見 [OCR 受控自我訓練架構](docs/ocr_self_training_architecture.md)。
+
+本機角色與文件查詢 ACL 的設定方式、後端強制點與正式 OIDC/JWT 邊界，見 [文件查詢權限](docs/query_access_control.md)。
 
 ## 驗證
 

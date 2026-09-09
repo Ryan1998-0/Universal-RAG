@@ -3,12 +3,14 @@ import json
 import html
 import mimetypes
 import os
+from dataclasses import replace
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from time import perf_counter
 from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from rag_demo.config import RagConfig
+from rag_demo.access_control import AccessControlError, AccessPolicyStore
 from rag_demo.conversation_store import ConversationStore
 from rag_demo.document_pipeline import (
     MAX_DOCUMENT_UPLOAD_BYTES,
@@ -49,6 +51,7 @@ STATIC_ROOT = Path(
 CONVERSATION_STORE = None
 DOCUMENT_STORE = None
 RAG_PIPELINE = None
+ACCESS_POLICY_STORE = None
 
 
 def _conversation_store():
@@ -70,6 +73,13 @@ def _rag_pipeline():
     if RAG_PIPELINE is None:
         RAG_PIPELINE = RagPipeline(conversation_store=_conversation_store())
     return RAG_PIPELINE
+
+
+def _access_policy_store():
+    global ACCESS_POLICY_STORE
+    if ACCESS_POLICY_STORE is None:
+        ACCESS_POLICY_STORE = AccessPolicyStore()
+    return ACCESS_POLICY_STORE
 
 
 def render_home(
@@ -345,21 +355,28 @@ class RagRequestHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/config":
             self._send_json(_runtime_config_payload())
             return
+        if parsed.path == "/api/access/session":
+            self._send_json(self._access_session_payload())
+            return
+        if parsed.path.startswith("/api/access/policies/"):
+            source_id = unquote(parsed.path.removeprefix("/api/access/policies/").strip("/"))
+            self._handle_access_policy_get(source_id)
+            return
         if parsed.path.startswith("/api/profiles/"):
             profile = unquote(parsed.path.removeprefix("/api/profiles/").strip("/"))
             if not profile:
                 self._send_json({"error": "profile is required"}, status=400)
                 return
             try:
-                self._send_json(_profile_data_payload(profile))
+                self._send_json(_profile_data_payload(profile, principal=self._current_principal()))
             except (ValueError, FileNotFoundError) as exc:
                 self._send_json({"error": str(exc)}, status=400)
             return
         if parsed.path == "/api/documents":
-            self._send_json({"documents": _document_store().list_documents()})
+            self._send_json({"documents": self._visible_uploaded_documents()})
             return
         if parsed.path == "/api/folders":
-            self._send_json({"folders": _document_store().list_folders()})
+            self._send_json({"folders": self._visible_folders()})
             return
         if parsed.path.startswith("/api/documents/") and parsed.path.endswith("/download"):
             self._handle_document_download(parsed.path)
@@ -390,6 +407,9 @@ class RagRequestHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/retrieve":
             self._handle_api_retrieve()
             return
+        if parsed.path == "/api/access/session":
+            self._handle_access_session_set()
+            return
         if parsed.path == "/api/route":
             self._handle_api_route()
             return
@@ -417,11 +437,13 @@ class RagRequestHandler(BaseHTTPRequestHandler):
         top_k = _parse_int(parse_qs(body).get("top_k", [str(RagConfig.from_env().top_k)])[0], RagConfig.from_env().top_k)
 
         if question:
+            source_ids, _ = self._authorized_source_ids(DEFAULT_PROFILE, None)
             answer = _answer_standalone_question(
                 question,
                 model=model,
-                profile=knowledge_base.name,
+                profile=DEFAULT_PROFILE,
                 top_k=top_k,
+                source_ids=source_ids,
             )
             answer_html = html.escape(answer)
         else:
@@ -452,6 +474,10 @@ class RagRequestHandler(BaseHTTPRequestHandler):
 
     def do_PUT(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path.startswith("/api/access/policies/"):
+            source_id = unquote(parsed.path.removeprefix("/api/access/policies/").strip("/"))
+            self._handle_access_policy_put(source_id)
+            return
         if parsed.path.startswith("/api/folders/"):
             folder_id = unquote(parsed.path.removeprefix("/api/folders/").strip("/"))
             self._handle_rename_folder(folder_id)
@@ -509,7 +535,10 @@ class RagRequestHandler(BaseHTTPRequestHandler):
 
             profile = str(payload.get("profile") or DEFAULT_PROFILE).strip()
 
-            source_ids = _source_ids_from_payload(payload)
+            source_ids, denied_source_ids = self._authorized_source_ids(
+                profile,
+                _source_ids_from_payload(payload),
+            )
             settings = RagConfig.from_env()
             query_variants = [
                 str(query).strip()[:500]
@@ -551,6 +580,7 @@ class RagRequestHandler(BaseHTTPRequestHandler):
                     settings=settings,
                     question=question,
                 )
+            result["access"] = self._access_result_payload(denied_source_ids)
             self._send_json(result)
         except Exception as exc:
             self._send_json({"error": str(exc)}, status=500)
@@ -568,6 +598,8 @@ class RagRequestHandler(BaseHTTPRequestHandler):
 
     def _handle_create_folder(self) -> None:
         try:
+            if not self._require_access_admin():
+                return
             payload = self._read_json_body()
             folder = _document_store().create_folder(payload.get("name"))
             self._send_json({"folder": folder}, status=201)
@@ -578,6 +610,8 @@ class RagRequestHandler(BaseHTTPRequestHandler):
 
     def _handle_rename_folder(self, folder_id: str) -> None:
         try:
+            if not self._require_access_admin():
+                return
             payload = self._read_json_body()
             folder = _document_store().rename_folder(folder_id, payload.get("name"))
             self._send_json({"folder": folder})
@@ -588,6 +622,8 @@ class RagRequestHandler(BaseHTTPRequestHandler):
 
     def _handle_delete_folder(self, folder_id: str) -> None:
         try:
+            if not self._require_access_admin():
+                return
             self._send_json(_document_store().delete_folder(folder_id))
         except DocumentPipelineError as exc:
             self._send_json({"error": str(exc)}, status=400)
@@ -596,6 +632,8 @@ class RagRequestHandler(BaseHTTPRequestHandler):
 
     def _handle_move_document(self, source_id: str) -> None:
         try:
+            if not self._require_access_admin():
+                return
             payload = self._read_json_body()
             document = _document_store().move_document(source_id, payload.get("folder_id"))
             self._send_json({"document": document})
@@ -605,6 +643,8 @@ class RagRequestHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(exc)}, status=500)
 
     def _handle_document_upload(self) -> None:
+        if not self._require_access_admin():
+            return
         try:
             length = int(self.headers.get("Content-Length", "0"))
         except (TypeError, ValueError):
@@ -648,6 +688,10 @@ class RagRequestHandler(BaseHTTPRequestHandler):
         if original_path is None:
             self._send_not_found()
             return
+        allowed_ids, _ = self._authorized_source_ids(DEFAULT_PROFILE, [source_id])
+        if source_id not in allowed_ids:
+            self._send_json({"error": "沒有下載此文件的權限。"}, status=403)
+            return
         metadata = next(
             (
                 document
@@ -678,7 +722,13 @@ class RagRequestHandler(BaseHTTPRequestHandler):
                 default_profile=DEFAULT_PROFILE,
                 allowed_models=allowed_models_from_env(DEFAULT_MODEL),
             )
-            self._send_json(_rag_pipeline().run(request))
+            source_ids, denied_source_ids = self._authorized_source_ids(
+                request.profile,
+                request.source_ids,
+            )
+            result = _rag_pipeline().run(replace(request, source_ids=source_ids))
+            result["access"] = self._access_result_payload(denied_source_ids)
+            self._send_json(result)
         except RagPipelineInputError as exc:
             self._send_json(
                 {"error": str(exc), "code": "INVALID_RAG_REQUEST"},
@@ -701,6 +751,132 @@ class RagRequestHandler(BaseHTTPRequestHandler):
         if length <= 0:
             return {}
         return json.loads(self.rfile.read(length).decode("utf-8"))
+
+    def _current_principal(self) -> dict:
+        # This local workbench uses a selectable demo profile.  Production must
+        # resolve the equivalent principal from a verified OIDC/JWT token.
+        cookie_header = str(self.headers.get("Cookie") or "")
+        principal_id = ""
+        for item in cookie_header.split(";"):
+            key, _, value = item.strip().partition("=")
+            if key == "rag_demo_principal":
+                principal_id = unquote(value)
+                break
+        return _access_policy_store().resolve_principal(principal_id or "admin-demo")
+
+    def _access_session_payload(self) -> dict:
+        store = _access_policy_store()
+        principal = self._current_principal()
+        return {
+            "mode": "local-demo-profile",
+            "notice": "此本機頁面的身分切換用於驗證權限規則；正式環境必須改由 OIDC/JWT 驗證。",
+            "principal": principal,
+            "principals": store.list_principals(),
+            "roles": store.list_roles(),
+            "can_manage": store.is_admin(principal),
+        }
+
+    def _handle_access_session_set(self) -> None:
+        try:
+            payload = self._read_json_body()
+            principal = _access_policy_store().resolve_principal(payload.get("principal_id"))
+            encoded_id = quote(principal["id"], safe="")
+            self._send_json(
+                self._access_session_payload_for(principal),
+                headers={"Set-Cookie": f"rag_demo_principal={encoded_id}; Path=/; SameSite=Lax"},
+            )
+        except AccessControlError as exc:
+            self._send_json({"error": str(exc)}, status=400)
+
+    def _access_session_payload_for(self, principal: dict) -> dict:
+        store = _access_policy_store()
+        return {
+            "mode": "local-demo-profile",
+            "notice": "此本機頁面的身分切換用於驗證權限規則；正式環境必須改由 OIDC/JWT 驗證。",
+            "principal": principal,
+            "principals": store.list_principals(),
+            "roles": store.list_roles(),
+            "can_manage": store.is_admin(principal),
+        }
+
+    def _require_access_admin(self) -> bool:
+        if _access_policy_store().is_admin(self._current_principal()):
+            return True
+        self._send_json({"error": "只有系統管理員可以修改文件與權限設定。"}, status=403)
+        return False
+
+    def _available_source_ids(self, profile: str) -> list[str]:
+        description = get_hybrid_retriever(profile).describe()
+        return list(dict.fromkeys(
+            str(source.get("source_id") or "").strip()
+            for source in (description.get("sources") or [])
+            if str(source.get("source_id") or "").strip()
+        ))
+
+    def _authorized_source_ids(self, profile: str, requested_source_ids):
+        principal = self._current_principal()
+        return _access_policy_store().allowed_source_ids(
+            principal,
+            self._available_source_ids(profile),
+            requested_source_ids,
+        )
+
+    def _access_result_payload(self, denied_source_ids: list[str]) -> dict:
+        principal = self._current_principal()
+        return {
+            "principal": {"id": principal["id"], "label": principal["label"]},
+            "denied_source_count": len(denied_source_ids),
+        }
+
+    def _visible_uploaded_documents(self) -> list[dict]:
+        documents = _document_store().list_documents()
+        allowed_ids, _ = _access_policy_store().allowed_source_ids(
+            self._current_principal(),
+            [document.get("source_id") for document in documents],
+        )
+        allowed_set = set(allowed_ids)
+        return [document for document in documents if document.get("source_id") in allowed_set]
+
+    def _visible_folders(self) -> list[dict]:
+        documents = self._visible_uploaded_documents()
+        counts = {}
+        for document in documents:
+            folder_id = str(document.get("folder_id") or "uncategorized")
+            counts[folder_id] = counts.get(folder_id, 0) + 1
+        folders = []
+        for folder in _document_store().list_folders():
+            folder_id = str(folder.get("id") or "")
+            if folder.get("system") or folder_id in counts:
+                folders.append({**folder, "document_count": counts.get(folder_id, 0)})
+        return folders
+
+    def _handle_access_policy_get(self, source_id: str) -> None:
+        try:
+            if not self._require_access_admin():
+                return
+            self._ensure_known_source(source_id)
+            self._send_json({"policy": _access_policy_store().policy_for_source(source_id)})
+        except AccessControlError as exc:
+            self._send_json({"error": str(exc)}, status=400)
+
+    def _handle_access_policy_put(self, source_id: str) -> None:
+        try:
+            if not self._require_access_admin():
+                return
+            self._ensure_known_source(source_id)
+            payload = self._read_json_body()
+            policy = _access_policy_store().set_policy(source_id, payload.get("allowed_roles"))
+            self._send_json({"policy": policy})
+        except AccessControlError as exc:
+            self._send_json({"error": str(exc)}, status=400)
+
+    def _ensure_known_source(self, source_id: str) -> None:
+        configured_profiles = list_profile_retrieval_configs(default_profile=DEFAULT_PROFILE)
+        known_ids = set()
+        for config in configured_profiles:
+            known_ids.update(self._available_source_ids(config["profile"]))
+        if source_id not in known_ids:
+            raise AccessControlError("找不到要設定權限的文件。")
 
     def _send_static_file(self, raw_path: str) -> bool:
         relative_path = "index.html" if raw_path == "/" else unquote(raw_path).lstrip("/")
@@ -730,10 +906,12 @@ class RagRequestHandler(BaseHTTPRequestHandler):
         self.send_response(404)
         self.end_headers()
 
-    def _send_json(self, payload: dict, status: int = 200) -> None:
+    def _send_json(self, payload: dict, status: int = 200, headers: dict | None = None) -> None:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        for key, value in (headers or {}).items():
+            self.send_header(str(key), str(value))
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
@@ -810,7 +988,7 @@ def _runtime_config_payload() -> dict:
     }
 
 
-def _profile_data_payload(profile: str) -> dict:
+def _profile_data_payload(profile: str, principal: dict | None = None) -> dict:
     config = load_profile_retrieval_config(profile)
     payload = get_hybrid_retriever(config["profile"]).describe()
     uploaded_documents = {
@@ -821,7 +999,33 @@ def _profile_data_payload(profile: str) -> dict:
         {**source, **uploaded_documents.get(source.get("source_id"), {})}
         for source in payload.get("sources") or []
     ]
-    payload["folders"] = _document_store().list_folders()
+    if principal is not None:
+        allowed_ids, _ = _access_policy_store().allowed_source_ids(
+            principal,
+            [source.get("source_id") for source in payload["sources"]],
+        )
+        allowed_set = set(allowed_ids)
+        payload["sources"] = [
+            source for source in payload["sources"]
+            if source.get("source_id") in allowed_set
+        ]
+    folders = _document_store().list_folders()
+    if principal is not None:
+        visible_documents = [
+            document
+            for document in _document_store().list_documents()
+            if document.get("source_id") in allowed_set
+        ]
+        visible_counts = {}
+        for document in visible_documents:
+            folder_id = str(document.get("folder_id") or "uncategorized")
+            visible_counts[folder_id] = visible_counts.get(folder_id, 0) + 1
+        folders = [
+            {**folder, "document_count": visible_counts.get(str(folder.get("id") or ""), 0)}
+            for folder in folders
+            if folder.get("system") or str(folder.get("id") or "") in visible_counts
+        ]
+    payload["folders"] = folders
     payload.update(
         {
             "profile": config["profile"],
@@ -837,12 +1041,14 @@ def _answer_standalone_question(
     model: str,
     profile: str = DEFAULT_PROFILE,
     top_k: int = None,
+    source_ids=None,
 ) -> str:
     request = RagPipelineRequest(
         question=question,
         model=model,
         profile=profile,
         top_k=top_k,
+        source_ids=source_ids,
         persist_conversation=False,
     )
     return _rag_pipeline().run(request)["answer"]

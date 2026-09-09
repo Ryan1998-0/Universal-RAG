@@ -115,6 +115,46 @@ export async function loadRuntimeConfig(endpoint = "/api/config", options = {}) 
   };
 }
 
+export async function loadAccessSession(endpoint = "/api/access/session", options = {}) {
+  const body = await requestJson(endpoint, { method: "GET" }, options);
+  return normalizeAccessSession(body);
+}
+
+export async function switchAccessSession(principalId, endpoint = "/api/access/session", options = {}) {
+  const body = await requestJson(endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ principal_id: String(principalId || "") }),
+  }, options);
+  return normalizeAccessSession(body);
+}
+
+export async function loadSourceAccessPolicy(sourceId, endpoint = "/api/access/policies", options = {}) {
+  const cleanId = String(sourceId || "").trim();
+  if (!cleanId) throw new Error("必須提供文件來源編號。");
+  const body = await requestJson(
+    `${String(endpoint).replace(/\/$/, "")}/${encodeURIComponent(cleanId)}`,
+    { method: "GET" },
+    options,
+  );
+  return normalizeAccessPolicy(body.policy);
+}
+
+export async function saveSourceAccessPolicy(sourceId, allowedRoles, endpoint = "/api/access/policies", options = {}) {
+  const cleanId = String(sourceId || "").trim();
+  if (!cleanId) throw new Error("必須提供文件來源編號。");
+  const body = await requestJson(
+    `${String(endpoint).replace(/\/$/, "")}/${encodeURIComponent(cleanId)}`,
+    {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ allowed_roles: Array.isArray(allowedRoles) ? allowedRoles.map(String) : [] }),
+    },
+    options,
+  );
+  return normalizeAccessPolicy(body.policy);
+}
+
 export async function loadProfileData(profile, endpoint = "/api/profiles", options = {}) {
   const cleanProfile = String(profile || "").trim();
   if (!cleanProfile) throw new Error("必須指定知識庫設定。");
@@ -148,6 +188,38 @@ function normalizeRuntimeModel(model) {
     provider: String(model?.provider || ""),
     name: String(model?.name || ""),
     label: String(model?.label || model?.id || ""),
+  };
+}
+
+function normalizeAccessSession(session) {
+  return {
+    mode: String(session?.mode || ""),
+    notice: String(session?.notice || ""),
+    principal: {
+      id: String(session?.principal?.id || ""),
+      label: String(session?.principal?.label || ""),
+      roles: Array.isArray(session?.principal?.roles) ? session.principal.roles.map(String) : [],
+    },
+    principals: Array.isArray(session?.principals) ? session.principals.map((principal) => ({
+      id: String(principal?.id || ""),
+      label: String(principal?.label || ""),
+      roles: Array.isArray(principal?.roles) ? principal.roles.map(String) : [],
+    })).filter((principal) => principal.id) : [],
+    roles: Array.isArray(session?.roles) ? session.roles.map((role) => ({
+      id: String(role?.id || ""),
+      label: String(role?.label || ""),
+      description: String(role?.description || ""),
+    })).filter((role) => role.id) : [],
+    canManage: Boolean(session?.can_manage),
+  };
+}
+
+function normalizeAccessPolicy(policy) {
+  if (!policy || typeof policy !== "object") throw new Error("權限 API 回應缺少設定。");
+  return {
+    sourceId: String(policy.source_id || ""),
+    allowedRoles: Array.isArray(policy.allowed_roles) ? policy.allowed_roles.map(String) : [],
+    inheritedDefault: Boolean(policy.inherited_default),
   };
 }
 

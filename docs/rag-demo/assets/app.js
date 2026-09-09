@@ -6,7 +6,9 @@ import {
   createDocumentFolder,
   deleteConversation,
   deleteDocumentFolder,
+  loadAccessSession,
   listConversations,
+  loadSourceAccessPolicy,
   loadConversation,
   loadProfileData,
   loadRuntimeConfig,
@@ -14,6 +16,8 @@ import {
   readAgentEndpoint,
   renameDocumentFolder,
   saveAgentEndpoint,
+  saveSourceAccessPolicy,
+  switchAccessSession,
   uploadDocument,
 } from "../agent-client.js?v=canonical-pipeline-3";
 
@@ -130,6 +134,8 @@ const state = {
   folderDialogMode: "create",
   editingFolderId: "",
   staticShowcase: false,
+  access: { principal: { id: "", label: "", roles: [] }, principals: [], roles: [], canManage: false },
+  editingAccessSourceId: "",
 };
 
 const elements = {
@@ -200,6 +206,13 @@ const elements = {
   deleteFolderDialog: document.querySelector("#deleteFolderDialog"),
   deleteFolderMessage: document.querySelector("#deleteFolderMessage"),
   confirmDeleteFolder: document.querySelector("#confirmDeleteFolderButton"),
+  accessProfile: document.querySelector("#accessProfileSelect"),
+  accessNotice: document.querySelector("#accessNotice"),
+  accessPolicyDialog: document.querySelector("#accessPolicyDialog"),
+  accessPolicyDocument: document.querySelector("#accessPolicyDocument"),
+  accessRoleList: document.querySelector("#accessRoleList"),
+  accessPolicyError: document.querySelector("#accessPolicyError"),
+  saveAccessPolicy: document.querySelector("#saveAccessPolicyButton"),
   deleteConversationDialog: document.querySelector("#deleteConversationDialog"),
   deleteConversationMessage: document.querySelector("#deleteConversationMessage"),
 };
@@ -227,6 +240,12 @@ async function init() {
     elements.knowledgeBase.value = state.profile;
     elements.qaModel.value = state.qaModel;
     elements.language.value = state.language;
+    try {
+      configureAccessSession(await loadAccessSession());
+    } catch (error) {
+      if (!state.staticShowcase) throw error;
+      elements.accessProfile.closest("label").hidden = true;
+    }
     applyLanguage();
     state.agentEndpoint = readAgentEndpoint({ defaultEndpoint: "/api/ask" });
     elements.agentEndpoint.value = state.agentEndpoint;
@@ -365,6 +384,22 @@ function bindEvents() {
     }
   });
   elements.confirmDeleteFolder.addEventListener("click", deleteSelectedFolder);
+  elements.accessProfile.addEventListener("change", async () => {
+    const principalId = elements.accessProfile.value;
+    if (!principalId || principalId === state.access.principal.id) return;
+    elements.accessProfile.disabled = true;
+    try {
+      configureAccessSession(await switchAccessSession(principalId));
+      await loadKnowledgeBase(state.profile);
+      setDocumentUploadStatus(`已切換為「${state.access.principal.label}」，只顯示可查詢文件。`, "success");
+    } catch (error) {
+      elements.accessProfile.value = state.access.principal.id;
+      setDocumentUploadStatus(`身分切換失敗：${error instanceof Error ? error.message : String(error)}`, "error");
+    } finally {
+      elements.accessProfile.disabled = false;
+    }
+  });
+  elements.saveAccessPolicy.addEventListener("click", saveAccessPolicyFromDialog);
 
   elements.uploadDocument.addEventListener("click", () => {
     if (!state.uploadingDocuments) elements.documentInput.click();
@@ -540,8 +575,12 @@ function renderFolderControls() {
   elements.uploadFolder.value = state.uploadFolderId;
   const selectedFolder = currentUploadFolder();
   const protectedFolder = Boolean(selectedFolder.system);
-  elements.renameFolder.disabled = protectedFolder;
-  elements.deleteFolder.disabled = protectedFolder;
+  const canManage = Boolean(state.access.canManage);
+  elements.uploadFolder.disabled = !canManage || state.uploadingDocuments;
+  elements.uploadDocument.disabled = !canManage || state.uploadingDocuments;
+  elements.newFolder.disabled = !canManage;
+  elements.renameFolder.disabled = !canManage || protectedFolder;
+  elements.deleteFolder.disabled = !canManage || protectedFolder;
 }
 
 function openFolderDialog(mode) {
@@ -755,6 +794,15 @@ function renderDocumentSelector() {
           <small>${sourceStatusLabel(source, counts.get(source.source_id) || 0)}</small>
         </span>
       `;
+      if (state.access.canManage) {
+        const accessButton = document.createElement("button");
+        accessButton.type = "button";
+        accessButton.className = "document-access-button";
+        accessButton.textContent = "權限";
+        accessButton.title = `設定 ${source.name} 的查詢權限`;
+        accessButton.addEventListener("click", () => openAccessPolicyDialog(source));
+        row.append(accessButton);
+      }
       row.querySelector("input").addEventListener("change", (event) => {
         const sourceId = event.currentTarget.value;
         if (event.currentTarget.checked) state.selectedSourceIds.add(sourceId);
@@ -778,6 +826,7 @@ function renderDocumentSelector() {
         picker.value = folderList().some((folder) => folder.id === source.folder_id)
           ? source.folder_id
           : "uncategorized";
+        picker.disabled = !state.access.canManage;
         picker.addEventListener("change", (event) => {
           handleDocumentFolderChange(source.source_id, event.currentTarget.value, event.currentTarget);
         });
@@ -789,6 +838,80 @@ function renderDocumentSelector() {
   }
 
   elements.selectedDocCount.textContent = `(${state.selectedSourceIds.size})`;
+}
+
+function configureAccessSession(session) {
+  state.access = session || state.access;
+  const principal = state.access.principal || {};
+  elements.accessProfile.replaceChildren(
+    ...(state.access.principals || []).map((item) => {
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.label;
+      return option;
+    }),
+  );
+  elements.accessProfile.value = principal.id || "";
+  const roleLabels = (principal.roles || []).map((roleId) => (
+    (state.access.roles || []).find((role) => role.id === roleId)?.label || roleId
+  ));
+  elements.accessNotice.textContent = state.access.notice || "";
+  elements.accessNotice.hidden = !state.access.notice;
+  elements.accessProfile.closest("label").hidden = !(state.access.principals || []).length;
+  elements.accessProfile.title = roleLabels.length ? `角色：${roleLabels.join("、")}` : "";
+}
+
+async function openAccessPolicyDialog(source) {
+  if (!state.access.canManage || !source?.source_id) return;
+  state.editingAccessSourceId = source.source_id;
+  elements.accessPolicyDocument.textContent = source.name || source.source_id;
+  elements.accessPolicyError.hidden = true;
+  elements.accessPolicyError.textContent = "";
+  elements.accessRoleList.replaceChildren();
+  try {
+    const policy = await loadSourceAccessPolicy(source.source_id);
+    const choices = [
+      { id: "all", label: "全員公開", description: "任何已設定的查詢身分都能檢索" },
+      ...(state.access.roles || []).filter((role) => role.id !== "admin"),
+    ];
+    for (const choice of choices) {
+      const label = document.createElement("label");
+      label.className = "access-role-option";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = choice.id;
+      checkbox.checked = policy.allowedRoles.includes(choice.id);
+      const copy = document.createElement("span");
+      copy.innerHTML = `<strong>${escapeHtml(choice.label)}</strong><small>${escapeHtml(choice.description || "")}</small>`;
+      label.append(checkbox, copy);
+      elements.accessRoleList.append(label);
+    }
+    elements.accessPolicyDialog.showModal();
+  } catch (error) {
+    setDocumentUploadStatus(`讀取權限設定失敗：${error instanceof Error ? error.message : String(error)}`, "error");
+  }
+}
+
+async function saveAccessPolicyFromDialog() {
+  const sourceId = state.editingAccessSourceId;
+  const allowedRoles = [...elements.accessRoleList.querySelectorAll('input[type="checkbox"]:checked')]
+    .map((input) => input.value);
+  if (!sourceId || !allowedRoles.length) {
+    elements.accessPolicyError.textContent = "至少選擇一個可查詢角色。";
+    elements.accessPolicyError.hidden = false;
+    return;
+  }
+  elements.saveAccessPolicy.disabled = true;
+  try {
+    await saveSourceAccessPolicy(sourceId, allowedRoles);
+    elements.accessPolicyDialog.close();
+    setDocumentUploadStatus("文件查詢權限已儲存；下一次檢索會先套用此限制。", "success");
+  } catch (error) {
+    elements.accessPolicyError.textContent = error instanceof Error ? error.message : String(error);
+    elements.accessPolicyError.hidden = false;
+  } finally {
+    elements.saveAccessPolicy.disabled = false;
+  }
 }
 
 function sourceStatusLabel(source, chunkCount) {

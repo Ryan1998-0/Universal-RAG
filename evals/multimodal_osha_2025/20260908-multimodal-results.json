@@ -1,0 +1,4750 @@
+{
+  "benchmark_id": "taiwan_osha_2025_multimodal_12",
+  "source_id": "upload-9c9b1122ba1a0262a057",
+  "source_pdf": "evals/multimodal_osha_2025/source/2025年職業安全衛生年報.pdf",
+  "run_at": "2026-09-08T22:09:23+08:00",
+  "policy": {
+    "retrieval": "API hybrid BM25 + embedding + rerank; top_k=5",
+    "vision_oracle": "Qwen3-VL receives gold page image(s), no retrieval evidence",
+    "multimodal_rag": "Qwen3-VL receives retrieved page image(s) plus retrieved text evidence",
+    "scoring": "required numeric/keyword term coverage; deterministic audit, not a model judge"
+  },
+  "summary": {
+    "question_count": 12,
+    "page_recall": 8,
+    "text_evidence_pass": 9,
+    "vision_oracle_pass": 8,
+    "multimodal_rag_pass": 7,
+    "retrieval_p50_ms": 117.813
+  },
+  "results": [
+    {
+      "id": "mm01-page3-supervision",
+      "question": "2025年職業安全衛生監督檢查共辦理多少場次？",
+      "modality": "infographic",
+      "gold_pages": [
+        3
+      ],
+      "retrieved_pages": [
+        49,
+        52,
+        55
+      ],
+      "page_recall": false,
+      "text_evidence_pass": false,
+      "text_evidence_matched": [
+        "場次"
+      ],
+      "required_terms": [
+        "150,173",
+        "場次"
+      ],
+      "vision_oracle_answer": "150,173場次",
+      "vision_oracle_pass": true,
+      "vision_oracle_matched": [
+        "150,173",
+        "場次"
+      ],
+      "multimodal_rag_answer": "18",
+      "multimodal_rag_pass": false,
+      "multimodal_rag_matched": [],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年職業安全衛生監督檢查共辦理多少場次？",
+        "retrievalQuery": "2025年職業安全衛生監督檢查共辦理多少場次？",
+        "retrievalQueries": [
+          "2025年職業安全衛生監督檢查共辦理多少場次？"
+        ],
+        "evidenceQuery": "2025年職業安全衛生監督檢查共辦理多少場次？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::47::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 49 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 49",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 47 ◆ 於 2025 年持續檢討修正「推動中小企 業臨場健康服務補助計畫」，就檢附 資料之期限酌予放寬、同日上午或下 午之辦理場次酌予限定，並限制事業 單位委託之特約機構，曾拒絕、妨礙 或規避查核者之補助，以提升勞工受 服務之頻率及特約機構之服務品質。 ◆ 為落實賴清德總統「健康台灣」政策， 2025 年已修正「推行職業安全衛生優 良單位及人員選拔作業要點」，優良 人員區分職業安全衛生及勞工健康服 務，並新增勞工健康服務優良人員推 薦程序及推薦表，透過表揚活動鼓勵 績優單位持續推動職場勞工健康保護。 ¸ 2023 ϋЇ 2025ᅰ 2025 年成果： ◆ 修訂「勞工健康服務監督檢查表」及 「勞工健康服務推動現況臨場訪查 表」，並辦理臨場訪查計 18 場次，以 精進辦理勞工健康服務之成效，維護 勞工健康權益。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.787683,
+            "bm25Score": 0.911765,
+            "embeddingScore": 0.736682,
+            "rerankScore": 0.787683,
+            "matchedTerms": [
+              "2025",
+              "47",
+              "於",
+              "年持",
+              "持續",
+              "續檢",
+              "檢討",
+              "討修",
+              "修正",
+              "年持續",
+              "持續檢",
+              "續檢討",
+              "檢討修",
+              "討修正",
+              "推動",
+              "動中",
+              "中小",
+              "小企",
+              "推動中",
+              "動中小"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 3,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::50::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 52 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 52",
+            "content": "2025 年成果： ◆ 辦理勞工體格及健康檢查認可醫療機 構訪查，共計訪查 30 家醫療機構及輔 導 4 家特定檢查項目檢驗機構。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.647834,
+            "bm25Score": 0.513529,
+            "embeddingScore": 0.811983,
+            "rerankScore": 0.647834,
+            "matchedTerms": [
+              "2025",
+              "30",
+              "4",
+              "年成",
+              "成果",
+              "年成果",
+              "辦理",
+              "理勞",
+              "勞工",
+              "工體",
+              "體格",
+              "格及",
+              "及健",
+              "健康",
+              "康檢",
+              "檢查",
+              "查認",
+              "認可",
+              "可醫",
+              "醫療"
+            ],
+            "originalRank": 5,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::53::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 55 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 55",
+            "content": "2025 年成果： ◆ 辦理認可職業傷病診治專責醫院評鑑 部分，已於 2025 年 10 月 20 日公開 評鑑結果及近年推動職業傷病診治服 務網絡概況。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.623092,
+            "bm25Score": 0.513529,
+            "embeddingScore": 0.757002,
+            "rerankScore": 0.623092,
+            "matchedTerms": [
+              "2025",
+              "10",
+              "20",
+              "年成",
+              "成果",
+              "年成果",
+              "辦理",
+              "理認",
+              "認可",
+              "可職",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "院評"
+            ],
+            "originalRank": 4,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 34 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 1.416,
+          "embeddingMs": 203.271,
+          "fusionMs": 0.083,
+          "rerankMs": 4.834,
+          "totalMs": 209.979
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 34,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 0.911765,
+            "embedding": 0.736682,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 19,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::47",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 49 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 49",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n47\n◆ 於 2025 年持續檢討修正「推動中小企\n業臨場健康服務補助計畫」，就檢附\n資料之期限酌予放寬、同日上午或下\n午之辦理場次酌予限定，並限制事業\n單位委託之特約機構，曾拒絕、妨礙\n或規避查核者之補助，以提升勞工受\n服務之頻率及特約機構之服務品質。\n◆ 為落實賴清德總統「健康台灣」政策，\n2025 年已修正「推行職業安全衛生優\n良單位及人員選拔作業要點」，優良\n人員區分職業安全衛生及勞工健康服\n務，並新增勞工健康服務優良人員推\n薦程序及推薦表，透過表揚活動鼓勵\n績優單位持續推動職場勞工健康保護。\n¸ 2023 ϋЇ 2025ᅰ\n2025 年成果：\n◆ 修訂「勞工健康服務監督檢查表」及\n「勞工健康服務推動現況臨場訪查\n表」，並辦理臨場訪查計 18 場次，以\n精進辦理勞工健康服務之成效，維護\n勞工健康權益。\n◆ 補助事業單位共計 4,108 家次，補助\n金額逾新臺幣 1 億 4,540 萬元。\n◆ 與國民健康署合作辦理之「健康職場\n永續卓越獎」，共 3 家事業單位獲得\n殊榮，獲獎單位依據自身職場環境特\n性及勞工健康需求，積極投入資源、\n應用策略與工具改善軟硬體措施，提\n供健康友善的工作環境，落實勞工健\n康保護。",
+            "score": 0.772969,
+            "bm25Score": 30.788846,
+            "embeddingScore": 0.749801,
+            "rerankScore": 0.772969,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職業",
+              "業安",
+              "安全",
+              "全衛",
+              "衛生",
+              "監督",
+              "督檢",
+              "檢查",
+              "辦理",
+              "場次",
+              "年職業",
+              "職業安",
+              "業安全",
+              "安全衛",
+              "全衛生",
+              "監督檢",
+              "督檢查"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::41",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 43 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 43",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n41\n¸ ๝\n構對於防護措施不足經通知限期改善\n之事業單位， 要求回報現場改善情形，\n未配合回報或改善者，列為複查抽檢\n對象，以督促雇主落實法遵。\n◆ 2025 年 9 月 8 日修正發布「改善安全\n衛生設施及器具補助作業要點」，針\n對中小企業及自營作業者，結合地方\n政府輔導量能，提供高溫作業防護設\n施及器具之補助。\n2025 年成果：\n◆ 配合「高氣溫作業熱危害預防指引（第\n三版）」之修正，分區辦理說明會 22\n場次。\n◆ 辦理戶外作業熱危害高風險事業單位\n之檢查共 9,328 場次。\n◆ 補助中小企業及自營作業者風扇衣、\n降溫背心等共 1,311件。\n¸ ࣂࠬ\nВഃdᒒеජ\n࢛ٜ",
+            "score": 0.71626,
+            "bm25Score": 30.918579,
+            "embeddingScore": 0.693768,
+            "rerankScore": 0.71626,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職業",
+              "業安",
+              "安全",
+              "全衛",
+              "衛生",
+              "檢查",
+              "查共",
+              "辦理",
+              "場次",
+              "年職業",
+              "職業安",
+              "業安全",
+              "安全衛",
+              "全衛生",
+              "檢查共"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::49",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 51 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 51",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n49\n¸ ྠඟΥЪྼਕ৅ᇖʈЪѥ\n2025 年成果：\n◆ 辦理提供勞工健康服務之特約機構查\n核，共計查核 33 家勞工健康顧問服務\n機構及 20 家全民健康保險特約醫院\n（診所），並依據查核結果辦理 5 場\n次教育訓練，策進特約機構改善服務\n品質。\n◆ 計有勞工健康服務護理及相關人員\n1,407 人，勞工健康服務醫師 10 人，\n透過電腦化結訓測驗取得專業證照。\n◆ 計有辦理勞工體格與健康檢查醫師 474\n人、辦理勞工體格與健康檢查護理人\n員 738 人，透過電腦化結訓測驗取得\n專業證照。\n◆ 截至 2025 年止，已持續培訓具勞工\n健康服務資格醫師逾 2,200 位，護理\n人員及相關人員逾 2 萬 8,000 位。\n另培訓具辦理勞工體格與健康檢查\n資格醫師逾 10,000 位，護理人員逾\n22,000 位。\n◆ 辦理 5 場次勞工健康服務跨部門整合\n實務訓練工作坊。\n◆ 補助大專院校辦理「推動勞工健康服\n務護理人員訓練微學程補助計畫」，\n計補助 4 家學校辦理課程，受惠學員\n計 88 人。",
+            "score": 0.680212,
+            "bm25Score": 19.737471,
+            "embeddingScore": 0.748769,
+            "rerankScore": 0.680212,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職業",
+              "業安",
+              "安全",
+              "全衛",
+              "衛生",
+              "檢查",
+              "辦理",
+              "場次",
+              "年職業",
+              "職業安",
+              "業安全",
+              "安全衛",
+              "全衛生"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::53",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 55 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 55",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n53\nዚՓ\nਕ\n考量我國每年職災保險職業傷病給付情形，評估尚有增加認可專責醫院需求，以\n提升服務量能與職業傷病勞工因果關係診斷及轉介服務之近便性，並提供職災勞工恢\n復及強化其工作能力之專業服務，以利重返職場。勞動部於全國布建 17 家職業傷病診\n治專責醫院，並將於 2026 年起擴增至 19 家。\n次在職訓練課程，使個案管理師能將\n課中所學運用於實務服務，以利精進\n職業傷病整合性服務之運作。\n2025 年成果：\n◆ 辦理認可職業傷病診治專責醫院評鑑\n部分，已於 2025 年 10 月 20 日公開\n評鑑結果及近年推動職業傷病診治服\n務網絡概況。在職訓練課程部分，共\n辦理 9 場職業傷病防治與復工相關之\n宣導會及 2 場研習會，主題涵蓋職業\n傷病診治與預防、心理健康與壓力管\n理、職災復健及重返職場支持、職災\n法規與勞工權益等領域，參與學員共\n計 1,032 人次。\n辦理情形：\n◆ 為確保認可醫療機構服務之完整性及\n品質，勞動部依據《職業傷病診治醫\n療機構認可管理補助及職業傷病通報\n辦法》規定 ，於 2025 年辦理 17 家\n認可醫療機構評鑑作業，並於 10 月\n31 日舉辦「114年度職業傷病診治及\n職災職能復健專責醫院評鑑優良表揚\n典禮」，藉此表彰在職業傷病診治及\n職能復健服務體系中表現傑出的醫療\n機構。\n◆ 另外， 鑑於職業傷病診治服務過程中，\n個案管理師扮演非常重要角色，職安\n署與職災預防及重建中心亦辦理多梯\n¸ Υᅂ",
+            "score": 0.66906,
+            "bm25Score": 20.890119,
+            "embeddingScore": 0.725159,
+            "rerankScore": 0.66906,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職業",
+              "業安",
+              "安全",
+              "全衛",
+              "衛生",
+              "辦理",
+              "理多",
+              "年職業",
+              "職業安",
+              "業安全",
+              "安全衛",
+              "全衛生",
+              "辦理多"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::50",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 52 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 52",
+            "content": "50\nᗴ౻& ഄଫ03\n੶ʷ༟ৃʷ၍ଣd౤ʺ௶ʈ਄ੰᏨ\nሯ\n為強化地方主管機關對辦理勞工體\n格及健康檢查認可醫療機構之監督管理\n效能，舉辦勞工及衛生主管機關之勞工健\n康檢查業務人員研習營。另持續擴增「辦\n理勞工體格及健康檢查認可醫療機構管\n理系統」及「全國勞工健康檢查資料庫」\n功能，透過分析該等系統資料，篩選訪\n查之重點對象及辦理訪查，以提升健康\n檢查及管理分級之品質。\n辦理情形：\n◆ 於 2025 年持續擴增與調整「勞工健康\n保護管理報備系統」之警示機制與相\n關系統介接功能，強化管理者資料審\n查之效能及行政管理作為，並運用系\n統資訊化管理，協助特約機構管理人\n員進修之相關功能。\n◆ 公開特約機構服務量能與品質等相關\n資訊，提供給事業單位選擇時參考，\n期能鼓勵特約機構持續強化辦理勞工\n健康服務的品質， 落實勞工健康保護。\n2025 年成果：\n◆ 辦理勞工體格及健康檢查認可醫療機\n構訪查，共計訪查 30 家醫療機構及輔\n導 4 家特定檢查項目檢驗機構。\n¸ ݟ",
+            "score": 0.648338,
+            "bm25Score": 19.619092,
+            "embeddingScore": 0.719441,
+            "rerankScore": 0.648338,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職業",
+              "業安",
+              "安全",
+              "全衛",
+              "衛生",
+              "監督",
+              "檢查",
+              "辦理",
+              "年職業",
+              "職業安",
+              "業安全",
+              "安全衛",
+              "全衛生"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 30,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm02-page3-insurance-rate",
+      "question": "2025年勞工保險職業災害給付千人率是多少？",
+      "modality": "infographic",
+      "gold_pages": [
+        3,
+        20
+      ],
+      "retrieved_pages": [
+        60,
+        59
+      ],
+      "page_recall": false,
+      "text_evidence_pass": false,
+      "text_evidence_matched": [],
+      "required_terms": [
+        "2.250"
+      ],
+      "vision_oracle_answer": "2.250",
+      "vision_oracle_pass": true,
+      "vision_oracle_matched": [
+        "2.250"
+      ],
+      "multimodal_rag_answer": "證據不足",
+      "multimodal_rag_pass": false,
+      "multimodal_rag_matched": [],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年勞工保險職業災害給付千人率是多少？",
+        "retrievalQuery": "2025年勞工保險職業災害給付千人率是多少？",
+        "retrievalQueries": [
+          "2025年勞工保險職業災害給付千人率是多少？"
+        ],
+        "evidenceQuery": "2025年勞工保險職業災害給付千人率是多少？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::58::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 60 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 60",
+            "content": "58 ᗴ౻& ഄଫ03 ¸ Ⴉ̙ᔖӨᔖঐూ਄ᔼ৫Ⴞኬஞൖ 2025 年成果： ◆ 2025 年辦理《職業災害勞工保護法》 各項津貼補助計 594 件，補助金額達 新臺幣 7 ,190萬餘元。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.855815,
+            "bm25Score": 0.89375,
+            "embeddingScore": 0.809451,
+            "rerankScore": 0.855815,
+            "matchedTerms": [
+              "58",
+              "03",
+              "2025",
+              "594",
+              "7",
+              "190",
+              "年成",
+              "成果",
+              "年成果",
+              "年辦",
+              "辦理",
+              "年辦理",
+              "職業",
+              "業災",
+              "災害",
+              "害勞",
+              "勞工",
+              "工保",
+              "保護",
+              "護法"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::58::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 60 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 60",
+            "content": "職災勞工如為未參 加勞保者，因職業災害致死亡或失能 達勞工保險失能給付標準附表第 1 等 級至第 10 等級規定之項目，且未獲雇 主足額補償時，除上述津貼補助外， 亦得申請死亡補助或失能補助。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.79133,
+            "bm25Score": 0.95125,
+            "embeddingScore": 0.595873,
+            "rerankScore": 0.79133,
+            "matchedTerms": [
+              "1",
+              "10",
+              "職災",
+              "災勞",
+              "勞工",
+              "工如",
+              "如為",
+              "為未",
+              "未參",
+              "職災勞",
+              "災勞工",
+              "勞工如",
+              "工如為",
+              "如為未",
+              "為未參",
+              "加勞",
+              "勞保",
+              "保者",
+              "加勞保",
+              "勞保者"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::57::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 59 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 59",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 57 ʈЪʿ౤ԶᔖӨ௶ ʈ΢ධ໾п ʈЪ 全衛生知識，提升勞工職業災害預防 及職災應變能力。 2025 年成果： ◆ 辦理職業災害預防及職災勞工重建計 畫案成果發表暨研習會，並補助 25 個單位辦理 125 場職業災害預防及 職業災害勞工重建宣導，參加人數 共計 8,217 人次，補助金額共計 658 萬 1,000 元。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.782284,
+            "bm25Score": 0.80625,
+            "embeddingScore": 0.752992,
+            "rerankScore": 0.782284,
+            "matchedTerms": [
+              "2025",
+              "57",
+              "全衛",
+              "衛生",
+              "生知",
+              "知識",
+              "全衛生",
+              "衛生知",
+              "生知識",
+              "提升",
+              "升勞",
+              "勞工",
+              "工職",
+              "職業",
+              "業災",
+              "災害",
+              "害預",
+              "預防",
+              "提升勞",
+              "升勞工"
+            ],
+            "originalRank": 4,
+            "fineUnitCount": 2,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 28 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 1.684,
+          "embeddingMs": 84.308,
+          "fusionMs": 0.09,
+          "rerankMs": 4.699,
+          "totalMs": 91.07
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 28,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 0.89375,
+            "embedding": 0.809451,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 19,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::58",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 60 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 60",
+            "content": "58\nᗴ౻& ഄଫ03\n¸ Ⴉ̙ᔖӨᔖঐూ਄ᔼ৫Ⴞኬஞൖ\n2025 年成果：\n◆ 2025 年辦理《職業災害勞工保護法》\n各項津貼補助計 594 件，補助金額達\n新臺幣 7 ,190萬餘元。另《勞工職業災\n害保險及保護法》之器具補助核付件\n數為 701件，補助金額為651 萬餘元，\n合計 7 ,841萬餘元。\nŇଉʷਖ਼பᔼ৫ၾή˙\n՘ЪdၚආᔖӨ௶\nሯ\nਕၣഖd౤ʺ\n׌\n為協助職災勞工重返職場，職災職\n能復健專責醫院提供整合式個案管理服\n務，涵蓋關懷、評估、轉介及資源連結，\n確保勞工獲得適當的重建措施，恢復工\n提供津貼補助，協助災後生活\n為保障職業災害勞工及其遺屬生活，\n依《勞工職業災害保險及保護法》及該\n法施行前之《職業災害勞工保護法》之\n規定，對職災勞工或其遺屬給予各項津\n貼補助保障。\n辦理情形：\n◆ 依《職業災害勞工保護法》規定，提\n供職災勞工及其遺屬補助項目包括：\n職業疾病生活津貼、失能生活津貼、\n職業訓練生活津貼、器具補助、看護\n補助及家屬補助。職災勞工如為未參\n加勞保者，因職業災害致死亡或失能\n達勞工保險失能給付標準附表第 1 等\n級至第 10 等級規定之項目，且未獲雇\n主足額補償時，除上述津貼補助外，\n亦得申請死亡補助或失能補助。\n◆ 此外，《勞工職業災害保險及\n保護法》整合《職業災害勞工\n保護法》之各項津貼補助，已\n提高因職災失能者之給付水準；\n另為符合職災勞工受傷後之輔\n具需求，提供《職業災害勞工\n申請器具照護失能及死亡補助\n辦法》第 3 條附表所列 116項\n輔助器具項目之補助及表列項\n目以外之專案器具補助。",
+            "score": 0.727849,
+            "bm25Score": 32.091721,
+            "embeddingScore": 0.853908,
+            "rerankScore": 0.727849,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "工保",
+              "保險",
+              "職業",
+              "業災",
+              "災害",
+              "給付",
+              "勞工保",
+              "工保險",
+              "職業災",
+              "業災害"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::1",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 3 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 3",
+            "content": "2025\n職業安全衛生年報\n重要績效\n人次126,594\n人次3,306\n人28\n%9.8\n座次105,643\n人\n17%\n17\n件6,103\n3,350 場次\n59,443 場次\n場次1,373\n場次\n場次\n1,009\n57\n危險性機械設備檢查\n營造業墜落職災死亡\n2.250\n5.26%\n較2024年再下降\n職災給付千人率降至\n機械設備型式驗證合格\n場次150,173\n職安衛監督檢查\n勞工身心健康保護\n專案檢查實施\n較2024年再成長\n職災勞工及\n家庭個案服務\n較2024年再降\n重大職災死亡人數\n較2024年減少\n勞動條件宣導\n增加\n職業安全衛生宣導\n及輔導訪查\n勞動條件監督檢查\n較前3年同期平均值減少",
+            "score": 0.681231,
+            "bm25Score": 37.508976,
+            "embeddingScore": 0.671772,
+            "rerankScore": 0.681231,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "職業",
+              "給付",
+              "付千",
+              "千人",
+              "人率",
+              "給付千",
+              "付千人",
+              "千人率"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::56",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 58 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 58",
+            "content": "56\nᗴ౻& ഄଫ03\nd౤ʺᄲ\nଟ\n為保障遭遇職業災害勞工及其家屬\n之權益，依《勞工職業災害保險及保護\n法》及《勞工職業災害保險職業病鑑定\n作業實施辦法》規定，優化鑑定機制，\n內容包括中央鑑定一級制、強化前置鑑\n定調查、專業分組鑑定模式、簡化書面\n審查及開會程序等。\n辦理情形：\n◆ 為維護職業病鑑定之專業性，已依《勞\n工職業災害保險職業病鑑定作業實施辦\n法》建置職業病鑑定專家名冊，按鑑定\n案件之疾病類型，籌組 3 個分組鑑定\n會，透過專業分工方式，使鑑定意見容\n易聚焦，並簡化書面審查次數（由2 次\n調整為 1 次）與開會程序，以提升鑑定\n效能。有關職業病鑑定流程如下：\n◆ 另因職業病調查涉及職業醫學、職業\n衛生等專業，故由職安署或勞檢機構\n派員，會同職災預防及重建中心人員\n及職業醫學專科醫師、職業衛生人員\n等共組專業團隊，協助職業病調查及\n撰寫職業醫學證據調查報告書。\n2025 年成果：\n◆ 自 2022 年 5 月至 2025 年共計受理\n案件 48 件，已辦結 15 件，其中 6 件\n（40%）鑑定為「職業病或工作相關\n疾病」， 9 件（60%）鑑定為「非職\n業病或工作相關疾病」。另分析案件\n之疾病類型，以「腦心血管疾病」案\n量居冠 （14 件，29.2%），「 肌 肉\n骨骼疾病」次之（ 13 件，27 .1%），\n「精神疾病」名列第 3（11 件，\n22.9%） ， 「肺部疾病」 位居第4（8件，\n16.7%） ， 其餘案件則有2件（4.2%）。\n¸ ೻",
+            "score": 0.652255,
+            "bm25Score": 32.900815,
+            "embeddingScore": 0.642652,
+            "rerankScore": 0.652255,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "保險",
+              "險職",
+              "職業",
+              "業災",
+              "災害",
+              "保險職",
+              "險職業",
+              "職業災",
+              "業災害"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::57",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 59 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 59",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n57\nʈЪʿ౤ԶᔖӨ௶\nʈ΢ධ໾п\nʈЪ\n全衛生知識，提升勞工職業災害預防\n及職災應變能力。\n2025 年成果：\n◆ 辦理職業災害預防及職災勞工重建計\n畫案成果發表暨研習會，並補助 25\n個單位辦理 125 場職業災害預防及\n職業災害勞工重建宣導，參加人數\n共計 8,217 人次，補助金額共計 658\n萬 1,000 元。另補助 10 個單位辦理\n職災預防及職災勞工重建技術研發及\n推廣等計畫，補助金額共計 890 萬\n3,818 元。\n¸ ਞၾ 2025ึ\n為鼓勵結合勞工團體、雇主團體、\n醫療機構、學術及研究機構等團體的資\n源，共同參與推動職業災害預防及職災\n勞工重建工作，勞動部持續補助相關機\n關（構）、法人或團體，辦理職業災害\n預防及職業災害勞工重建宣導及相關研\n究等事項。\n辦理情形：\n◆ 補助相關機關（構）、法人或團體，\n辦理職業災害預防、職業傷病調查、\n職業病防治、職業災害勞工重建宣導\n及相關研究等事項，落實強化勞工安",
+            "score": 0.602018,
+            "bm25Score": 16.625914,
+            "embeddingScore": 0.735819,
+            "rerankScore": 0.602018,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "職業",
+              "業災",
+              "災害",
+              "職業災",
+              "業災害"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::63",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 65 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 65",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n63\n2025 年成果：\n◆ 提供職災勞工及其家庭個案服務權益\n保障、職能復健、職業重建、就業服\n務、心理諮商及法律諮詢等協助，個\n案管理服務 2,828 件，計服務 12 萬\n6,594 人次。\n◆ 發放職災死亡勞工家屬慰問金共 310\n件，計 3,882 萬餘元。\n◆ 提供重返職場補助措施，包含 780 位\n被保險人職能復健期間之職能復健津\n貼、208 個事業單位僱用職業災害勞\n工補助及 9 件雇主提供職災勞工輔助\n設施補助，補助案量共計 997 件，補\n助金額達 2,740 萬 3,850 元。同時鼓\n勵地方政府依轄區特性辦理重返職場\n業務推廣、宣導及相關活動，共辦理\n137 場說明會，宣導人數達 8,081 人。\n◆ 拍攝「職災勞工重返職場紀實影片」，\n並上傳至職安署 Y ouTube頻道供民眾\n點閱。影片以紀錄片方式，採訪 3 位\n遭逢職災的勞工，呈現從地方政府個\n案管理服務、醫院職能復健到重返職\n場的心路歷程，藉此宣導職災勞工各\n項重建服務，加深民眾對現行協助措\n施之了解。\n¸ ΣᔖӨ\nᗫᛆूd՘пᔖ\nᔖఙ\n¸ ؂\nܓ\n¸ ึd\nึɽ଺\n◆ 研議《勞動部代墊\n職業災害死亡勞工\n遺屬民事訴訟假扣\n押提存擔保金作業\n要點》，以減輕職\n災勞工遺屬進行民\n事訴訟假扣押程序\n之經濟負擔，並保\n障其權益。",
+            "score": 0.593499,
+            "bm25Score": 13.670436,
+            "embeddingScore": 0.755,
+            "rerankScore": 0.593499,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "保險",
+              "職業",
+              "業災",
+              "災害",
+              "職業災",
+              "業災害"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 28,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm03-page3-case-service",
+      "question": "2025年職災勞工及家庭個案服務量是多少？",
+      "modality": "infographic",
+      "gold_pages": [
+        3
+      ],
+      "retrieved_pages": [
+        65,
+        15
+      ],
+      "page_recall": false,
+      "text_evidence_pass": false,
+      "text_evidence_matched": [
+        "人次"
+      ],
+      "required_terms": [
+        "126,594",
+        "人次"
+      ],
+      "vision_oracle_answer": "126,594人次",
+      "vision_oracle_pass": true,
+      "vision_oracle_matched": [
+        "126,594",
+        "人次"
+      ],
+      "multimodal_rag_answer": "2,828 件，計服務 12 萬 6,594 人次。",
+      "multimodal_rag_pass": false,
+      "multimodal_rag_matched": [
+        "人次"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年職災勞工及家庭個案服務量是多少？",
+        "retrievalQuery": "2025年職災勞工及家庭個案服務量是多少？",
+        "retrievalQueries": [
+          "2025年職災勞工及家庭個案服務量是多少？"
+        ],
+        "evidenceQuery": "2025年職災勞工及家庭個案服務量是多少？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::63::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 65 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 65",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 63 2025 年成果： ◆ 提供職災勞工及其家庭個案服務權益 保障、職能復健、職業重建、就業服 務、心理諮商及法律諮詢等協助，個 案管理服務 2,828 件，計服務 12 萬 6,594 人次。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.905231,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.789401,
+            "rerankScore": 0.905231,
+            "matchedTerms": [
+              "2025",
+              "63",
+              "2",
+              "828",
+              "12",
+              "6",
+              "594",
+              "年成",
+              "成果",
+              "年成果",
+              "提供",
+              "供職",
+              "職災",
+              "災勞",
+              "勞工",
+              "工及",
+              "及其",
+              "其家",
+              "家庭",
+              "庭個"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::13::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 15 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 15",
+            "content": "為強化職業災害勞工及其家屬之權益保障，職安署於 2025 年完成「職災勞工及家 屬法律權益協助方案」 規劃， 並於2026年正式推動， 建構職災案件全程法律支持機制。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.848056,
+            "bm25Score": 0.966667,
+            "embeddingScore": 0.703087,
+            "rerankScore": 0.848056,
+            "matchedTerms": [
+              "2025",
+              "2026",
+              "為強",
+              "強化",
+              "化職",
+              "職業",
+              "業災",
+              "災害",
+              "害勞",
+              "勞工",
+              "工及",
+              "及其",
+              "其家",
+              "家屬",
+              "屬之",
+              "之權",
+              "權益",
+              "益保",
+              "保障",
+              "為強化"
+            ],
+            "originalRank": 2,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::13::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 15 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 15",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 13 除職業傷病診治專責醫院外，職安署亦積極推動職災職能復健專責醫院認可制度， 2025 年累計認可 38 家專責醫院投入職災勞工服務（ 2026 年 1 月 1 日起，將增加至 39 家專責醫院）。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.753043,
+            "bm25Score": 0.826667,
+            "embeddingScore": 0.663058,
+            "rerankScore": 0.753043,
+            "matchedTerms": [
+              "2025",
+              "13",
+              "38",
+              "2026",
+              "1",
+              "39",
+              "除職",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "院外",
+              "除職業",
+              "職業傷",
+              "業傷病"
+            ],
+            "originalRank": 2,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 32 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 0.804,
+          "embeddingMs": 1555.434,
+          "fusionMs": 6.752,
+          "rerankMs": 646.075,
+          "totalMs": 2217.649
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 32,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "low",
+        "evidenceEvaluation": {
+          "status": "ambiguous",
+          "sufficient": false,
+          "confidence": "low",
+          "reason": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。",
+          "signals": {
+            "bm25": 1.0,
+            "embedding": 0.789401,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 18,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": false
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::63",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 65 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 65",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n63\n2025 年成果：\n◆ 提供職災勞工及其家庭個案服務權益\n保障、職能復健、職業重建、就業服\n務、心理諮商及法律諮詢等協助，個\n案管理服務 2,828 件，計服務 12 萬\n6,594 人次。\n◆ 發放職災死亡勞工家屬慰問金共 310\n件，計 3,882 萬餘元。\n◆ 提供重返職場補助措施，包含 780 位\n被保險人職能復健期間之職能復健津\n貼、208 個事業單位僱用職業災害勞\n工補助及 9 件雇主提供職災勞工輔助\n設施補助，補助案量共計 997 件，補\n助金額達 2,740 萬 3,850 元。同時鼓\n勵地方政府依轄區特性辦理重返職場\n業務推廣、宣導及相關活動，共辦理\n137 場說明會，宣導人數達 8,081 人。\n◆ 拍攝「職災勞工重返職場紀實影片」，\n並上傳至職安署 Y ouTube頻道供民眾\n點閱。影片以紀錄片方式，採訪 3 位\n遭逢職災的勞工，呈現從地方政府個\n案管理服務、醫院職能復健到重返職\n場的心路歷程，藉此宣導職災勞工各\n項重建服務，加深民眾對現行協助措\n施之了解。\n¸ ΣᔖӨ\nᗫᛆूd՘пᔖ\nᔖఙ\n¸ ؂\nܓ\n¸ ึd\nึɽ଺\n◆ 研議《勞動部代墊\n職業災害死亡勞工\n遺屬民事訴訟假扣\n押提存擔保金作業\n要點》，以減輕職\n災勞工遺屬進行民\n事訴訟假扣押程序\n之經濟負擔，並保\n障其權益。",
+            "score": 0.91211,
+            "bm25Score": 57.864875,
+            "embeddingScore": 0.768412,
+            "rerankScore": 0.91211,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職災",
+              "災勞",
+              "勞工",
+              "工及",
+              "家庭",
+              "庭個",
+              "個案",
+              "案服",
+              "服務",
+              "職災勞",
+              "災勞工",
+              "勞工及",
+              "家庭個",
+              "庭個案",
+              "個案服",
+              "案服務"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::13",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 15 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 15",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n13\n除職業傷病診治專責醫院外，職安署亦積極推動職災職能復健專責醫院認可制度，\n2025 年累計認可 38 家專責醫院投入職災勞工服務（ 2026 年 1 月 1 日起，將增加至\n39 家專責醫院）。此外，為增加職災勞工服務之整體近便性，同時於全臺各地布建網\n絡型態的職災職能復健強化訓練機構，地點包括澎湖、金門等離島縣市，加上原有職\n能復健專責醫院，合計將有超過 60 個服務據點，方便職災勞工就近接受復工服務。\n為強化職業災害勞工及其家屬之權益保障，職安署於 2025 年完成「職災勞工及家\n屬法律權益協助方案」 規劃， 並於2026年正式推動， 建構職災案件全程法律支持機制。\n該方案整合專業法律資源，提供職災發生後之原因初步分析、律師諮詢、和解與調解\n陪同及訴訟扶助等服務；並針對移工提供通譯支援，降低語言障礙，提升服務可近性。\n透過本方案之推動，強化職災勞工及其家屬之權益保障，確保其獲得適切協助及合理\n補償與賠償。\n¸ ሔ",
+            "score": 0.77683,
+            "bm25Score": 40.308844,
+            "embeddingScore": 0.710584,
+            "rerankScore": 0.77683,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職災",
+              "災勞",
+              "勞工",
+              "工及",
+              "及家",
+              "服務",
+              "職災勞",
+              "災勞工",
+              "勞工及",
+              "工及家"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::58",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 60 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 60",
+            "content": "58\nᗴ౻& ഄଫ03\n¸ Ⴉ̙ᔖӨᔖঐూ਄ᔼ৫Ⴞኬஞൖ\n2025 年成果：\n◆ 2025 年辦理《職業災害勞工保護法》\n各項津貼補助計 594 件，補助金額達\n新臺幣 7 ,190萬餘元。另《勞工職業災\n害保險及保護法》之器具補助核付件\n數為 701件，補助金額為651 萬餘元，\n合計 7 ,841萬餘元。\nŇଉʷਖ਼பᔼ৫ၾή˙\n՘ЪdၚආᔖӨ௶\nሯ\nਕၣഖd౤ʺ\n׌\n為協助職災勞工重返職場，職災職\n能復健專責醫院提供整合式個案管理服\n務，涵蓋關懷、評估、轉介及資源連結，\n確保勞工獲得適當的重建措施，恢復工\n提供津貼補助，協助災後生活\n為保障職業災害勞工及其遺屬生活，\n依《勞工職業災害保險及保護法》及該\n法施行前之《職業災害勞工保護法》之\n規定，對職災勞工或其遺屬給予各項津\n貼補助保障。\n辦理情形：\n◆ 依《職業災害勞工保護法》規定，提\n供職災勞工及其遺屬補助項目包括：\n職業疾病生活津貼、失能生活津貼、\n職業訓練生活津貼、器具補助、看護\n補助及家屬補助。職災勞工如為未參\n加勞保者，因職業災害致死亡或失能\n達勞工保險失能給付標準附表第 1 等\n級至第 10 等級規定之項目，且未獲雇\n主足額補償時，除上述津貼補助外，\n亦得申請死亡補助或失能補助。\n◆ 此外，《勞工職業災害保險及\n保護法》整合《職業災害勞工\n保護法》之各項津貼補助，已\n提高因職災失能者之給付水準；\n另為符合職災勞工受傷後之輔\n具需求，提供《職業災害勞工\n申請器具照護失能及死亡補助\n辦法》第 3 條附表所列 116項\n輔助器具項目之補助及表列項\n目以外之專案器具補助。",
+            "score": 0.711811,
+            "bm25Score": 32.232058,
+            "embeddingScore": 0.668666,
+            "rerankScore": 0.711811,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職災",
+              "災勞",
+              "勞工",
+              "工及",
+              "及家",
+              "個案",
+              "職災勞",
+              "災勞工",
+              "勞工及"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::53",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 55 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 55",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n53\nዚՓ\nਕ\n考量我國每年職災保險職業傷病給付情形，評估尚有增加認可專責醫院需求，以\n提升服務量能與職業傷病勞工因果關係診斷及轉介服務之近便性，並提供職災勞工恢\n復及強化其工作能力之專業服務，以利重返職場。勞動部於全國布建 17 家職業傷病診\n治專責醫院，並將於 2026 年起擴增至 19 家。\n次在職訓練課程，使個案管理師能將\n課中所學運用於實務服務，以利精進\n職業傷病整合性服務之運作。\n2025 年成果：\n◆ 辦理認可職業傷病診治專責醫院評鑑\n部分，已於 2025 年 10 月 20 日公開\n評鑑結果及近年推動職業傷病診治服\n務網絡概況。在職訓練課程部分，共\n辦理 9 場職業傷病防治與復工相關之\n宣導會及 2 場研習會，主題涵蓋職業\n傷病診治與預防、心理健康與壓力管\n理、職災復健及重返職場支持、職災\n法規與勞工權益等領域，參與學員共\n計 1,032 人次。\n辦理情形：\n◆ 為確保認可醫療機構服務之完整性及\n品質，勞動部依據《職業傷病診治醫\n療機構認可管理補助及職業傷病通報\n辦法》規定 ，於 2025 年辦理 17 家\n認可醫療機構評鑑作業，並於 10 月\n31 日舉辦「114年度職業傷病診治及\n職災職能復健專責醫院評鑑優良表揚\n典禮」，藉此表彰在職業傷病診治及\n職能復健服務體系中表現傑出的醫療\n機構。\n◆ 另外， 鑑於職業傷病診治服務過程中，\n個案管理師扮演非常重要角色，職安\n署與職災預防及重建中心亦辦理多梯\n¸ Υᅂ",
+            "score": 0.690593,
+            "bm25Score": 29.11859,
+            "embeddingScore": 0.662038,
+            "rerankScore": 0.690593,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職災",
+              "災勞",
+              "勞工",
+              "個案",
+              "服務",
+              "務量",
+              "年職災",
+              "職災勞",
+              "災勞工",
+              "服務量"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::52",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 54 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 54",
+            "content": "52\nᗴ౻& ഄଫ03\nਕ଄\nႊଟ\n為積極拓展職災勞工個案來源，以\n利地方政府職災勞工專業服務人員及早\n介入協助職災勞工，提供其職業傷病診治\n及重建服務， 2025 年修正《職業安全衛\n生法》第 38 條規定之職業災害內容及統\n計資料欄位，並透過系統介接方式納入職\n業災害勞工服務資訊整合管理服務體系。\n辦理情形：\n◆ 職業災害內容及統計於 2025 年 10 月\n31 日修正要求事業單位應按月填報有\n關職業災害之資料欄位，修正事項如\n下：如災害類型屬上下班交通事故，\n增列勾選「有無違反交通法規」、增\n列選擇住院情形及是否出院資訊、增\n列「聯絡電話」，以利地方政府職災\n專服員聯絡職災勞工或其家屬及增列\n「職災發生地點」，以供職安署派案\n予該管地方政府職災專服員提供服務。\n2025 年成果：\n◆ 經比對事業單位按月填報資料與勞保\n局職災給付資料、醫療機構服務個案\n資料，平均每月增加 380 名個案。",
+            "score": 0.647285,
+            "bm25Score": 28.814005,
+            "embeddingScore": 0.609568,
+            "rerankScore": 0.647285,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職災",
+              "災勞",
+              "勞工",
+              "個案",
+              "服務",
+              "職災勞",
+              "災勞工"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 32,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm04-page3-health-check",
+      "question": "2025年勞工身心健康保護專案檢查實施多少場次？",
+      "modality": "infographic",
+      "gold_pages": [
+        3
+      ],
+      "retrieved_pages": [
+        44,
+        85,
+        49
+      ],
+      "page_recall": false,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "1,373",
+        "場次"
+      ],
+      "required_terms": [
+        "1,373",
+        "場次"
+      ],
+      "vision_oracle_answer": "1,373場次",
+      "vision_oracle_pass": true,
+      "vision_oracle_matched": [
+        "1,373",
+        "場次"
+      ],
+      "multimodal_rag_answer": "1,373場次",
+      "multimodal_rag_pass": true,
+      "multimodal_rag_matched": [
+        "1,373",
+        "場次"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年勞工身心健康保護專案檢查實施多少場次？",
+        "retrievalQuery": "2025年勞工身心健康保護專案檢查實施多少場次？",
+        "retrievalQueries": [
+          "2025年勞工身心健康保護專案檢查實施多少場次？"
+        ],
+        "evidenceQuery": "2025年勞工身心健康保護專案檢查實施多少場次？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::42::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 44 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 44",
+            "content": "42 ᗴ౻& ഄଫ03 ღ 為營造友善的工作環境並守護勞工 身心健康，職安署透過宣導、輔導及勞 工身心健康保護專案檢查等多元措施， 聚焦於職場不法侵害防制、過勞風險管 理、重複性作業引發之肌肉骨骼傷害預 防，以及女性勞工母性健康保障等重點， 督促事業單位落實相關法規要求，確保 勞工權益獲得完善保障。 辦理情形： • 透過勞工身心健康保護專案檢查，提 升高風險行業如醫療保健業、運輸倉 儲業及保全服務業等之法遵。 2025 年成果： • 勞工身心健康保護專案檢查對象，共 計實施 1,373 場次。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.9585,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.907778,
+            "rerankScore": 0.9585,
+            "matchedTerms": [
+              "42",
+              "03",
+              "為營",
+              "營造",
+              "造友",
+              "友善",
+              "善的",
+              "的工",
+              "工作",
+              "作環",
+              "環境",
+              "境並",
+              "並守",
+              "守護",
+              "護勞",
+              "勞工",
+              "為營造",
+              "營造友",
+              "造友善",
+              "友善的"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 3,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::84::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 85 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 85",
+            "content": "辦理 2025 年「春安期間加強勞動檢查實施計畫」，督促業者強化 高危險作業之防災作為，及遵守過勞預防相關規定，共檢查 9,628 家事業單位， 停工276件次， 罰鍰802件次、 罰鍰金額計6,436萬元。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.770927,
+            "bm25Score": 0.853333,
+            "embeddingScore": 0.670208,
+            "rerankScore": 0.770927,
+            "matchedTerms": [
+              "2025",
+              "9",
+              "628",
+              "276",
+              "802",
+              "6",
+              "436",
+              "辦理",
+              "年",
+              "春安",
+              "安期",
+              "期間",
+              "間加",
+              "加強",
+              "強勞",
+              "勞動",
+              "動檢",
+              "檢查",
+              "查實",
+              "實施"
+            ],
+            "originalRank": 4,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::47::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 49 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 49",
+            "content": "¸ 2023 ϋЇ 2025ᅰ 2025 年成果： ◆ 修訂「勞工健康服務監督檢查表」及 「勞工健康服務推動現況臨場訪查 表」，並辦理臨場訪查計 18 場次，以 精進辦理勞工健康服務之成效，維護 勞工健康權益。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.74909,
+            "bm25Score": 0.694444,
+            "embeddingScore": 0.815879,
+            "rerankScore": 0.74909,
+            "matchedTerms": [
+              "2023",
+              "2025",
+              "18",
+              "年成",
+              "成果",
+              "年成果",
+              "修訂",
+              "勞工",
+              "工健",
+              "健康",
+              "康服",
+              "服務",
+              "務監",
+              "監督",
+              "督檢",
+              "檢查",
+              "查表",
+              "勞工健",
+              "工健康",
+              "健康服"
+            ],
+            "originalRank": 3,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 33 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 2.678,
+          "embeddingMs": 92.454,
+          "fusionMs": 0.102,
+          "rerankMs": 5.699,
+          "totalMs": 101.516
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 33,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 1.0,
+            "embedding": 0.907778,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::42",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 44 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 44",
+            "content": "42\nᗴ౻& ഄଫ03\nღ\n為營造友善的工作環境並守護勞工\n身心健康，職安署透過宣導、輔導及勞\n工身心健康保護專案檢查等多元措施，\n聚焦於職場不法侵害防制、過勞風險管\n理、重複性作業引發之肌肉骨骼傷害預\n防，以及女性勞工母性健康保障等重點，\n督促事業單位落實相關法規要求，確保\n勞工權益獲得完善保障。\n辦理情形：\n• 透過勞工身心健康保護專案檢查，提\n升高風險行業如醫療保健業、運輸倉\n儲業及保全服務業等之法遵。\n2025 年成果：\n• 勞工身心健康保護專案檢查對象，共\n計實施 1,373 場次。\ndҖ෧Ꮄሯᔖఙ˖ʷ\n積極落實「尊嚴勞動」理念，針對\n社會高度關注之職場霸凌議題，透過法制\n強化、指引更新及實務輔導等多元策略，\n建構零容忍之友善職場環境。除啟動法\n規修正外，更強化企業內部申訴與調查\n機制，確保每位勞工皆能在受尊重且安\n全的環境下工作。\n辦理情形：\n◆ 推動職安法修法：啟動《職業安全衛\n生法》修法作業，增列「職場霸凌防\n治專章」，明確定義職場霸凌之樣態，\n並強化雇主對於預防、調查及處置之\n法律責任。\n◆ 精進預防指引：修正發布第四版「執\n行職務遭受不法侵害預防指引」，納\n入權力不對等、逾越合理範圍等明確\n定義，並增訂調查小組組成標準及外\n部專家參與機制。\n◆ 強化企業揭露與自評：結合 GRI403\n職業健康與安全揭露指南，引領企業\n將「職場心理健康」與「霸凌防治」\n納入永續報告書揭露指標，建立主動\n績效監測機制。\n¸ ˓ย༶",
+            "score": 0.918824,
+            "bm25Score": 107.148722,
+            "embeddingScore": 0.684463,
+            "rerankScore": 0.918824,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "工身",
+              "身心",
+              "心健",
+              "健康",
+              "康保",
+              "保護",
+              "護專",
+              "專案",
+              "案檢",
+              "檢查",
+              "實施",
+              "場次",
+              "勞工身",
+              "工身心",
+              "身心健",
+              "心健康",
+              "健康保",
+              "康保護"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::46",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 48 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 48",
+            "content": "46\nᗴ౻& ഄଫ03\nᚐ\nਕ\n為提升我國勞工健康服務效能，透過有系統地提供國內中小企業標竿學習，督促\n事業單位落實勞工身心健康的保護。政策推動的核心在於透過更具親近性的勞工健康\n照護與多元的協助管道，協助事業單位預防工作相關疾病，進而建立能讓勞工安心且\n健康的職場環境。\n務補助計畫」，補助勞工人數 199 人\n以下依法需僱用或特約勞工健康服務\n專業人員辦理臨場健康服務之事業單\n位，並依據歷年補助申請案件資料及\n審查結果，逐年完善事業單位線上申\n請補助之作業流程，及提升補助審查\n效能，同時結合服務實務案例，製作\n圖卡及辦理說明會，增進事業單位推\n動勞工健康服務之知能及意願，以持\n續落實勞工健康保護制度。\n辦理情形：\n◆ 靈活運用檢查、宣導、輔導與補助等\n多管齊下的策略；在輔導與查核機制\n上，依勞動檢查機構需求，結合外部\n相關領域實務專家資源，於執行勞工\n健康服務監督檢查時提供相關意見及\n協助，同時亦開發勞工健康服務實務\n檢核手冊與表單，以強化事業單位之\n勞工健康服務法遵。\n◆ 協助中小企業辦理勞工健康保護，職\n安署透過「推動中小企業臨場健康服\n¸ ̛ 1̸ 3਄ੰᔖఙ͑ᚃՙ൳ᆤ཯ᆤՊᓿ",
+            "score": 0.668754,
+            "bm25Score": 43.885058,
+            "embeddingScore": 0.649901,
+            "rerankScore": 0.668754,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "工身",
+              "身心",
+              "心健",
+              "健康",
+              "康保",
+              "保護",
+              "檢查",
+              "勞工身",
+              "工身心",
+              "身心健",
+              "心健康",
+              "健康保",
+              "康保護"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::47",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 49 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 49",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n47\n◆ 於 2025 年持續檢討修正「推動中小企\n業臨場健康服務補助計畫」，就檢附\n資料之期限酌予放寬、同日上午或下\n午之辦理場次酌予限定，並限制事業\n單位委託之特約機構，曾拒絕、妨礙\n或規避查核者之補助，以提升勞工受\n服務之頻率及特約機構之服務品質。\n◆ 為落實賴清德總統「健康台灣」政策，\n2025 年已修正「推行職業安全衛生優\n良單位及人員選拔作業要點」，優良\n人員區分職業安全衛生及勞工健康服\n務，並新增勞工健康服務優良人員推\n薦程序及推薦表，透過表揚活動鼓勵\n績優單位持續推動職場勞工健康保護。\n¸ 2023 ϋЇ 2025ᅰ\n2025 年成果：\n◆ 修訂「勞工健康服務監督檢查表」及\n「勞工健康服務推動現況臨場訪查\n表」，並辦理臨場訪查計 18 場次，以\n精進辦理勞工健康服務之成效，維護\n勞工健康權益。\n◆ 補助事業單位共計 4,108 家次，補助\n金額逾新臺幣 1 億 4,540 萬元。\n◆ 與國民健康署合作辦理之「健康職場\n永續卓越獎」，共 3 家事業單位獲得\n殊榮，獲獎單位依據自身職場環境特\n性及勞工健康需求，積極投入資源、\n應用策略與工具改善軟硬體措施，提\n供健康友善的工作環境，落實勞工健\n康保護。",
+            "score": 0.652667,
+            "bm25Score": 25.601206,
+            "embeddingScore": 0.742099,
+            "rerankScore": 0.652667,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "健康",
+              "康保",
+              "保護",
+              "檢查",
+              "場次",
+              "健康保",
+              "康保護"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::84",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 85 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 85",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n83\n˚cಂcԫ\n修正發布「勞動部辦理職業傷病診治醫療機構之認可補助及監督管\n理作業要點」，配合職業傷病診治醫療機構實務運作及申請補助所\n需，以健全職業傷病診治服務品質及擴大對職業災害勞工之照顧與\n服務。\n辦理 2025 年「春安期間加強勞動檢查實施計畫」，督促業者強化\n高危險作業之防災作為，及遵守過勞預防相關規定，共檢查 9,628\n家事業單位， 停工276件次， 罰鍰802件次、 罰鍰金額計6,436萬元。\n召開 2025 年第 1 次全國勞動檢查機構首長聯繫會報，勞動部洪申\n翰部長與各勞動檢查機構首長及職安署同仁共同檢討過去工作成效\n並研商未來重點方向，並強調職場安全不容絲毫鬆懈，勞動部將持\n續作為第一線檢查機構的堅強後盾，攜手為勞工打造更安全健康的\n工作環境。\n¸ ޼\nਠ͊Ը˙Σ\nŇ 2025ߏ\n01/03\n01/07\n~\n02/12\n01/17",
+            "score": 0.629261,
+            "bm25Score": 22.656212,
+            "embeddingScore": 0.720649,
+            "rerankScore": 0.629261,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "健康",
+              "檢查",
+              "查實",
+              "實施",
+              "檢查實",
+              "查實施"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::49",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 51 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 51",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n49\n¸ ྠඟΥЪྼਕ৅ᇖʈЪѥ\n2025 年成果：\n◆ 辦理提供勞工健康服務之特約機構查\n核，共計查核 33 家勞工健康顧問服務\n機構及 20 家全民健康保險特約醫院\n（診所），並依據查核結果辦理 5 場\n次教育訓練，策進特約機構改善服務\n品質。\n◆ 計有勞工健康服務護理及相關人員\n1,407 人，勞工健康服務醫師 10 人，\n透過電腦化結訓測驗取得專業證照。\n◆ 計有辦理勞工體格與健康檢查醫師 474\n人、辦理勞工體格與健康檢查護理人\n員 738 人，透過電腦化結訓測驗取得\n專業證照。\n◆ 截至 2025 年止，已持續培訓具勞工\n健康服務資格醫師逾 2,200 位，護理\n人員及相關人員逾 2 萬 8,000 位。\n另培訓具辦理勞工體格與健康檢查\n資格醫師逾 10,000 位，護理人員逾\n22,000 位。\n◆ 辦理 5 場次勞工健康服務跨部門整合\n實務訓練工作坊。\n◆ 補助大專院校辦理「推動勞工健康服\n務護理人員訓練微學程補助計畫」，\n計補助 4 家學校辦理課程，受惠學員\n計 88 人。",
+            "score": 0.625285,
+            "bm25Score": 17.931924,
+            "embeddingScore": 0.76655,
+            "rerankScore": 0.625285,
+            "matchedTerms": [
+              "2025",
+              "勞工",
+              "健康",
+              "康保",
+              "檢查",
+              "場次",
+              "健康保"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 30,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm05-page3-type-certification",
+      "question": "2025年機械設備型式驗證合格件數是多少？",
+      "modality": "infographic",
+      "gold_pages": [
+        3
+      ],
+      "retrieved_pages": [
+        3,
+        28,
+        29
+      ],
+      "page_recall": true,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "6,103",
+        "件"
+      ],
+      "required_terms": [
+        "6,103",
+        "件"
+      ],
+      "vision_oracle_answer": "6,103 件",
+      "vision_oracle_pass": true,
+      "vision_oracle_matched": [
+        "6,103",
+        "件"
+      ],
+      "multimodal_rag_answer": "6,103 件",
+      "multimodal_rag_pass": true,
+      "multimodal_rag_matched": [
+        "6,103",
+        "件"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年機械設備型式驗證合格件數是多少？",
+        "retrievalQuery": "2025年機械設備型式驗證合格件數是多少？",
+        "retrievalQueries": [
+          "2025年機械設備型式驗證合格件數是多少？"
+        ],
+        "evidenceQuery": "2025年機械設備型式驗證合格件數是多少？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::1::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 3 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 3",
+            "content": "場次 59,443 場次 場次1,373 場次 場次 1,009 57 危險性機械設備檢查 營造業墜落職災死亡 2.250 5.26% 較2024年再下降 職災給付千人率降至 機械設備型式驗證合格 場次 降 職災給付千人率降至 機械設備型式驗證合格 場次150,173 職安衛監督檢查 勞工身心健康保護 專案檢查實施 較2024年再成長 職災勞工及 家庭個案服務 較2024年再降 重大職災死亡人數 較202",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.818896,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.597547,
+            "rerankScore": 0.818896,
+            "matchedTerms": [
+              "59",
+              "443",
+              "1",
+              "373",
+              "009",
+              "57",
+              "2",
+              "250",
+              "5",
+              "26",
+              "2024",
+              "場次",
+              "危險",
+              "險性",
+              "性機",
+              "機械",
+              "械設",
+              "設備",
+              "備檢",
+              "檢查"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 2,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::26::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 28 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 28",
+            "content": "◆ 另依同法第 8 條規定，於 2018年 7 月 起，推動指定機械、設備或器具的「型 式驗證制度」，國內產製或國外輸入 的交流電焊機用自動電擊防止裝置， 非經驗證機構實施型式驗證合格及張 貼合格標章者，製造者或輸入者均不 得運出廠、場或輸入",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.799825,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.555168,
+            "rerankScore": 0.799825,
+            "matchedTerms": [
+              "8",
+              "2018",
+              "7",
+              "另依",
+              "依同",
+              "同法",
+              "法第",
+              "另依同",
+              "依同法",
+              "同法第",
+              "條規",
+              "規定",
+              "條規定",
+              "於",
+              "年",
+              "月",
+              "起",
+              "推動",
+              "動指",
+              "指定"
+            ],
+            "originalRank": 2,
+            "fineUnitCount": 1,
+            "fineArticleKey": "第8條",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::27::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 29 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 29",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 27 2025 年成果： ◆ 辦理 878 家廠商 6,103 件申報登錄案件的審查，並執行 256 家廠商 1,127 項指定機 械設備清查與抽檢。 3 0 2 0 金屬材料加工用車床 ( 含數值控制車床 ) 235 62 274 46 152 24 148 25 金屬材料加工用加工 中心機 ( 含銑床、 搪床、傳送機 ) 311 99 460 68 258 50 151 28 交流電焊機用 自動電擊防止裝置 10 1 46 1 實施型式驗證合格及張貼合格標章 合計 4,053 990 75,496 6,451 6,716 1,145 2,692 206 ¸ 2025ࠇ",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.749789,
+            "bm25Score": 0.936667,
+            "embeddingScore": 0.659279,
+            "rerankScore": 0.749789,
+            "matchedTerms": [
+              "2025",
+              "27",
+              "878",
+              "6",
+              "103",
+              "256",
+              "1",
+              "127",
+              "年成",
+              "成果",
+              "年成果",
+              "辦理",
+              "家廠",
+              "廠商",
+              "家廠商",
+              "件申",
+              "申報",
+              "報登",
+              "登錄",
+              "錄案"
+            ],
+            "originalRank": 3,
+            "fineUnitCount": 2,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 31 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 1.174,
+          "embeddingMs": 89.171,
+          "fusionMs": 0.096,
+          "rerankMs": 4.387,
+          "totalMs": 95.098
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 31,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 1.0,
+            "embedding": 0.597547,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 17,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 3 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 3",
+            "content": "2025\n職業安全衛生年報\n重要績效\n人次126,594\n人次3,306\n人28\n%9.8\n座次105,643\n人\n17%\n17\n件6,103\n3,350 場次\n59,443 場次\n場次1,373\n場次\n場次\n1,009\n57\n危險性機械設備檢查\n營造業墜落職災死亡\n2.250\n5.26%\n較2024年再下降\n職災給付千人率降至\n機械設備型式驗證合格\n場次150,173\n職安衛監督檢查\n勞工身心健康保護\n專案檢查實施\n較2024年再成長\n職災勞工及\n家庭個案服務\n較2024年再降\n重大職災死亡人數\n較2024年減少\n勞動條件宣導\n增加\n職業安全衛生宣導\n及輔導訪查\n勞動條件監督檢查\n較前3年同期平均值減少",
+            "score": 0.859391,
+            "bm25Score": 86.978072,
+            "embeddingScore": 0.505294,
+            "rerankScore": 0.859391,
+            "matchedTerms": [
+              "2025",
+              "機械",
+              "械設",
+              "設備",
+              "備型",
+              "型式",
+              "式驗",
+              "驗證",
+              "證合",
+              "合格",
+              "機械設",
+              "械設備",
+              "設備型",
+              "備型式",
+              "型式驗",
+              "式驗證",
+              "驗證合",
+              "證合格"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::26",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 28 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 28",
+            "content": "26\n؈03\nࠥ\nᎈ\n為保障工作者的職場作業安全，首\n重於機械設備本質安全的要求，我國自\n2015年起依《職業安全衛生法》第 7 條\n及《職業安全衛生法施行細則》第 12 條\n規定，推動 10 種指定機械、設備或器具\n源頭管理之「資訊申報登錄制度」。\n辦理情形：\n◆ 於 2019年公告新增 2 種指定機械、設\n備或器具，分別為 2019年實施非數值\n控制之傳統車床與銑 / 搪床及於 2023\n年實施數值控制之傳統車床與銑 / 搪\n床、加工中心機及傳送機。\n◆ 另依同法第 8 條規定，於 2018年 7 月\n起，推動指定機械、設備或器具的「型\n式驗證制度」，國內產製或國外輸入\n的交流電焊機用自動電擊防止裝置，\n非經驗證機構實施型式驗證合格及張\n貼合格標章者，製造者或輸入者均不\n得運出廠、場或輸入。\n¸ ኜՈ඲፬ଣ͡జ೮፽",
+            "score": 0.857019,
+            "bm25Score": 67.141357,
+            "embeddingScore": 0.656701,
+            "rerankScore": 0.857019,
+            "matchedTerms": [
+              "2025",
+              "機械",
+              "械設",
+              "設備",
+              "型式",
+              "式驗",
+              "驗證",
+              "證合",
+              "合格",
+              "機械設",
+              "械設備",
+              "型式驗",
+              "式驗證",
+              "驗證合",
+              "證合格"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::27",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 29 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 29",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n27\n2025 年成果：\n◆ 辦理 878 家廠商 6,103 件申報登錄案件的審查，並執行 256 家廠商 1,127 項指定機\n械設備清查與抽檢。\nዚ૛eண௪\nኜՈ၇ᗳ\n೮፽ / ᜕ᗇ\nᅰ\n೮፽ /\n᜕ᗇഅᅰ\n΋Б\nБഅᅰ\nе͡జ೮፽ /\n᜕ᗇഅᅰ ௪ൗ\nϋ΅ 2015\n~2025 2025 2015\n~2025 2025 2015\n~2025 2025 2015\n~2025 2025\n動力衝剪機械 477 85 691 54 749 104 210 11\n申報登錄\n安全資訊\n及張貼\n安全標示\n手推刨床 42 6 47 3 15 1 48 3\n木材加工用圓盤鋸 137 26 296 24 89 7 235 12\n動力堆高機 831 262 59,835 4,999 4,627 877 91 5\n研磨機 572 94 852 55 402 29 686 62\n研磨輪 344 41 644 22 265 26 762 35\n防爆電氣設備 1,053 309 12,212 1,169 156 27 359 25\n動力衝剪機械之\n光電式安全裝置 41 5 139 10 3 0 2 0\n金屬材料加工用車床\n( 含數值控制車床 ) 235 62 274 46 152 24 148 25\n金屬材料加工用加工\n中心機 ( 含銑床、\n搪床、傳送機 )\n311 99 460 68 258 50 151 28\n交流電焊機用\n自動電擊防止裝置 10 1 46 1\n實施型式驗證合格及張貼合格標章\n合計 4,053 990 75,496 6,451 6,716 1,145 2,692 206\n¸ 2025ࠇ",
+            "score": 0.789042,
+            "bm25Score": 57.281319,
+            "embeddingScore": 0.597176,
+            "rerankScore": 0.789042,
+            "matchedTerms": [
+              "2025",
+              "機械",
+              "械設",
+              "設備",
+              "型式",
+              "式驗",
+              "驗證",
+              "證合",
+              "合格",
+              "械設備",
+              "型式驗",
+              "式驗證",
+              "驗證合",
+              "證合格"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::25",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 27 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 27",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n25\n¸ ݟ\nڭ\n׌ߧ\n代行檢查機構除了既有的專業能力，\n也必須具備一定的公信力，因公營單位\n及國防單位之代檢機構有「球員兼裁判」\n之嫌，為維持檢查之公平性、客觀性，\n自 2003 年起改以評選方式委託非營利法\n人機構分區辦理。\n2015年 2016年 2017年 2018年 2019年 2020年 2021年 2022年 2023年 2024年 2025年\n危險性機械 27,624 28,226 29,675 33,608 30,257 30,057 30,959 31,271 31,690 34,464 34,355\n危險性設備 73,098 72,542 73,218 73,061 73,958 71,451 72,028 73,796 71,551 72,379 71,288\n100,722 100,768 102,893 106,669\n104,215 101,508 102,987 105,067 103,241\n106,343 105,643\n-\n20,000\n40,000\n60,000\n80,000\n100,000\n120,000\n代行檢查機構歷年執行危險性機械設備檢查座數統計\n辦理情形：\n◆ 職安署於北、中、南區分別委託中華\n鍋爐協會、中華產業機械設備協會及\n中華民國工業安全衛生協會等單位執\n行代檢。\n◆ 指定的代行檢查種類包括危險性機械\n的定期檢查、變更檢查、重新檢查、\n既有檢查，危險性設備之熔接檢查、\n構造檢查、竣工檢查、定期檢查、變\n更檢查、重新檢查、既有檢查。\n2025 年成果：\n◆ 實施危險性機械檢查計 3 萬 4,355 座\n次及危險性設備檢查計 7 萬 1,288 座\n次。",
+            "score": 0.627979,
+            "bm25Score": 25.929139,
+            "embeddingScore": 0.566407,
+            "rerankScore": 0.627979,
+            "matchedTerms": [
+              "2025",
+              "機械",
+              "械設",
+              "設備",
+              "機械設",
+              "械設備"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::24",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 26 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 26",
+            "content": "24\n؈03\n1. 固定式起重機\n34,122 座數\n29%\n2. 移動式起重機\n15,971 座數\n13%\n5. 吊龍\n1,224 座數\n1%\n6. 鍋爐\n5,105 座數\n4%\n7. 第一種壓力容器\n25,227 座數\n21%\n8. 高壓氣體特定設備\n31,008 座數\n26%\n危險性機械及\n設備設置座數\n統計\n9. 高壓氣體容器\n6,288 座數\n5%\n3. 人字臂起重棒\n1 座數\n0%\n4. 營建用升降機\n1,399 座數\n危險性機械及設備設置座數統計\nପุ༶ᔷτΌ\n根據《職業安全衛生法》第 16 條規定，非經勞動檢查機構或中央主管機關指定的\n代行檢查機構檢查合格，不得使用；其使用超過規定期間者，非經再檢查合格，不得\n繼續使用。\n辦理情形：\n◆ 依《職業安全衛生法施行細則》第 22、23 條定義如下：\n◎ 危險性機械：固定式起重機、移動式起重機、人字臂起重桿、營建用升降機、營\n建用提升機及吊籠。\n◎ 危險性設備：鍋爐、第一種壓力容器、高壓氣體特定設備及高壓氣體容器。\n2025 年成果：\n¸ Ї 2025ணໄ 120,345ዚ૛ʿண௪",
+            "score": 0.581589,
+            "bm25Score": 16.577645,
+            "embeddingScore": 0.564182,
+            "rerankScore": 0.581589,
+            "matchedTerms": [
+              "2025",
+              "機械",
+              "設備",
+              "合格"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 26,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm06-page4-contents",
+      "question": "目錄中「職安法修正發布，提升我國整體勞動環境」從哪一頁開始？",
+      "modality": "visual-contents",
+      "gold_pages": [
+        4
+      ],
+      "retrieved_pages": [
+        4,
+        45,
+        86
+      ],
+      "page_recall": true,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "10",
+        "職安法修正發布"
+      ],
+      "required_terms": [
+        "10",
+        "職安法修正發布"
+      ],
+      "vision_oracle_answer": "10",
+      "vision_oracle_pass": false,
+      "vision_oracle_matched": [
+        "10"
+      ],
+      "multimodal_rag_answer": "10",
+      "multimodal_rag_pass": false,
+      "multimodal_rag_matched": [
+        "10"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "目錄中「職安法修正發布，提升我國整體勞動環境」從哪一頁開始？",
+        "retrievalQuery": "目錄中「職安法修正發布，提升我國整體勞動環境」從哪一頁開始？",
+        "retrievalQueries": [
+          "目錄中「職安法修正發布，提升我國整體勞動環境」從哪一頁開始？"
+        ],
+        "evidenceQuery": "目錄中「職安法修正發布，提升我國整體勞動環境」從哪一頁開始？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::2::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 4 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 4",
+            "content": "02 10 11 12 15 職安法修正發布，提升我國整體勞動環境 持續減災，降低營造業墜落、倒崩塌災害 擴大職業傷病診治與重建量能，強化職災 勞工支持措施 提供石綿拆除防護資源，守護",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.850711,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.668247,
+            "rerankScore": 0.850711,
+            "matchedTerms": [
+              "02",
+              "10",
+              "11",
+              "12",
+              "15",
+              "職安",
+              "安法",
+              "法修",
+              "修正",
+              "正發",
+              "發布",
+              "職安法",
+              "安法修",
+              "法修正",
+              "修正發",
+              "正發布",
+              "提升",
+              "升我",
+              "我國",
+              "國整"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::43::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 45 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 45",
+            "content": "2025 年成果： ◆ 完成職安法修法： 2025 年 12 月 19 日總統令發布《職業 安全衛生法》部分條文修正案，正式 納入「職場霸凌防治專章」，健全救 濟途徑。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.688692,
+            "bm25Score": 0.745,
+            "embeddingScore": 0.61987,
+            "rerankScore": 0.688692,
+            "matchedTerms": [
+              "2025",
+              "12",
+              "19",
+              "年成",
+              "成果",
+              "年成果",
+              "完成",
+              "成職",
+              "職安",
+              "安法",
+              "法修",
+              "修法",
+              "完成職",
+              "成職安",
+              "職安法",
+              "安法修",
+              "法修法",
+              "年",
+              "月",
+              "日總"
+            ],
+            "originalRank": 4,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::85::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 86 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 86",
+            "content": "84 05 ፽ ˚cಂcԫ 修正發布「勞動部補助直轄市及縣市政府辦理職業災害勞工協助事 項作業要點」，增加進用職災勞工服務專業服務人員及職災勞工重 建行政協助人員學歷資格之相關科系數量，並調升職災勞工個案相 關服務專業",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.580308,
+            "bm25Score": 0.56,
+            "embeddingScore": 0.60513,
+            "rerankScore": 0.580308,
+            "matchedTerms": [
+              "84",
+              "05",
+              "c",
+              "修正",
+              "正發",
+              "發布",
+              "修正發",
+              "正發布",
+              "勞動",
+              "動部",
+              "部補",
+              "補助",
+              "助直",
+              "直轄",
+              "轄市",
+              "市及",
+              "及縣",
+              "縣市",
+              "市政",
+              "政府"
+            ],
+            "originalRank": 3,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 32 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 1.859,
+          "embeddingMs": 82.315,
+          "fusionMs": 0.072,
+          "rerankMs": 5.236,
+          "totalMs": 89.764
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 32,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 1.0,
+            "embedding": 0.668247,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": false,
+            "answerBearingEvidence": null
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::2",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 4 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 4",
+            "content": "02\n10\n11\n12\n15\n職安法修正發布，提升我國整體勞動環境\n持續減災，降低營造業墜落、倒崩塌災害\n擴大職業傷病診治與重建量能，強化職災\n勞工支持措施\n提供石綿拆除防護資源，守護災區勞工健康\n提升勞動檢查效能，完善行政支援體系\n守護勞工安全不鬆懈\n擴大輔導提升職場本質安全\n多元策略，全面健康勞動力保障\n健全高風險化學品危害預防打造\n健康環境\n運用多元專業強化勞工健康保護\n擴大職業傷病通報服務即時且到位\nҏ04\n18\n22\n30\n38\n44\n46\n51\nఠ h ᗴ౻ၾഄଫ06\n൩ h 2025ᓃΫᚥ08\nਞ h ؈16\nͦ ፽ CONTENTS",
+            "score": 0.95,
+            "bm25Score": 116.673677,
+            "embeddingScore": 0.67663,
+            "rerankScore": 0.95,
+            "matchedTerms": [
+              "職安",
+              "安法",
+              "法修",
+              "修正",
+              "正發",
+              "發布",
+              "職安法",
+              "安法修",
+              "法修正",
+              "修正發",
+              "正發布",
+              "提升",
+              "升我",
+              "我國",
+              "國整",
+              "整體",
+              "體勞",
+              "勞動",
+              "動環",
+              "環境"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::42",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 44 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 44",
+            "content": "42\nᗴ౻& ഄଫ03\nღ\n為營造友善的工作環境並守護勞工\n身心健康，職安署透過宣導、輔導及勞\n工身心健康保護專案檢查等多元措施，\n聚焦於職場不法侵害防制、過勞風險管\n理、重複性作業引發之肌肉骨骼傷害預\n防，以及女性勞工母性健康保障等重點，\n督促事業單位落實相關法規要求，確保\n勞工權益獲得完善保障。\n辦理情形：\n• 透過勞工身心健康保護專案檢查，提\n升高風險行業如醫療保健業、運輸倉\n儲業及保全服務業等之法遵。\n2025 年成果：\n• 勞工身心健康保護專案檢查對象，共\n計實施 1,373 場次。\ndҖ෧Ꮄሯᔖఙ˖ʷ\n積極落實「尊嚴勞動」理念，針對\n社會高度關注之職場霸凌議題，透過法制\n強化、指引更新及實務輔導等多元策略，\n建構零容忍之友善職場環境。除啟動法\n規修正外，更強化企業內部申訴與調查\n機制，確保每位勞工皆能在受尊重且安\n全的環境下工作。\n辦理情形：\n◆ 推動職安法修法：啟動《職業安全衛\n生法》修法作業，增列「職場霸凌防\n治專章」，明確定義職場霸凌之樣態，\n並強化雇主對於預防、調查及處置之\n法律責任。\n◆ 精進預防指引：修正發布第四版「執\n行職務遭受不法侵害預防指引」，納\n入權力不對等、逾越合理範圍等明確\n定義，並增訂調查小組組成標準及外\n部專家參與機制。\n◆ 強化企業揭露與自評：結合 GRI403\n職業健康與安全揭露指南，引領企業\n將「職場心理健康」與「霸凌防治」\n納入永續報告書揭露指標，建立主動\n績效監測機制。\n¸ ˓ย༶",
+            "score": 0.661596,
+            "bm25Score": 28.588121,
+            "embeddingScore": 0.671494,
+            "rerankScore": 0.661596,
+            "matchedTerms": [
+              "職安",
+              "安法",
+              "法修",
+              "修正",
+              "正發",
+              "發布",
+              "職安法",
+              "安法修",
+              "修正發",
+              "正發布",
+              "勞動",
+              "環境"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::85",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 86 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 86",
+            "content": "84\n05\n፽\n˚cಂcԫ\n修正發布「勞動部補助直轄市及縣市政府辦理職業災害勞工協助事\n項作業要點」，增加進用職災勞工服務專業服務人員及職災勞工重\n建行政協助人員學歷資格之相關科系數量，並調升職災勞工個案相\n關服務專業服務人員、職災勞工服務督導人員之薪點，鼓勵人員久\n任。\n修正發布「機械設備器具型式檢定作業要點」，與國際接軌，精進\n型式檢定作業流程，強化機械設備器具源頭管理機制。\n勞動部與台灣勞動法學會共同主辦為期 2 天的「防治職場霸凌法制\n研討會」，就歐美日等先進國家與我國的職場霸凌防治法制進行專\n題演講及實務研析交流。¸ ীึක\n൚\n¸ ̛ 6৅ึ˴։ᇹӸऐ̛5\nੈྐྵ̛ 4Υᅂ\n03/14\n03/20\n03/21\n~\n03/22",
+            "score": 0.604202,
+            "bm25Score": 23.456804,
+            "embeddingScore": 0.621014,
+            "rerankScore": 0.604202,
+            "matchedTerms": [
+              "修正",
+              "正發",
+              "發布",
+              "修正發",
+              "正發布",
+              "我國",
+              "勞動"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::43",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 45 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 45",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n43\n◆ 提升雇主防治意識：向企業宣導職場\n霸凌防治核心原則，強化職場霸凌的\n預防與處理能力，並協助企業落實相\n關法規， 以減少職場衝突與法律風險。\n2025 年成果：\n◆ 完成職安法修法：\n2025 年 12 月 19 日總統令發布《職業\n安全衛生法》部分條文修正案，正式\n納入「職場霸凌防治專章」，健全救\n濟途徑。\n◆ 發布第四版「執行職務遭受不法侵害\n預防指引」：\n於 2025 年 2 月正式公告更新指引，明\n定當雇主為不法侵害涉案人之外部調\n查機制，補強過往制度缺口。\n◆ 推廣宣導：\n特邀請專家學者解析相關法令並分享\n實務案例，強化雇主落實職場不法侵\n害預防及職場霸凌防治相關措施，\n2025 年共辦理 4 場次「職場不法侵害\n預防宣導說明會」。\n¸ ึ",
+            "score": 0.587382,
+            "bm25Score": 25.045744,
+            "embeddingScore": 0.584448,
+            "rerankScore": 0.587382,
+            "matchedTerms": [
+              "職安",
+              "安法",
+              "法修",
+              "修正",
+              "發布",
+              "職安法",
+              "安法修",
+              "提升"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::46",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 48 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 48",
+            "content": "46\nᗴ౻& ഄଫ03\nᚐ\nਕ\n為提升我國勞工健康服務效能，透過有系統地提供國內中小企業標竿學習，督促\n事業單位落實勞工身心健康的保護。政策推動的核心在於透過更具親近性的勞工健康\n照護與多元的協助管道，協助事業單位預防工作相關疾病，進而建立能讓勞工安心且\n健康的職場環境。\n務補助計畫」，補助勞工人數 199 人\n以下依法需僱用或特約勞工健康服務\n專業人員辦理臨場健康服務之事業單\n位，並依據歷年補助申請案件資料及\n審查結果，逐年完善事業單位線上申\n請補助之作業流程，及提升補助審查\n效能，同時結合服務實務案例，製作\n圖卡及辦理說明會，增進事業單位推\n動勞工健康服務之知能及意願，以持\n續落實勞工健康保護制度。\n辦理情形：\n◆ 靈活運用檢查、宣導、輔導與補助等\n多管齊下的策略；在輔導與查核機制\n上，依勞動檢查機構需求，結合外部\n相關領域實務專家資源，於執行勞工\n健康服務監督檢查時提供相關意見及\n協助，同時亦開發勞工健康服務實務\n檢核手冊與表單，以強化事業單位之\n勞工健康服務法遵。\n◆ 協助中小企業辦理勞工健康保護，職\n安署透過「推動中小企業臨場健康服\n¸ ̛ 1̸ 3਄ੰᔖఙ͑ᚃՙ൳ᆤ཯ᆤՊᓿ",
+            "score": 0.584434,
+            "bm25Score": 16.649086,
+            "embeddingScore": 0.629097,
+            "rerankScore": 0.584434,
+            "matchedTerms": [
+              "提升",
+              "升我",
+              "我國",
+              "勞動",
+              "環境",
+              "提升我",
+              "升我國"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 27,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm07-page12-amendment",
+      "question": "2025年職安法修法經立法院三讀與總統公布的日期各為何？共修正幾條，其中新增幾條？",
+      "modality": "text-and-layout",
+      "gold_pages": [
+        12
+      ],
+      "retrieved_pages": [
+        12,
+        45,
+        49
+      ],
+      "page_recall": true,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "12月2日",
+        "12月19日",
+        "25條",
+        "新增6條"
+      ],
+      "required_terms": [
+        "12月2日",
+        "12月19日",
+        "25條",
+        "新增6條"
+      ],
+      "vision_oracle_answer": "2025年職安法修法經立法院三讀：2025年12月2日；總統公布：2025年12月19日；共修正6條，其中新增6條。",
+      "vision_oracle_pass": false,
+      "vision_oracle_matched": [
+        "12月2日",
+        "12月19日",
+        "新增6條"
+      ],
+      "multimodal_rag_answer": "2025年12月2日經立法院三讀通過；2025年12月19日經總統公布；共修正25條，其中新增6條。",
+      "multimodal_rag_pass": true,
+      "multimodal_rag_matched": [
+        "12月2日",
+        "12月19日",
+        "25條",
+        "新增6條"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年職安法修法經立法院三讀與總統公布的日期各為何？共修正幾條，其中新增幾條？",
+        "retrievalQuery": "2025年職安法修法經立法院三讀與總統公布的日期各為何？共修正幾條，其中新增幾條？",
+        "retrievalQueries": [
+          "2025年職安法修法經立法院三讀與總統公布的日期各為何？共修正幾條，其中新增幾條？"
+        ],
+        "evidenceQuery": "2025年職安法修法經立法院三讀與總統公布的日期各為何？共修正幾條，其中新增幾條？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::10::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 12 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 12",
+            "content": "2025ᓃΫᚥ02 10 ͍೯̺d౤ʺҢ਷዆᜗௶ਗᐑྤ 《職業安全衛生法》（以下簡稱職安法）自 1974年勞工安全衛生法（職安法前身）公布施行 以來，歷經多次修正，旨在建構完善之職業安全衛 生環境，防止職業災害，保障工作者安全及健康， 然而鑑於近年重大職業災害未能有效下降，尤其是 營造工程職災占比居高不下，為強化職場減災並提 升法律規範效能， 勞動部於2024年啟動修法作業， 經彙整 並提 升法律規範效能， 勞動部於2024年啟動修法作業， 經彙整各界意見及國際經驗，完成修法草案，並於 2025 年 12 月 2 日經立法院三讀通過，及 12 月 19 日經總統公布，共計修正 25 條（含新增 6 條）， 展現政府守護勞工身心安全健康之決心。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.848636,
+            "bm25Score": 0.927119,
+            "embeddingScore": 0.752714,
+            "rerankScore": 0.848636,
+            "matchedTerms": [
+              "2025",
+              "02",
+              "10",
+              "d",
+              "1974",
+              "2024",
+              "職業",
+              "業安",
+              "安全",
+              "全衛",
+              "衛生",
+              "生法",
+              "職業安",
+              "業安全",
+              "安全衛",
+              "全衛生",
+              "衛生法",
+              "以下",
+              "下簡",
+              "簡稱"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 2,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::43::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 45 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 45",
+            "content": "2025 年成果： ◆ 完成職安法修法： 2025 年 12 月 19 日總統令發布《職業 安全衛生法》部分條文修正案，正式 納入「職場霸凌防治專章」，健全救 濟途徑。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.685486,
+            "bm25Score": 0.737288,
+            "embeddingScore": 0.622171,
+            "rerankScore": 0.685486,
+            "matchedTerms": [
+              "2025",
+              "12",
+              "19",
+              "年成",
+              "成果",
+              "年成果",
+              "完成",
+              "成職",
+              "職安",
+              "安法",
+              "法修",
+              "修法",
+              "完成職",
+              "成職安",
+              "職安法",
+              "安法修",
+              "法修法",
+              "年",
+              "月",
+              "日總"
+            ],
+            "originalRank": 2,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::47::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 49 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 49",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 47 ◆ 於 2025 年持續檢討修正「推動中小企 業臨場健康服務補助計畫」，就檢附 資料之期限酌予放寬、同日上午或下 午之辦理場次酌予限定，並限制事業 單位委託之特約機構，曾拒絕、妨礙 或規避查核者之補助，以提升勞工受 服務之頻率及特約機構之服務品質。 ◆ 為落實賴清德總統「健康台灣」政策， 2025 年已修正「推行職業安全衛生優 良單位及人員選拔作業要點」，優良 人員區分職業安全衛生及勞工健康服 務，並新增勞工健康服務優良人員推 薦程序及推薦表，透過表揚活動鼓勵 績優單位持續推動職場勞工健康保護。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.483702,
+            "bm25Score": 0.564915,
+            "embeddingScore": 0.526927,
+            "rerankScore": 0.483702,
+            "matchedTerms": [
+              "2025",
+              "47",
+              "於",
+              "年持",
+              "持續",
+              "續檢",
+              "檢討",
+              "討修",
+              "修正",
+              "年持續",
+              "持續檢",
+              "續檢討",
+              "檢討修",
+              "討修正",
+              "推動",
+              "動中",
+              "中小",
+              "小企",
+              "推動中",
+              "動中小"
+            ],
+            "originalRank": 4,
+            "fineUnitCount": 2,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 34 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 2.701,
+          "embeddingMs": 185.448,
+          "fusionMs": 0.091,
+          "rerankMs": 4.994,
+          "totalMs": 193.464
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 34,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 0.927119,
+            "embedding": 0.752714,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 19,
+            "requiresAnswerValue": false,
+            "answerBearingEvidence": null
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::10",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 12 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 12",
+            "content": "2025ᓃΫᚥ02\n10\n͍೯̺d౤ʺҢ਷዆᜗௶ਗᐑྤ\n《職業安全衛生法》（以下簡稱職安法）自\n1974年勞工安全衛生法（職安法前身）公布施行\n以來，歷經多次修正，旨在建構完善之職業安全衛\n生環境，防止職業災害，保障工作者安全及健康，\n然而鑑於近年重大職業災害未能有效下降，尤其是\n營造工程職災占比居高不下，為強化職場減災並提\n升法律規範效能， 勞動部於2024年啟動修法作業，\n經彙整各界意見及國際經驗，完成修法草案，並於\n2025 年 12 月 2 日經立法院三讀通過，及 12 月 19\n日經總統公布，共計修正 25 條（含新增 6 條），\n展現政府守護勞工身心安全健康之決心。\n本次修法核心聚焦於「工安預防全面化」及「職場霸凌法制化」兩大主軸，在職\n場減災方面，將工程業主納入交付承攬責任體系，其於每個工程階段皆有安全衛生管\n理責任，從源頭規劃設計階段消除，降低施工風險，同時強化事業單位交付承攬時，\n與各級承攬人應負防止職業災害之責任，增列工作場所、設備出租或出借者之危害告\n知責任，以及定明特定機械操作人員、自營作業者等防災職責；此外，針對近期引發\n社會高度關注之職場霸凌議題，亦將其納入法制化規範，以補足現行制度對不法侵害\n防護之不足，積極督促各界落實職業安全衛生管理，打造更具安全、健康與尊嚴之職\n場環境。\n¸ ׵2025 ϋ 12 ˜ 2ࣩ",
+            "score": 0.894853,
+            "bm25Score": 77.23094,
+            "embeddingScore": 0.505418,
+            "rerankScore": 0.894853,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職安",
+              "安法",
+              "修法",
+              "經立",
+              "立法",
+              "法院",
+              "院三",
+              "三讀",
+              "總統",
+              "統公",
+              "公布",
+              "職安法",
+              "經立法",
+              "立法院",
+              "法院三",
+              "院三讀",
+              "總統公",
+              "統公布"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::43",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 45 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 45",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n43\n◆ 提升雇主防治意識：向企業宣導職場\n霸凌防治核心原則，強化職場霸凌的\n預防與處理能力，並協助企業落實相\n關法規， 以減少職場衝突與法律風險。\n2025 年成果：\n◆ 完成職安法修法：\n2025 年 12 月 19 日總統令發布《職業\n安全衛生法》部分條文修正案，正式\n納入「職場霸凌防治專章」，健全救\n濟途徑。\n◆ 發布第四版「執行職務遭受不法侵害\n預防指引」：\n於 2025 年 2 月正式公告更新指引，明\n定當雇主為不法侵害涉案人之外部調\n查機制，補強過往制度缺口。\n◆ 推廣宣導：\n特邀請專家學者解析相關法令並分享\n實務案例，強化雇主落實職場不法侵\n害預防及職場霸凌防治相關措施，\n2025 年共辦理 4 場次「職場不法侵害\n預防宣導說明會」。\n¸ ึ",
+            "score": 0.687391,
+            "bm25Score": 35.591757,
+            "embeddingScore": 0.488995,
+            "rerankScore": 0.687391,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職安",
+              "安法",
+              "法修",
+              "修法",
+              "總統",
+              "職安法",
+              "安法修",
+              "法修法",
+              "修正"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::2",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 4 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 4",
+            "content": "02\n10\n11\n12\n15\n職安法修正發布，提升我國整體勞動環境\n持續減災，降低營造業墜落、倒崩塌災害\n擴大職業傷病診治與重建量能，強化職災\n勞工支持措施\n提供石綿拆除防護資源，守護災區勞工健康\n提升勞動檢查效能，完善行政支援體系\n守護勞工安全不鬆懈\n擴大輔導提升職場本質安全\n多元策略，全面健康勞動力保障\n健全高風險化學品危害預防打造\n健康環境\n運用多元專業強化勞工健康保護\n擴大職業傷病通報服務即時且到位\nҏ04\n18\n22\n30\n38\n44\n46\n51\nఠ h ᗴ౻ၾഄଫ06\n൩ h 2025ᓃΫᚥ08\nਞ h ؈16\nͦ ፽ CONTENTS",
+            "score": 0.670054,
+            "bm25Score": 23.311165,
+            "embeddingScore": 0.538919,
+            "rerankScore": 0.670054,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職安",
+              "安法",
+              "法修",
+              "職安法",
+              "安法修",
+              "修正"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::47",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 49 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 49",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n47\n◆ 於 2025 年持續檢討修正「推動中小企\n業臨場健康服務補助計畫」，就檢附\n資料之期限酌予放寬、同日上午或下\n午之辦理場次酌予限定，並限制事業\n單位委託之特約機構，曾拒絕、妨礙\n或規避查核者之補助，以提升勞工受\n服務之頻率及特約機構之服務品質。\n◆ 為落實賴清德總統「健康台灣」政策，\n2025 年已修正「推行職業安全衛生優\n良單位及人員選拔作業要點」，優良\n人員區分職業安全衛生及勞工健康服\n務，並新增勞工健康服務優良人員推\n薦程序及推薦表，透過表揚活動鼓勵\n績優單位持續推動職場勞工健康保護。\n¸ 2023 ϋЇ 2025ᅰ\n2025 年成果：\n◆ 修訂「勞工健康服務監督檢查表」及\n「勞工健康服務推動現況臨場訪查\n表」，並辦理臨場訪查計 18 場次，以\n精進辦理勞工健康服務之成效，維護\n勞工健康權益。\n◆ 補助事業單位共計 4,108 家次，補助\n金額逾新臺幣 1 億 4,540 萬元。\n◆ 與國民健康署合作辦理之「健康職場\n永續卓越獎」，共 3 家事業單位獲得\n殊榮，獲獎單位依據自身職場環境特\n性及勞工健康需求，積極投入資源、\n應用策略與工具改善軟硬體措施，提\n供健康友善的工作環境，落實勞工健\n康保護。",
+            "score": 0.607453,
+            "bm25Score": 10.900249,
+            "embeddingScore": 0.539113,
+            "rerankScore": 0.607453,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "總統",
+              "修正",
+              "新增"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::65",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 67 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 67",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n65\n落實管理系統審查制度，驅動企業\n職安管理再進化\n持續落實績效審查及績效認可制度，\n使事業單位運用職業安全衛生管理系統\n方式持續檢討改善，深化職安衛管理。\n辦理情形：\n推動職業安全衛生管理系統績效審\n查制度，並依職業安全衛生管理辦法第 6\n條之 1 規定，協助企業以系統化方式落\n實安全衛生管理，職安署推行相關策略 :\n◆ 持續對勞動檢查員辦理職業安全衛生\n管理系統主導稽核員訓練，以及現場\n查核實務訓練。\n◆ 由各勞動檢查機構派員實施現場查核。\n2025 年成果：\n◆ 通過職業安全衛生管理系統績效審查\n事業單位且在有效期間計有 75 家。\n表揚國家職安獎項典範，引領產業\n安衛文化升級\n為促進企業自主提升職業安全衛生\n管理，打造安全健康的工作環境，職安\n署舉辦多項職業安全衛生獎項，促進企\n業追求卓越優質職安衛文化。\n辦理情形：\n設立「國家職業安全衛生獎」、「優\n良工程金安獎」及「職業安全衛生優良單\n位及人員獎」等獎項，以表揚企業及個\n人共同為更好的職場安全衛生環境努力。\n2025 年成果：\n◆ 2025 年「國家職業安全衛生獎」計有\n6 家企業及 3 位個人獲獎。其中獲得\n「大型企業標竿獎」的有日月光半導\n體、勤美股份有限公司等 2 家；「中\n小企業標竿獎」與「勞動健康特別獎」\n亦各有 2 家企業獲獎，此外，本屆個\n人獎部分由莊弘毅、陳叡瑜及姚自強\n等 3 位專家獲獎。\n◆ 優良工程金安獎計有 45 件工程及 21\n位人員獲獎，其中獲獎工程分別為 2\n件特優、16 件優等、27 件佳作；人員\n類共計優等 8 人、甲等 13 人。\n◆ 計有 32 家獲得優良單位獎及 36 位獲\n得優良人員獎，其中 4 家得獎事業單\n位獲頒「優良單位五星獎」。\n¸ ྼਕ৅ᇖ\n¸ ͡ጫ\n཯ᆤՊᓿ",
+            "score": 0.524956,
+            "bm25Score": 8.497755,
+            "embeddingScore": 0.460386,
+            "rerankScore": 0.524956,
+            "matchedTerms": [
+              "2025",
+              "年職",
+              "職安",
+              "其中"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 31,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm08-page13-construction",
+      "question": "2025年營造業重大職災死亡人數是多少，占全部重大職災死亡人數幾％？",
+      "modality": "text-and-table",
+      "gold_pages": [
+        13
+      ],
+      "retrieved_pages": [
+        25,
+        13
+      ],
+      "page_recall": true,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "113人",
+        "43.6%"
+      ],
+      "required_terms": [
+        "113人",
+        "43.6%"
+      ],
+      "vision_oracle_answer": "259人，占43.6％",
+      "vision_oracle_pass": false,
+      "vision_oracle_matched": [
+        "43.6%"
+      ],
+      "multimodal_rag_answer": "77人，占60~70%",
+      "multimodal_rag_pass": false,
+      "multimodal_rag_matched": [],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年營造業重大職災死亡人數是多少，占全部重大職災死亡人數幾％？",
+        "retrievalQuery": "2025年營造業重大職災死亡人數是多少，占全部重大職災死亡人數幾％？",
+        "retrievalQueries": [
+          "2025年營造業重大職災死亡人數是多少，占全部重大職災死亡人數幾％？"
+        ],
+        "evidenceQuery": "2025年營造業重大職災死亡人數是多少，占全部重大職災死亡人數幾％？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::23::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 25 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 25",
+            "content": "◆ 統計 2025 年營造業墜落重大職災死亡 人數已降至 77 人，較前 3 年同期平均 值 96 人 (2022 年為 105 人、2023 年 為 102 人、2024 年為 82 人）減少 19 人，降幅 19.8%。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.906571,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.792379,
+            "rerankScore": 0.906571,
+            "matchedTerms": [
+              "2025",
+              "77",
+              "3",
+              "96",
+              "2022",
+              "105",
+              "2023",
+              "102",
+              "2024",
+              "82",
+              "19",
+              "8",
+              "統計",
+              "年營",
+              "營造",
+              "造業",
+              "業墜",
+              "墜落",
+              "落重",
+              "重大"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::23::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 25 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 25",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 23 ̋੶္၍ᚃಯӨdᐄிʈ೻τΌΣ ᄁ 我國營造業墜落職災為所有災害 類型之首，佔營造業重大職災死亡人數 60~70%，與英國、新加坡、日本及韓國 等國家比較，墜落職災占比明顯偏高；",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.884194,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.742654,
+            "rerankScore": 0.884194,
+            "matchedTerms": [
+              "2025",
+              "23",
+              "d",
+              "60",
+              "70",
+              "我國",
+              "國營",
+              "營造",
+              "造業",
+              "業墜",
+              "墜落",
+              "落職",
+              "職災",
+              "災為",
+              "為所",
+              "所有",
+              "有災",
+              "災害",
+              "我國營",
+              "國營造"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::11::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 13 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 13",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 11 ¸ ݟ ࢔ 2025 年全國各縣市政府重大職業災害死亡人數統計為 259 人，較 2024 年降低 9.8％，其中營造業死亡人數為 113人（占 43.6％），較 2024 年減少 32 人，展現具 體減災成效。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.873674,
+            "bm25Score": 0.966667,
+            "embeddingScore": 0.760016,
+            "rerankScore": 0.873674,
+            "matchedTerms": [
+              "2025",
+              "11",
+              "259",
+              "2024",
+              "9",
+              "8",
+              "113",
+              "43",
+              "6",
+              "32",
+              "年全",
+              "全國",
+              "國各",
+              "各縣",
+              "縣市",
+              "市政",
+              "政府",
+              "府重",
+              "重大",
+              "大職"
+            ],
+            "originalRank": 3,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 26 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 2.84,
+          "embeddingMs": 108.237,
+          "fusionMs": 0.113,
+          "rerankMs": 5.921,
+          "totalMs": 117.813
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 26,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "low",
+        "evidenceEvaluation": {
+          "status": "ambiguous",
+          "sufficient": false,
+          "confidence": "low",
+          "reason": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。",
+          "signals": {
+            "bm25": 1.0,
+            "embedding": 0.792379,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 18,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": false
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::23",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 25 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 25",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n23\n̋੶္၍ᚃಯӨdᐄிʈ೻τΌΣ\nᄁ\n我國營造業墜落職災為所有災害\n類型之首，佔營造業重大職災死亡人數\n60~70%，與英國、新加坡、日本及韓國\n等國家比較，墜落職災占比明顯偏高；\n另近年我國營造工程案件有朝向大規模、\n高樓層及深開挖之趨勢，致本質危害相對\n提升，因此，今年針對易發生墜落職災之\n建築工地，採取勤查嚴罰及公私協力防災\n等策略，另參考英國、新加坡及日本等先\n進國家施工安全管理制度，積極推動職業\n安全衛生法令修正，增加工程業主施工\n安全採購管理責任，並提高違法事業單\n位之處罰額度，督促業者積極主動防災。\n辦理情形：\n勞動部 2025 年研訂減災策進計畫，\n除加強營造工地防災勞檢，要求勞動檢查\n¸ ݟ\n機構勤查嚴罰並與中央及地方政府等合\n作成立職場減災跨機關平台，針對建設公\n司或大型工程業主等舉辦高階主管座談，\n以及針對微型、臨時性營造作業辦理臨\n場監督輔導等，加強墜落減災。\n2025 年成果：\n◆ 統計 2025 年全國營造業勞動監督檢查\n共計 62,961 工地次，停工 2,100 次，\n罰鍰 1 億 8,820 萬元。另針對屋頂作\n業、 道路施工作業及修繕作業等微型、\n臨時性營造作業，辦理臨場監督輔導\n共計 5,855 場次。\n◆ 統計 2025 年營造業墜落重大職災死亡\n人數已降至 77 人，較前 3 年同期平均\n值 96 人 (2022 年為 105 人、2023 年\n為 102 人、2024 年為 82 人）減少 19\n人，降幅 19.8%。",
+            "score": 0.921481,
+            "bm25Score": 118.200471,
+            "embeddingScore": 0.741372,
+            "rerankScore": 0.921481,
+            "matchedTerms": [
+              "2025",
+              "年營",
+              "營造",
+              "造業",
+              "業重",
+              "重大",
+              "大職",
+              "職災",
+              "災死",
+              "死亡",
+              "亡人",
+              "人數",
+              "年營造",
+              "營造業",
+              "造業重",
+              "業重大",
+              "重大職",
+              "大職災",
+              "職災死",
+              "災死亡"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::1",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 3 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 3",
+            "content": "2025\n職業安全衛生年報\n重要績效\n人次126,594\n人次3,306\n人28\n%9.8\n座次105,643\n人\n17%\n17\n件6,103\n3,350 場次\n59,443 場次\n場次1,373\n場次\n場次\n1,009\n57\n危險性機械設備檢查\n營造業墜落職災死亡\n2.250\n5.26%\n較2024年再下降\n職災給付千人率降至\n機械設備型式驗證合格\n場次150,173\n職安衛監督檢查\n勞工身心健康保護\n專案檢查實施\n較2024年再成長\n職災勞工及\n家庭個案服務\n較2024年再降\n重大職災死亡人數\n較2024年減少\n勞動條件宣導\n增加\n職業安全衛生宣導\n及輔導訪查\n勞動條件監督檢查\n較前3年同期平均值減少",
+            "score": 0.865002,
+            "bm25Score": 110.648803,
+            "embeddingScore": 0.694931,
+            "rerankScore": 0.865002,
+            "matchedTerms": [
+              "2025",
+              "營造",
+              "造業",
+              "重大",
+              "大職",
+              "職災",
+              "災死",
+              "死亡",
+              "亡人",
+              "人數",
+              "營造業",
+              "重大職",
+              "大職災",
+              "職災死",
+              "災死亡",
+              "死亡人",
+              "亡人數"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::11",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 13 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 13",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n11\n¸ ݟ\n࢔\n2025 年全國各縣市政府重大職業災害死亡人數統計為 259 人，較 2024 年降低\n9.8％，其中營造業死亡人數為 113人（占 43.6％），較 2024 年減少 32 人，展現具\n體減災成效。\n職安署為加強營造業墜落減災，於 2025 年度訂定營造業墜落減災策進計畫，為擴\n大計畫執行成效，特別針對高風險營造工地，包含國家重要建設計畫工程、重大建築\n投資工程、大型廠房新建工程及丁類危險性工作場所等大型工程，列冊為高風險營造\n工地，強化建築工程檢查強度，請勞動檢查機構辦理墜落預防檢查時，一併辦理倒塌、\n崩塌、火災及爆炸等預防加強檢查。\n2025 年辦理全國營造業勞動檢查，由各勞動檢查機構首長及主管等率百名勞動檢\n查員於全國北、中、南等地區，針對高風險營造工地採取加強監管續減災檢查，共計\n檢查 431 個工地，發現違反職安法令計 19,767 項，並依法停工 753 處。",
+            "score": 0.788847,
+            "bm25Score": 73.090418,
+            "embeddingScore": 0.801917,
+            "rerankScore": 0.788847,
+            "matchedTerms": [
+              "2025",
+              "營造",
+              "造業",
+              "重大",
+              "大職",
+              "死亡",
+              "亡人",
+              "人數",
+              "營造業",
+              "重大職",
+              "死亡人",
+              "亡人數"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::37",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 39 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 39",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n37\n¸ AI၍ՓʿІਗ፫ᗆ\nঐ\n營造業重大職業災害比例居全產業\n之冠，且隨工程規模大型化與施工複雜\n化，施工風險隨之增加。為提升管理效\n能，職安署持續推動科技智慧化管理工\n具，輔助工地落實自主管理與風險控管。\n辦理情形：\n為鼓勵事業單位運用科技技術減災，\n持續維運「營造業職業安全衛生管理系\n統資訊應用平台」，系統性蒐集並發布\n國內外營造業科技技術應用資源。為強\n化實務經驗交流，職安署進一步針對具\n示範意義之工程辦理實地觀摩會，邀請\n國內優良工程分享智慧化管理成果，包\n含智慧化場域管理及智慧化機械輔助等，\n提供事業單位學習、研發與應用的借鑑\n與參考。\n2025 年成果：\n分享 30 篇營造業職業安全衛生運用\n科技技術之摘要，包括虛擬實境（VR）、\n物聯網（ IoT）、人工智慧（ AI）、建築\n資訊模型（ BIM）等技術於職業安全衛\n生管理之應用，並辦理 3 場工地現場觀\n摩會。",
+            "score": 0.630499,
+            "bm25Score": 42.158459,
+            "embeddingScore": 0.644605,
+            "rerankScore": 0.630499,
+            "matchedTerms": [
+              "2025",
+              "營造",
+              "造業",
+              "業重",
+              "重大",
+              "大職",
+              "營造業",
+              "造業重",
+              "業重大",
+              "重大職"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::63",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 65 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 65",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n63\n2025 年成果：\n◆ 提供職災勞工及其家庭個案服務權益\n保障、職能復健、職業重建、就業服\n務、心理諮商及法律諮詢等協助，個\n案管理服務 2,828 件，計服務 12 萬\n6,594 人次。\n◆ 發放職災死亡勞工家屬慰問金共 310\n件，計 3,882 萬餘元。\n◆ 提供重返職場補助措施，包含 780 位\n被保險人職能復健期間之職能復健津\n貼、208 個事業單位僱用職業災害勞\n工補助及 9 件雇主提供職災勞工輔助\n設施補助，補助案量共計 997 件，補\n助金額達 2,740 萬 3,850 元。同時鼓\n勵地方政府依轄區特性辦理重返職場\n業務推廣、宣導及相關活動，共辦理\n137 場說明會，宣導人數達 8,081 人。\n◆ 拍攝「職災勞工重返職場紀實影片」，\n並上傳至職安署 Y ouTube頻道供民眾\n點閱。影片以紀錄片方式，採訪 3 位\n遭逢職災的勞工，呈現從地方政府個\n案管理服務、醫院職能復健到重返職\n場的心路歷程，藉此宣導職災勞工各\n項重建服務，加深民眾對現行協助措\n施之了解。\n¸ ΣᔖӨ\nᗫᛆूd՘пᔖ\nᔖఙ\n¸ ؂\nܓ\n¸ ึd\nึɽ଺\n◆ 研議《勞動部代墊\n職業災害死亡勞工\n遺屬民事訴訟假扣\n押提存擔保金作業\n要點》，以減輕職\n災勞工遺屬進行民\n事訴訟假扣押程序\n之經濟負擔，並保\n障其權益。",
+            "score": 0.6128,
+            "bm25Score": 39.238393,
+            "embeddingScore": 0.64441,
+            "rerankScore": 0.6128,
+            "matchedTerms": [
+              "2025",
+              "業重",
+              "職災",
+              "災死",
+              "死亡",
+              "人數",
+              "職災死",
+              "災死亡"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 26,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm09-page13-inspection",
+      "question": "2025年高風險營造工地共檢查多少個工地、發現多少項違規，並依法停工多少處？",
+      "modality": "text-and-table",
+      "gold_pages": [
+        13
+      ],
+      "retrieved_pages": [
+        13,
+        25,
+        37
+      ],
+      "page_recall": true,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "431",
+        "19,767",
+        "753"
+      ],
+      "required_terms": [
+        "431",
+        "19,767",
+        "753"
+      ],
+      "vision_oracle_answer": "共計檢查 431 個工地，發現違反職安法令計 19,767 項，並依法停工 753 處。",
+      "vision_oracle_pass": true,
+      "vision_oracle_matched": [
+        "431",
+        "19,767",
+        "753"
+      ],
+      "multimodal_rag_answer": "共計檢查 431 個工地，發現違反職安法令計 19,767 項，並依法停工 753 處。",
+      "multimodal_rag_pass": true,
+      "multimodal_rag_matched": [
+        "431",
+        "19,767",
+        "753"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年高風險營造工地共檢查多少個工地、發現多少項違規，並依法停工多少處？",
+        "retrievalQuery": "2025年高風險營造工地共檢查多少個工地、發現多少項違規，並依法停工多少處？",
+        "retrievalQueries": [
+          "2025年高風險營造工地共檢查多少個工地、發現多少項違規，並依法停工多少處？"
+        ],
+        "evidenceQuery": "2025年高風險營造工地共檢查多少個工地、發現多少項違規，並依法停工多少處？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::11::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 13 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 13",
+            "content": "職安署為加強營造業墜落減災，於 2025 年度訂定營造業墜落減災策進計畫，為擴 大計畫執行成效，特別針對高風險營造工地，包含國家重要建設計畫工程、重大建築 投資工程、大型廠房新建工程及丁類危險性工作場所等大型工程，列冊為高風險營造 工地，強化建築工程檢查強度，請勞動檢查機構辦 ，列冊為高風險營造 工地，強化建築工程檢查強度，請勞動檢查機構辦理墜落預防檢查時，一併辦理倒塌、 崩塌、火災及爆炸等預防加強檢查。 2025 年辦理全國營造業勞動檢查，由各勞動檢查機構首長及主管等率百名勞動檢 查員於全國北、中、南等地區，針對高風險營造工地採取加強監管續減災檢查，共計 檢查 431 個工地，發現違反職安法令計 19,767 項，並依法停工 753 處。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.898051,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.773447,
+            "rerankScore": 0.898051,
+            "matchedTerms": [
+              "2025",
+              "職安",
+              "安署",
+              "署為",
+              "為加",
+              "加強",
+              "強營",
+              "營造",
+              "造業",
+              "業墜",
+              "墜落",
+              "落減",
+              "減災",
+              "職安署",
+              "安署為",
+              "署為加",
+              "為加強",
+              "加強營",
+              "強營造",
+              "營造業"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 3,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::23::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 25 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 25",
+            "content": "辦理情形： 勞動部 2025 年研訂減災策進計畫， 除加強營造工地防災勞檢，要求勞動檢查 ¸ ݟ 機構勤查嚴罰並與中央及地方政府等合 作成立職場減災跨機關平台，針對建設公 司或大型工程業主等舉辦高階主管座談， 以及針對微型、臨時性營造作業辦理臨 場監督輔導等，加強墜落減災。 2025 年成果： ◆ 統計 2025 年全國營造業勞動監督檢查 共計 62,961 工地次，停工 2,100 次， 罰鍰 1 億 8,820 萬元。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.7077,
+            "bm25Score": 0.692157,
+            "embeddingScore": 0.793799,
+            "rerankScore": 0.7077,
+            "matchedTerms": [
+              "2025",
+              "辦理",
+              "理情",
+              "情形",
+              "辦理情",
+              "理情形",
+              "勞動",
+              "動部",
+              "勞動部",
+              "年研",
+              "研訂",
+              "訂減",
+              "減災",
+              "災策",
+              "策進",
+              "進計",
+              "計畫",
+              "年研訂",
+              "研訂減",
+              "訂減災"
+            ],
+            "originalRank": 2,
+            "fineUnitCount": 2,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::35::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 37 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 37",
+            "content": "2025 年成果： ◆ 優良工程金安獎選拔活動辦理迄今， 已由 2007 年的 11件工程及 6 位人員 參選，增加至 2025 年的 78 件工程及 70 位人員參選，營造工程及人員參選 踴躍且競爭激烈。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.588537,
+            "bm25Score": 0.579804,
+            "embeddingScore": 0.599212,
+            "rerankScore": 0.588537,
+            "matchedTerms": [
+              "2025",
+              "2007",
+              "11",
+              "6",
+              "78",
+              "70",
+              "年成",
+              "成果",
+              "年成果",
+              "優良",
+              "良工",
+              "工程",
+              "程金",
+              "金安",
+              "安獎",
+              "獎選",
+              "選拔",
+              "拔活",
+              "活動",
+              "動辦"
+            ],
+            "originalRank": 3,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 27 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 2.353,
+          "embeddingMs": 97.101,
+          "fusionMs": 0.062,
+          "rerankMs": 4.664,
+          "totalMs": 104.602
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 27,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "low",
+        "evidenceEvaluation": {
+          "status": "ambiguous",
+          "sufficient": false,
+          "confidence": "low",
+          "reason": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。",
+          "signals": {
+            "bm25": 1.0,
+            "embedding": 0.773447,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": false
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::11",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 13 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 13",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n11\n¸ ݟ\n࢔\n2025 年全國各縣市政府重大職業災害死亡人數統計為 259 人，較 2024 年降低\n9.8％，其中營造業死亡人數為 113人（占 43.6％），較 2024 年減少 32 人，展現具\n體減災成效。\n職安署為加強營造業墜落減災，於 2025 年度訂定營造業墜落減災策進計畫，為擴\n大計畫執行成效，特別針對高風險營造工地，包含國家重要建設計畫工程、重大建築\n投資工程、大型廠房新建工程及丁類危險性工作場所等大型工程，列冊為高風險營造\n工地，強化建築工程檢查強度，請勞動檢查機構辦理墜落預防檢查時，一併辦理倒塌、\n崩塌、火災及爆炸等預防加強檢查。\n2025 年辦理全國營造業勞動檢查，由各勞動檢查機構首長及主管等率百名勞動檢\n查員於全國北、中、南等地區，針對高風險營造工地採取加強監管續減災檢查，共計\n檢查 431 個工地，發現違反職安法令計 19,767 項，並依法停工 753 處。",
+            "score": 0.899111,
+            "bm25Score": 114.326559,
+            "embeddingScore": 0.685021,
+            "rerankScore": 0.899111,
+            "matchedTerms": [
+              "2025",
+              "高風",
+              "風險",
+              "險營",
+              "營造",
+              "造工",
+              "工地",
+              "檢查",
+              "個工",
+              "高風險",
+              "風險營",
+              "險營造",
+              "營造工",
+              "造工地",
+              "個工地",
+              "發現",
+              "並依",
+              "依法",
+              "法停",
+              "停工"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::23",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 25 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 25",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n23\n̋੶္၍ᚃಯӨdᐄிʈ೻τΌΣ\nᄁ\n我國營造業墜落職災為所有災害\n類型之首，佔營造業重大職災死亡人數\n60~70%，與英國、新加坡、日本及韓國\n等國家比較，墜落職災占比明顯偏高；\n另近年我國營造工程案件有朝向大規模、\n高樓層及深開挖之趨勢，致本質危害相對\n提升，因此，今年針對易發生墜落職災之\n建築工地，採取勤查嚴罰及公私協力防災\n等策略，另參考英國、新加坡及日本等先\n進國家施工安全管理制度，積極推動職業\n安全衛生法令修正，增加工程業主施工\n安全採購管理責任，並提高違法事業單\n位之處罰額度，督促業者積極主動防災。\n辦理情形：\n勞動部 2025 年研訂減災策進計畫，\n除加強營造工地防災勞檢，要求勞動檢查\n¸ ݟ\n機構勤查嚴罰並與中央及地方政府等合\n作成立職場減災跨機關平台，針對建設公\n司或大型工程業主等舉辦高階主管座談，\n以及針對微型、臨時性營造作業辦理臨\n場監督輔導等，加強墜落減災。\n2025 年成果：\n◆ 統計 2025 年全國營造業勞動監督檢查\n共計 62,961 工地次，停工 2,100 次，\n罰鍰 1 億 8,820 萬元。另針對屋頂作\n業、 道路施工作業及修繕作業等微型、\n臨時性營造作業，辦理臨場監督輔導\n共計 5,855 場次。\n◆ 統計 2025 年營造業墜落重大職災死亡\n人數已降至 77 人，較前 3 年同期平均\n值 96 人 (2022 年為 105 人、2023 年\n為 102 人、2024 年為 82 人）減少 19\n人，降幅 19.8%。",
+            "score": 0.644324,
+            "bm25Score": 32.508427,
+            "embeddingScore": 0.69018,
+            "rerankScore": 0.644324,
+            "matchedTerms": [
+              "2025",
+              "營造",
+              "造工",
+              "工地",
+              "檢查",
+              "營造工",
+              "造工地",
+              "停工"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::35",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 37 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 37",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n35\n¸ 2025τᆤ཯ᆤ\nʈྠඟdዓͭτሊᎴԄ\nߊ\n為提升營造工程職業安全衛生水準，\n激勵國內營造業者致力展開各項減災策\n略，達成持續降低職災發生的願景，每\n年藉由辦理優良工程金安獎選拔活動，\n發掘推動工程職安衛成效良好優質的施\n工團隊，以樹立學習標竿引領業界翻轉\n工地髒亂、危險、易生事故的負面形象。\n辦理情形：\n為促進達成前述降災願景，自 2007\n年起每年辦理優良工程金安獎選拔，表\n揚與獎勵安全衛生優良工程及人員，並\n分別於 2020 年及 2022 年擴大選拔範圍，\n納入民間工程及人員皆可角逐參選。\n2025 年成果：\n◆ 優良工程金安獎選拔活動辦理迄今，\n已由 2007 年的 11件工程及 6 位人員\n參選，增加至 2025 年的 78 件工程及\n70 位人員參選，營造工程及人員參選\n踴躍且競爭激烈。",
+            "score": 0.627737,
+            "bm25Score": 22.211052,
+            "embeddingScore": 0.735766,
+            "rerankScore": 0.627737,
+            "matchedTerms": [
+              "2025",
+              "營造",
+              "造工",
+              "工地",
+              "營造工"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::20",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 22 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 22",
+            "content": "20\n؈03\n༾ၾ\nॴ\n為落實職業安全衛生法令，勞動部\n積極建置勞動檢查人力。目前我國直轄市\n聘用勞動檢查員編制為 134 人，2024 年\n平均在職人數約為 115人，平均在職率\n為 86%。然勞動檢查員工作具備高度專\n業性與身心壓力，需不分平日或假日持續\n執行業務，實施營造工地或高風險場域勞\n動檢查，督促雇主落實安全衛生設施外，\n以捍衛勞工權益。面對近年公務體系福\n利調整及民間單位高薪挖角，各勞動檢\n查機構均面臨優秀人才流失之挑戰。\n辦理情形：\n◆ 為穩定檢查人力，強化久任誘因，\n2024 年 4 月起，依「勞動檢查員執\n行風險工作費」，工作風險等級第一\n類加給 5,000 元，第二類風每月加給\n¸ ፬ଣ 2025৅ᇖ\n¸ ፬ଣ 2025ίᔖ৅ᇖ\n3,000 元，並已數度修正「勞動部補\n助直轄市勞動檢查機構督促事業單位\n遵守職業安全衛生法令計畫」，以鼓\n舞勞動檢查員士氣。\n2025 年成果：\n◆ 重點優化措施包含提升聘用檢查員整\n體待遇，如調高各類人員薪點上限 2\n級，優化晉升機制，調整為「年度考\n核甲等」即可晉薪，以加速薪資晉\n升，依 2025 年考核結果，已有 42\n名聘用檢查員於 2026 年可直接晉薪\n1 級，落實實質薪資提升，增進檢查\n員福祉。",
+            "score": 0.612037,
+            "bm25Score": 31.019601,
+            "embeddingScore": 0.660713,
+            "rerankScore": 0.612037,
+            "matchedTerms": [
+              "2025",
+              "高風",
+              "風險",
+              "營造",
+              "造工",
+              "工地",
+              "檢查",
+              "高風險",
+              "營造工",
+              "造工地"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::21",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 23 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 23",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n21\n፭Ԩආd੶ʷ௶ਗૢ΁౤ʺ\n職安署依照企業與區域特性，推動\n勞動條件監督檢查策略，運用風險分級\n概念，督促事業單位確實符合勞動法令\n規定。除持續依照「公共安全」、「弱\n勢扶助」、「常態違規」、「社會關注」\n等 4 大面向規劃勞動條件專案檢查：\n1. 公共安全：\n針對涉及勞工生命安全的行業，如高風\n險製造業、營造業、汽車客運業等，加\n強檢查確保勞工工作權益。\n2. 弱勢扶助：\n關注臨時工、移工、派遣勞工等弱勢族\n群的勞動條件，防止剝削與歧視行為。\n3. 常態違規：\n針對歷年檢查發現違規率較高的行業，\n例如餐飲業、零售業、物流業等，進行\n強化稽查與改善輔導。\n4. 社會關注：\n因應特定時期的社會議題，如過長工時\n問題、薪資給付延遲等，對相關產業進\n行專案檢查。\n¸ ઋҖ\n辦理情形：\n針對不同違規風險的對象採取不同\n策略如下：\n◆ 針對高工時、高違規風險的事業單位：\n透過「專案檢查」、提列「重點檢查\n對象」與實施「跨部會聯合稽查」等\n措施，提升檢查力度與頻率，要求確\n實遵守勞動法令。\n◆ 對於違規風險較低、小（微）型等資\n源有限的事業單位：運用宣導、輔導、\n法遵訪視等多元政策工具，協助瞭解\n並遵守勞動法令，法令遵循訪視是預\n防勞動條件違規、提升企業合規性的\n關鍵措施。透過訪視，主管機關能夠\n提供企業適時的法規指導，協助事業\n單位理解並落實勞動法令，降低因違\n規而受罰的風險。此外，訪視機制不\n同於勞動檢查， 更著重於輔導與改善，\n特別是對於中小型企業或資源較有限\n的事業單位，透過訪視提升其對法規\n的認識與遵循度。\n2025 年成果：\n◆ 實施勞動條件監督檢查共計 59,443 場\n次，處分率 22.64％，並執行勞動條件\n宣導 1,009 場次。\n◆ 協助經濟部、金融監督管理委員會、\n國家通訊傳播委員會等 37 個部會暨所\n屬機關，查察 31,231 家事業單位過往\n勞動法令違規情形，作為各式租稅抵\n減等審查准駁的參考。",
+            "score": 0.591209,
+            "bm25Score": 21.922341,
+            "embeddingScore": 0.678359,
+            "rerankScore": 0.591209,
+            "matchedTerms": [
+              "2025",
+              "高風",
+              "風險",
+              "營造",
+              "檢查",
+              "發現",
+              "違規"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 31,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm10-page14-hospitals",
+      "question": "2025年認可多少家職業傷病診治專責醫院與網絡醫院？2026年專責醫院增加到幾家？",
+      "modality": "text-and-table",
+      "gold_pages": [
+        14
+      ],
+      "retrieved_pages": [
+        55,
+        15,
+        14
+      ],
+      "page_recall": true,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "17家",
+        "98家",
+        "19家"
+      ],
+      "required_terms": [
+        "17家",
+        "98家",
+        "19家"
+      ],
+      "vision_oracle_answer": "2025年認可17家職業傷病診治專責醫院與網絡醫院；2026年增加至19家。",
+      "vision_oracle_pass": false,
+      "vision_oracle_matched": [
+        "17家",
+        "19家"
+      ],
+      "multimodal_rag_answer": "2025年認可17家職業傷病診治專責醫院，並連結98家網絡醫院；2026年將增加至19家。",
+      "multimodal_rag_pass": true,
+      "multimodal_rag_matched": [
+        "17家",
+        "98家",
+        "19家"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年認可多少家職業傷病診治專責醫院與網絡醫院？2026年專責醫院增加到幾家？",
+        "retrievalQuery": "2025年認可多少家職業傷病診治專責醫院與網絡醫院？2026年專責醫院增加到幾家？",
+        "retrievalQueries": [
+          "2025年認可多少家職業傷病診治專責醫院與網絡醫院？2026年專責醫院增加到幾家？"
+        ],
+        "evidenceQuery": "2025年認可多少家職業傷病診治專責醫院與網絡醫院？2026年專責醫院增加到幾家？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::53::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 55 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 55",
+            "content": "2025 年成果： ◆ 辦理認可職業傷病診治專責醫院評鑑 部分，已於 2025 年 10 月 20 日公開 評鑑結果及近年推動職業傷病診治服 務網絡概況。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.903065,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.784588,
+            "rerankScore": 0.903065,
+            "matchedTerms": [
+              "2025",
+              "10",
+              "20",
+              "年成",
+              "成果",
+              "年成果",
+              "辦理",
+              "理認",
+              "認可",
+              "可職",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "院評"
+            ],
+            "originalRank": 2,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::13::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 15 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 15",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 13 除職業傷病診治專責醫院外，職安署亦積極推動職災職能復健專責醫院認可制度， 2025 年累計認可 38 家專責醫院投入職災勞工服務（ 2026 年 1 月 1 日起，將增加至 39 家專責醫院）。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.875945,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.724322,
+            "rerankScore": 0.875945,
+            "matchedTerms": [
+              "2025",
+              "13",
+              "38",
+              "2026",
+              "1",
+              "39",
+              "除職",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "院外",
+              "除職業",
+              "職業傷",
+              "業傷病"
+            ],
+            "originalRank": 4,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::12::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 14 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 14",
+            "content": "12 ඎঐd੶ʷᔖӨ௶ʈ ݄ 為強化職業災害勞工醫療診斷協助，以保障勞工健康，職安署積極推動職業傷病 診治專責醫院認可制度，於 2025 年認可 17 家職業傷病診治專責醫院，並連結 98 家 網絡醫院，提供職業傷病 然而，經評估全國職業傷病勞工之服務需求量及尚待發掘之潛在職業病個案 後，認為仍有必要增加認可專責醫院，以持續提升服務量能，爰於 2025 年底完成相關 審議程序，並自 2026 年起增加至 19 家（新增認可衛生福利",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.871476,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.783524,
+            "rerankScore": 0.871476,
+            "matchedTerms": [
+              "12",
+              "d",
+              "2025",
+              "17",
+              "98",
+              "為強",
+              "強化",
+              "化職",
+              "職業",
+              "業災",
+              "災害",
+              "害勞",
+              "勞工",
+              "工醫",
+              "醫療",
+              "療診",
+              "診斷",
+              "斷協",
+              "協助",
+              "為強化"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 2,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 32 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 1.957,
+          "embeddingMs": 104.676,
+          "fusionMs": 0.09,
+          "rerankMs": 5.757,
+          "totalMs": 112.787
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 32,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 1.0,
+            "embedding": 0.784588,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 20,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::12",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 14 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 14",
+            "content": "12\nඎঐd੶ʷᔖӨ௶ʈ\n݄\n為強化職業災害勞工醫療診斷協助，以保障勞工健康，職安署積極推動職業傷病\n診治專責醫院認可制度，於 2025 年認可 17 家職業傷病診治專責醫院，並連結 98 家\n網絡醫院，提供職業傷病診治、醫療復健及職能重建等整合性服務，共同構築起完整\n的支持系統，讓勞工朋友從傷病診治到重建復工，都能獲得完整、高品質且便利的醫\n療服務。然而，經評估全國職業傷病勞工之服務需求量及尚待發掘之潛在職業病個案\n後，認為仍有必要增加認可專責醫院，以持續提升服務量能，爰於 2025 年底完成相關\n審議程序，並自 2026 年起增加至 19 家（新增認可衛生福利部桃園醫院及奇美醫療財\n團法人奇美醫院等 2 家）。\n¸ 2025ึᖦΤ઼ਗᄃό",
+            "score": 0.932052,
+            "bm25Score": 142.82645,
+            "embeddingScore": 0.770231,
+            "rerankScore": 0.932052,
+            "matchedTerms": [
+              "2025",
+              "2026",
+              "年認",
+              "認可",
+              "家職",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "網絡",
+              "絡醫",
+              "年認可",
+              "家職業",
+              "職業傷",
+              "業傷病"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::53",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 55 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 55",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n53\nዚՓ\nਕ\n考量我國每年職災保險職業傷病給付情形，評估尚有增加認可專責醫院需求，以\n提升服務量能與職業傷病勞工因果關係診斷及轉介服務之近便性，並提供職災勞工恢\n復及強化其工作能力之專業服務，以利重返職場。勞動部於全國布建 17 家職業傷病診\n治專責醫院，並將於 2026 年起擴增至 19 家。\n次在職訓練課程，使個案管理師能將\n課中所學運用於實務服務，以利精進\n職業傷病整合性服務之運作。\n2025 年成果：\n◆ 辦理認可職業傷病診治專責醫院評鑑\n部分，已於 2025 年 10 月 20 日公開\n評鑑結果及近年推動職業傷病診治服\n務網絡概況。在職訓練課程部分，共\n辦理 9 場職業傷病防治與復工相關之\n宣導會及 2 場研習會，主題涵蓋職業\n傷病診治與預防、心理健康與壓力管\n理、職災復健及重返職場支持、職災\n法規與勞工權益等領域，參與學員共\n計 1,032 人次。\n辦理情形：\n◆ 為確保認可醫療機構服務之完整性及\n品質，勞動部依據《職業傷病診治醫\n療機構認可管理補助及職業傷病通報\n辦法》規定 ，於 2025 年辦理 17 家\n認可醫療機構評鑑作業，並於 10 月\n31 日舉辦「114年度職業傷病診治及\n職災職能復健專責醫院評鑑優良表揚\n典禮」，藉此表彰在職業傷病診治及\n職能復健服務體系中表現傑出的醫療\n機構。\n◆ 另外， 鑑於職業傷病診治服務過程中，\n個案管理師扮演非常重要角色，職安\n署與職災預防及重建中心亦辦理多梯\n¸ Υᅂ",
+            "score": 0.839705,
+            "bm25Score": 109.838804,
+            "embeddingScore": 0.758141,
+            "rerankScore": 0.839705,
+            "matchedTerms": [
+              "2025",
+              "2026",
+              "認可",
+              "家職",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "網絡",
+              "家職業",
+              "職業傷",
+              "業傷病",
+              "傷病診",
+              "病診治",
+              "診治專"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::55",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 57 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 57",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n55\nڐ\n׌ک\n依《勞工職業災害保險及保護法》\n第 73 條規定，職業傷病診治專責醫院應\n建立區域職業傷病診治及職能復健服務\n網絡，適時轉介，以提供職業傷病勞工\n更親近性之因果關係診斷及相關諮詢與\n轉介服務，並提升職業疾病通報率。\n辦理情形：\n◆ 為使職業傷病診治網絡醫院（下稱網\n絡醫院）順利推展職業傷病服務並提\n升服務量能及通報品質，職安署與職\n災預防及重建中心定期邀集各區網絡\n醫院召開業務聯繫會議，針對職業傷\n病通報與品質審查程序進行說明，並\n分析 2024 年通報成果，研討職業病通\n報案例中不同種類表項目之品質審查\n結果。另為提升網絡醫院之職業病評\n估與勞保局給付審定結果之一致性，\n亦彙整 2024 年勞保局給付審定結果，\n就未採認職業病評估報告書而核定非\n屬職業病之案例進行研討，以持續提\n升職業醫學診斷與評估報告書之品質。\n2025 年成果：\n◆ 2025 年共辦理 3 場聯繫會議，並已建\n構職業傷病診治網絡醫院 98 家，且完\n成澎湖、金門及連江等離島網絡醫院\n之設置。 另為提升我國職業病發現率、\n加強職業傷病診治服務品質、擴大對\n職災勞工之照顧服務及優化行政程序\n以利業務推行，經檢討現行補助作業\n所面臨問題，於 2025 年底研擬《全國\n職業傷病診治網絡醫院及職業傷病通\n報者補助實施要點》修正草案。\n¸ 2025௅ఙϣ",
+            "score": 0.802974,
+            "bm25Score": 104.674623,
+            "embeddingScore": 0.714932,
+            "rerankScore": 0.802974,
+            "matchedTerms": [
+              "2025",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "網絡",
+              "絡醫",
+              "職業傷",
+              "業傷病",
+              "傷病診",
+              "病診治",
+              "診治專",
+              "治專責",
+              "專責醫",
+              "責醫院"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::13",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 15 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 15",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n13\n除職業傷病診治專責醫院外，職安署亦積極推動職災職能復健專責醫院認可制度，\n2025 年累計認可 38 家專責醫院投入職災勞工服務（ 2026 年 1 月 1 日起，將增加至\n39 家專責醫院）。此外，為增加職災勞工服務之整體近便性，同時於全臺各地布建網\n絡型態的職災職能復健強化訓練機構，地點包括澎湖、金門等離島縣市，加上原有職\n能復健專責醫院，合計將有超過 60 個服務據點，方便職災勞工就近接受復工服務。\n為強化職業災害勞工及其家屬之權益保障，職安署於 2025 年完成「職災勞工及家\n屬法律權益協助方案」 規劃， 並於2026年正式推動， 建構職災案件全程法律支持機制。\n該方案整合專業法律資源，提供職災發生後之原因初步分析、律師諮詢、和解與調解\n陪同及訴訟扶助等服務；並針對移工提供通譯支援，降低語言障礙，提升服務可近性。\n透過本方案之推動，強化職災勞工及其家屬之權益保障，確保其獲得適切協助及合理\n補償與賠償。\n¸ ሔ",
+            "score": 0.784648,
+            "bm25Score": 85.307697,
+            "embeddingScore": 0.781403,
+            "rerankScore": 0.784648,
+            "matchedTerms": [
+              "2025",
+              "2026",
+              "認可",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "職業傷",
+              "業傷病",
+              "傷病診",
+              "病診治",
+              "診治專",
+              "治專責",
+              "專責醫",
+              "責醫院"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::92",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 93 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 93",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n91\n˚cಂcԫ\n辦理「職業傷病診治及職災職能復健專責醫院評鑑優良表揚頒獎典\n禮」，表揚評鑑績效優良之職業傷病診治專責醫院、職災職能復健\n專責醫院及職業傷病通報績效良好的網絡醫院，藉以鼓勵各醫療機\n構積極投入資源，以提供職災勞工高品質的醫療服務。\n¸ ਖ਼பᔼ৫\nΥᅂ\n辦理「114年度推動職安衛優良政府機關及五星獎事業單位」頒獎\n典禮，肯定績優政府機關及企業積極推動職場安全與勞工健康的貢\n獻，並期許得獎的政府機關及事業單位能持續精進，與勞動部一起\n共同打造安全健康的勞動環境。\n¸ ̛ 3̸1\nၾᐏᆤఊЗΥᅂ\n10/31\n~\n11/01\n11/20",
+            "score": 0.7799,
+            "bm25Score": 106.743669,
+            "embeddingScore": 0.683313,
+            "rerankScore": 0.7799,
+            "matchedTerms": [
+              "2025",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "網絡",
+              "絡醫",
+              "職業傷",
+              "業傷病",
+              "傷病診",
+              "病診治",
+              "診治專",
+              "治專責",
+              "專責醫",
+              "責醫院"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 29,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm11-page15-rehab",
+      "question": "2025年累計認可多少家職災職能復健專責醫院？2026年1月1日起增加到幾家？服務據點超過多少個？",
+      "modality": "text-and-cross-page",
+      "gold_pages": [
+        15
+      ],
+      "retrieved_pages": [
+        15,
+        62,
+        55
+      ],
+      "page_recall": true,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "38家",
+        "39家",
+        "60個"
+      ],
+      "required_terms": [
+        "38家",
+        "39家",
+        "60個"
+      ],
+      "vision_oracle_answer": "2025年累計認可38家職災職能復健專責醫院；2026年1月1日起增加至39家；服務據點超過60個。",
+      "vision_oracle_pass": true,
+      "vision_oracle_matched": [
+        "38家",
+        "39家",
+        "60個"
+      ],
+      "multimodal_rag_answer": "2025年累計認可38家；2026年1月1日起增加至39家；服務據點超過60個。",
+      "multimodal_rag_pass": true,
+      "multimodal_rag_matched": [
+        "38家",
+        "39家",
+        "60個"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年累計認可多少家職災職能復健專責醫院？2026年1月1日起增加到幾家？服務據點超過多少個？",
+        "retrievalQuery": "2025年累計認可多少家職災職能復健專責醫院？2026年1月1日起增加到幾家？服務據點超過多少個？",
+        "retrievalQueries": [
+          "2025年累計認可多少家職災職能復健專責醫院？2026年1月1日起增加到幾家？服務據點超過多少個？"
+        ],
+        "evidenceQuery": "2025年累計認可多少家職災職能復健專責醫院？2026年1月1日起增加到幾家？服務據點超過多少個？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::13::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 15 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 15",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 13 除職業傷病診治專責醫院外，職安署亦積極推動職災職能復健專責醫院認可制度， 2025 年累計認可 38 家專責醫院投入職災勞工服務（ 2026 年 1 月 1 日起，將增加至 39 家專責醫院）。 此外，為增加職災勞工服務之整體近便性，同時於全臺各地布建網 絡型態的職災職能復健強化訓練機構，地點包括澎湖、金門等離島縣市，加上原有職 能復健專責醫院，合計將有超過 60 個服務據點，方便職災勞工就近接受復工服務。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.917478,
+            "bm25Score": 1.0,
+            "embeddingScore": 0.816618,
+            "rerankScore": 0.917478,
+            "matchedTerms": [
+              "2025",
+              "13",
+              "38",
+              "2026",
+              "1",
+              "39",
+              "除職",
+              "職業",
+              "業傷",
+              "傷病",
+              "病診",
+              "診治",
+              "治專",
+              "專責",
+              "責醫",
+              "醫院",
+              "院外",
+              "除職業",
+              "職業傷",
+              "業傷病"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 2,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::60::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 62 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 62",
+            "content": "60 ᗴ౻& ഄଫ03 2025 年成果： ◆ 認可 38 家職災職能復健專責醫院，特 約補助 27 家醫院作為生心理強化訓練 機構，服務範圍擴及臺北區、北區、",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.885585,
+            "bm25Score": 0.988889,
+            "embeddingScore": 0.759325,
+            "rerankScore": 0.885585,
+            "matchedTerms": [
+              "60",
+              "03",
+              "2025",
+              "38",
+              "27",
+              "年成",
+              "成果",
+              "年成果",
+              "認可",
+              "家職",
+              "職災",
+              "災職",
+              "職能",
+              "能復",
+              "復健",
+              "健專",
+              "專責",
+              "責醫",
+              "醫院",
+              "家職災"
+            ],
+            "originalRank": 2,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::53::fine-evidence-3",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 55 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 55",
+            "content": "辦理情形： ◆ 為確保認可醫療機構服務之完整性及 品質，勞動部依據《職業傷病診治醫 療機構認可管理補助及職業傷病通報 辦法》規定 ，於 2025 年辦理 17 家 認可醫療機構評鑑作業，並於 10 月 31 日舉辦「114年度職業傷病診治及 職災職能復健專責醫院評鑑優良表揚 典禮」，藉此表彰在職業傷病診治及 職能復健服務體系中表現傑出的醫療 機構。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.830027,
+            "bm25Score": 0.966667,
+            "embeddingScore": 0.663022,
+            "rerankScore": 0.830027,
+            "matchedTerms": [
+              "2025",
+              "17",
+              "10",
+              "31",
+              "114",
+              "辦理",
+              "理情",
+              "情形",
+              "辦理情",
+              "理情形",
+              "為確",
+              "確保",
+              "保認",
+              "認可",
+              "可醫",
+              "醫療",
+              "療機",
+              "機構",
+              "構服",
+              "服務"
+            ],
+            "originalRank": 3,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 31 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 3.228,
+          "embeddingMs": 354.335,
+          "fusionMs": 0.095,
+          "rerankMs": 4.547,
+          "totalMs": 363.176
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 31,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "high",
+        "evidenceEvaluation": {
+          "status": "relevant",
+          "sufficient": true,
+          "confidence": "high",
+          "reason": "檢索片段具有明確的詞彙或語意相關性，可進入 grounded generation。",
+          "signals": {
+            "bm25": 1.0,
+            "embedding": 0.816618,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 19,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": true
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::13",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 15 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 15",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n13\n除職業傷病診治專責醫院外，職安署亦積極推動職災職能復健專責醫院認可制度，\n2025 年累計認可 38 家專責醫院投入職災勞工服務（ 2026 年 1 月 1 日起，將增加至\n39 家專責醫院）。此外，為增加職災勞工服務之整體近便性，同時於全臺各地布建網\n絡型態的職災職能復健強化訓練機構，地點包括澎湖、金門等離島縣市，加上原有職\n能復健專責醫院，合計將有超過 60 個服務據點，方便職災勞工就近接受復工服務。\n為強化職業災害勞工及其家屬之權益保障，職安署於 2025 年完成「職災勞工及家\n屬法律權益協助方案」 規劃， 並於2026年正式推動， 建構職災案件全程法律支持機制。\n該方案整合專業法律資源，提供職災發生後之原因初步分析、律師諮詢、和解與調解\n陪同及訴訟扶助等服務；並針對移工提供通譯支援，降低語言障礙，提升服務可近性。\n透過本方案之推動，強化職災勞工及其家屬之權益保障，確保其獲得適切協助及合理\n補償與賠償。\n¸ ሔ",
+            "score": 0.93873,
+            "bm25Score": 142.611479,
+            "embeddingScore": 0.85356,
+            "rerankScore": 0.93873,
+            "matchedTerms": [
+              "2025",
+              "2026",
+              "1",
+              "年累",
+              "累計",
+              "計認",
+              "認可",
+              "職災",
+              "災職",
+              "職能",
+              "能復",
+              "復健",
+              "健專",
+              "專責",
+              "責醫",
+              "醫院",
+              "年累計",
+              "累計認",
+              "計認可",
+              "職災職"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::60",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 62 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 62",
+            "content": "60\nᗴ౻& ഄଫ03\n2025 年成果：\n◆ 認可 38 家職災職能復健專責醫院，特\n約補助 27 家醫院作為生心理強化訓練\n機構，服務範圍擴及臺北區、北區、\n中區、南區、高屏區及東區，以及離\n島之縣市，職能復健服務人數達 2,868\n人。\n¸ Ъุঐɢ\n¸ Ⴉ̙ᔖӨᔖঐూ਄ᔼ৫dආБ͛ଣ\nᔖఙ\nᅂ˪",
+            "score": 0.762868,
+            "bm25Score": 95.601482,
+            "embeddingScore": 0.724252,
+            "rerankScore": 0.762868,
+            "matchedTerms": [
+              "2025",
+              "認可",
+              "家職",
+              "職災",
+              "災職",
+              "職能",
+              "能復",
+              "復健",
+              "健專",
+              "專責",
+              "責醫",
+              "醫院",
+              "家職災",
+              "職災職",
+              "災職能",
+              "職能復",
+              "能復健",
+              "復健專",
+              "健專責",
+              "專責醫"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::53",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 55 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 55",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n53\nዚՓ\nਕ\n考量我國每年職災保險職業傷病給付情形，評估尚有增加認可專責醫院需求，以\n提升服務量能與職業傷病勞工因果關係診斷及轉介服務之近便性，並提供職災勞工恢\n復及強化其工作能力之專業服務，以利重返職場。勞動部於全國布建 17 家職業傷病診\n治專責醫院，並將於 2026 年起擴增至 19 家。\n次在職訓練課程，使個案管理師能將\n課中所學運用於實務服務，以利精進\n職業傷病整合性服務之運作。\n2025 年成果：\n◆ 辦理認可職業傷病診治專責醫院評鑑\n部分，已於 2025 年 10 月 20 日公開\n評鑑結果及近年推動職業傷病診治服\n務網絡概況。在職訓練課程部分，共\n辦理 9 場職業傷病防治與復工相關之\n宣導會及 2 場研習會，主題涵蓋職業\n傷病診治與預防、心理健康與壓力管\n理、職災復健及重返職場支持、職災\n法規與勞工權益等領域，參與學員共\n計 1,032 人次。\n辦理情形：\n◆ 為確保認可醫療機構服務之完整性及\n品質，勞動部依據《職業傷病診治醫\n療機構認可管理補助及職業傷病通報\n辦法》規定 ，於 2025 年辦理 17 家\n認可醫療機構評鑑作業，並於 10 月\n31 日舉辦「114年度職業傷病診治及\n職災職能復健專責醫院評鑑優良表揚\n典禮」，藉此表彰在職業傷病診治及\n職能復健服務體系中表現傑出的醫療\n機構。\n◆ 另外， 鑑於職業傷病診治服務過程中，\n個案管理師扮演非常重要角色，職安\n署與職災預防及重建中心亦辦理多梯\n¸ Υᅂ",
+            "score": 0.734013,
+            "bm25Score": 77.653923,
+            "embeddingScore": 0.740892,
+            "rerankScore": 0.734013,
+            "matchedTerms": [
+              "2025",
+              "2026",
+              "1",
+              "認可",
+              "家職",
+              "職災",
+              "災職",
+              "職能",
+              "能復",
+              "復健",
+              "健專",
+              "專責",
+              "責醫",
+              "醫院",
+              "職災職",
+              "災職能",
+              "職能復",
+              "能復健",
+              "復健專",
+              "健專責"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::92",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 93 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 93",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n91\n˚cಂcԫ\n辦理「職業傷病診治及職災職能復健專責醫院評鑑優良表揚頒獎典\n禮」，表揚評鑑績效優良之職業傷病診治專責醫院、職災職能復健\n專責醫院及職業傷病通報績效良好的網絡醫院，藉以鼓勵各醫療機\n構積極投入資源，以提供職災勞工高品質的醫療服務。\n¸ ਖ਼பᔼ৫\nΥᅂ\n辦理「114年度推動職安衛優良政府機關及五星獎事業單位」頒獎\n典禮，肯定績優政府機關及企業積極推動職場安全與勞工健康的貢\n獻，並期許得獎的政府機關及事業單位能持續精進，與勞動部一起\n共同打造安全健康的勞動環境。\n¸ ̛ 3̸1\nၾᐏᆤఊЗΥᅂ\n10/31\n~\n11/01\n11/20",
+            "score": 0.66325,
+            "bm25Score": 76.946912,
+            "embeddingScore": 0.625513,
+            "rerankScore": 0.66325,
+            "matchedTerms": [
+              "2025",
+              "1",
+              "職災",
+              "災職",
+              "職能",
+              "能復",
+              "復健",
+              "健專",
+              "專責",
+              "責醫",
+              "醫院",
+              "職災職",
+              "災職能",
+              "職能復",
+              "能復健",
+              "復健專",
+              "健專責",
+              "專責醫",
+              "責醫院",
+              "服務"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::12",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 14 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 14",
+            "content": "12\nඎঐd੶ʷᔖӨ௶ʈ\n݄\n為強化職業災害勞工醫療診斷協助，以保障勞工健康，職安署積極推動職業傷病\n診治專責醫院認可制度，於 2025 年認可 17 家職業傷病診治專責醫院，並連結 98 家\n網絡醫院，提供職業傷病診治、醫療復健及職能重建等整合性服務，共同構築起完整\n的支持系統，讓勞工朋友從傷病診治到重建復工，都能獲得完整、高品質且便利的醫\n療服務。然而，經評估全國職業傷病勞工之服務需求量及尚待發掘之潛在職業病個案\n後，認為仍有必要增加認可專責醫院，以持續提升服務量能，爰於 2025 年底完成相關\n審議程序，並自 2026 年起增加至 19 家（新增認可衛生福利部桃園醫院及奇美醫療財\n團法人奇美醫院等 2 家）。\n¸ 2025ึᖦΤ઼ਗᄃό",
+            "score": 0.655327,
+            "bm25Score": 59.24543,
+            "embeddingScore": 0.712308,
+            "rerankScore": 0.655327,
+            "matchedTerms": [
+              "2025",
+              "2026",
+              "認可",
+              "家職",
+              "職能",
+              "復健",
+              "專責",
+              "責醫",
+              "醫院",
+              "專責醫",
+              "責醫院",
+              "起增",
+              "增加",
+              "起增加",
+              "服務"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 26,
+          "selectedUnitCount": 6,
+          "groupCount": 3,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    },
+    {
+      "id": "mm12-page17-asbestos",
+      "question": "2025年災後石綿拆除作業提供多少組防護包、辦理多少場次危害預防輔導，並設置幾處服務站？",
+      "modality": "text-and-infographic",
+      "gold_pages": [
+        17
+      ],
+      "retrieved_pages": [
+        17,
+        43
+      ],
+      "page_recall": true,
+      "text_evidence_pass": true,
+      "text_evidence_matched": [
+        "13,736",
+        "1,480",
+        "4處"
+      ],
+      "required_terms": [
+        "13,736",
+        "1,480",
+        "4處"
+      ],
+      "vision_oracle_answer": "提供13,736組防護包、辦理1,480場次危害預防輔導，並設置4處災後防護服務站。",
+      "vision_oracle_pass": true,
+      "vision_oracle_matched": [
+        "13,736",
+        "1,480",
+        "4處"
+      ],
+      "multimodal_rag_answer": "防護包：13,736組；輔導場次：1,480場次；服務站：4處",
+      "multimodal_rag_pass": true,
+      "multimodal_rag_matched": [
+        "13,736",
+        "1,480",
+        "4處"
+      ],
+      "retrieval": {
+        "variant": "bm25_embedding_rerank",
+        "query": "2025年災後石綿拆除作業提供多少組防護包、辦理多少場次危害預防輔導，並設置幾處服務站？",
+        "retrievalQuery": "2025年災後石綿拆除作業提供多少組防護包、辦理多少場次危害預防輔導，並設置幾處服務站？",
+        "retrievalQueries": [
+          "2025年災後石綿拆除作業提供多少組防護包、辦理多少場次危害預防輔導，並設置幾處服務站？"
+        ],
+        "evidenceQuery": "2025年災後石綿拆除作業提供多少組防護包、辦理多少場次危害預防輔導，並設置幾處服務站？",
+        "translation": {
+          "detectedLanguage": "zh-TW",
+          "addedTerms": []
+        },
+        "comparisonGraph": null,
+        "contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::15::fine-evidence-1",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 17 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 17",
+            "content": "2025ᔖุτΌሊ͛ ϋజ 15 ৰԣᚐ༟๕dςᚐӨਜ௶ʈ਄ੰ 因丹娜絲颱風造成嘉義、台南等地區採用石綿建材之房舍嚴重毀損，災後拆除與 清理作業面臨石綿粉塵暴露風險， 為因應災後地區拆除清理及復原重建作業之迫切性， 2025年7月25日訂定發布 「因應災後石綿 重建作業之迫切性， 2025年7月25日訂定發布 「因應災後石綿屋瓦浪板拆除清理作業危害預防處理原則」 ， 提供作業人員遵循。 另為降低民眾及作業人員於重建過程中之健康危害，並強化相關 作業之安全防護，成立災後重建防護指揮所，並於七股、新營、後壁及白河區設置 4 處災後防護服務站，同時成立職業安全衛生輔導團，主動深入災區辦理石綿拆除作業 危害預防輔導，總計提供石綿粉塵防護包共計 13, 理石綿拆除作業 危害預防輔導，總計提供石綿粉塵防護包共計 13,736 組，供災後拆除及重建相關作業 人員使用； 辦理石綿拆除作業危害預防輔導共 1,480 場次，提升作業人員對石綿危害 之認知及個人防護措施之落實。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.845571,
+            "bm25Score": 0.953077,
+            "embeddingScore": 0.743714,
+            "rerankScore": 0.845571,
+            "matchedTerms": [
+              "2025",
+              "15",
+              "d",
+              "7",
+              "25",
+              "因丹",
+              "丹娜",
+              "娜絲",
+              "絲颱",
+              "颱風",
+              "風造",
+              "造成",
+              "成嘉",
+              "嘉義",
+              "因丹娜",
+              "丹娜絲",
+              "娜絲颱",
+              "絲颱風",
+              "颱風造",
+              "風造成"
+            ],
+            "originalRank": 1,
+            "fineUnitCount": 5,
+            "fineArticleKey": "",
+            "fineGrouped": true,
+            "focus": true
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::41::fine-evidence-2",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 43 頁 / fine evidence",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 43",
+            "content": "2025 年成果： ◆ 配合「高氣溫作業熱危害預防指引（第 三版）」之修正，分區辦理說明會 22 場次。",
+            "branch": "Fine-grained embedding evidence",
+            "score": 0.648246,
+            "bm25Score": 0.693846,
+            "embeddingScore": 0.592513,
+            "rerankScore": 0.648246,
+            "matchedTerms": [
+              "2025",
+              "22",
+              "年成",
+              "成果",
+              "年成果",
+              "配合",
+              "高氣",
+              "氣溫",
+              "溫作",
+              "作業",
+              "業熱",
+              "熱危",
+              "危害",
+              "害預",
+              "預防",
+              "防指",
+              "指引",
+              "高氣溫",
+              "氣溫作",
+              "溫作業"
+            ],
+            "originalRank": 2,
+            "fineUnitCount": 1,
+            "fineArticleKey": "",
+            "fineGrouped": false,
+            "focus": true
+          }
+        ],
+        "pipeline": [
+          {
+            "name": "Query Planning",
+            "detail": "Run 1 complementary retrieval queries."
+          },
+          {
+            "name": "BM25",
+            "detail": "Lexical candidate generation across 1 queries."
+          },
+          {
+            "name": "Embedding",
+            "detail": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, cosine candidates across 1 queries."
+          },
+          {
+            "name": "RRF Merge",
+            "detail": "Fuse 32 unique BM25 and embedding candidates."
+          },
+          {
+            "name": "Hybrid Relevance Reranker",
+            "detail": "Re-score fused candidates and keep top 5."
+          },
+          {
+            "name": "Evidence Relevance Gate",
+            "detail": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。"
+          }
+        ],
+        "timings": {
+          "bm25Ms": 2.89,
+          "embeddingMs": 115.153,
+          "fusionMs": 0.076,
+          "rerankMs": 5.556,
+          "totalMs": 124.067
+        },
+        "diagnostics": {
+          "matchedEntities": [],
+          "hubWarning": false,
+          "denseMatchedAliases": [],
+          "embeddingModel": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+          "reranker": "weighted-hybrid-relevance-v1",
+          "candidateCount": 32,
+          "queryCount": 1,
+          "selectedSourceCount": 1,
+          "profile": "default",
+          "profileExpansionsApplied": false,
+          "tenantScopeApplied": false
+        },
+        "confidence": "low",
+        "evidenceEvaluation": {
+          "status": "ambiguous",
+          "sufficient": false,
+          "confidence": "low",
+          "reason": "片段雖可能與主題相關，但沒有同時包含問題主體與所需的數值／期間證據，不足以回答精確門檻問題。",
+          "signals": {
+            "bm25": 0.953077,
+            "embedding": 0.743714,
+            "matchedTerms": 20,
+            "meaningfulMatchedTerms": 18,
+            "requiresAnswerValue": true,
+            "answerBearingEvidence": false
+          }
+        },
+        "raw_contexts": [
+          {
+            "id": "upload-9c9b1122ba1a0262a057::15",
+            "rank": 1,
+            "title": "2025年職業安全衛生年報.pdf | 第 17 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 17",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n15\nৰԣᚐ༟๕dςᚐӨਜ௶ʈ਄ੰ\n因丹娜絲颱風造成嘉義、台南等地區採用石綿建材之房舍嚴重毀損，災後拆除與\n清理作業面臨石綿粉塵暴露風險， 為因應災後地區拆除清理及復原重建作業之迫切性，\n2025年7月25日訂定發布 「因應災後石綿屋瓦浪板拆除清理作業危害預防處理原則」 ，\n提供作業人員遵循。另為降低民眾及作業人員於重建過程中之健康危害，並強化相關\n作業之安全防護，成立災後重建防護指揮所，並於七股、新營、後壁及白河區設置 4\n處災後防護服務站，同時成立職業安全衛生輔導團，主動深入災區辦理石綿拆除作業\n危害預防輔導，總計提供石綿粉塵防護包共計 13,736 組，供災後拆除及重建相關作業\n人員使用；辦理石綿拆除作業危害預防輔導共 1,480 場次，提升作業人員對石綿危害\n之認知及個人防護措施之落實。\n¸ ਕ\n१౤Զͩၧԣᚐ̍\n¸ ཫԣႾኬʿ౤Զፔ༔",
+            "score": 0.927912,
+            "bm25Score": 158.426191,
+            "embeddingScore": 0.717207,
+            "rerankScore": 0.927912,
+            "matchedTerms": [
+              "2025",
+              "災後",
+              "後石",
+              "石綿",
+              "綿拆",
+              "拆除",
+              "除作",
+              "作業",
+              "提供",
+              "防護",
+              "護包",
+              "災後石",
+              "後石綿",
+              "石綿拆",
+              "綿拆除",
+              "拆除作",
+              "除作業",
+              "防護包",
+              "辦理",
+              "場次"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::41",
+            "rank": 2,
+            "title": "2025年職業安全衛生年報.pdf | 第 43 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 43",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n41\n¸ ๝\n構對於防護措施不足經通知限期改善\n之事業單位， 要求回報現場改善情形，\n未配合回報或改善者，列為複查抽檢\n對象，以督促雇主落實法遵。\n◆ 2025 年 9 月 8 日修正發布「改善安全\n衛生設施及器具補助作業要點」，針\n對中小企業及自營作業者，結合地方\n政府輔導量能，提供高溫作業防護設\n施及器具之補助。\n2025 年成果：\n◆ 配合「高氣溫作業熱危害預防指引（第\n三版）」之修正，分區辦理說明會 22\n場次。\n◆ 辦理戶外作業熱危害高風險事業單位\n之檢查共 9,328 場次。\n◆ 補助中小企業及自營作業者風扇衣、\n降溫背心等共 1,311件。\n¸ ࣂࠬ\nВഃdᒒеජ\n࢛ٜ",
+            "score": 0.591252,
+            "bm25Score": 34.491281,
+            "embeddingScore": 0.647654,
+            "rerankScore": 0.591252,
+            "matchedTerms": [
+              "2025",
+              "作業",
+              "提供",
+              "防護",
+              "辦理",
+              "場次",
+              "危害",
+              "害預",
+              "預防",
+              "輔導",
+              "危害預",
+              "害預防"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::57",
+            "rank": 3,
+            "title": "2025年職業安全衛生年報.pdf | 第 59 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 59",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n57\nʈЪʿ౤ԶᔖӨ௶\nʈ΢ධ໾п\nʈЪ\n全衛生知識，提升勞工職業災害預防\n及職災應變能力。\n2025 年成果：\n◆ 辦理職業災害預防及職災勞工重建計\n畫案成果發表暨研習會，並補助 25\n個單位辦理 125 場職業災害預防及\n職業災害勞工重建宣導，參加人數\n共計 8,217 人次，補助金額共計 658\n萬 1,000 元。另補助 10 個單位辦理\n職災預防及職災勞工重建技術研發及\n推廣等計畫，補助金額共計 890 萬\n3,818 元。\n¸ ਞၾ 2025ึ\n為鼓勵結合勞工團體、雇主團體、\n醫療機構、學術及研究機構等團體的資\n源，共同參與推動職業災害預防及職災\n勞工重建工作，勞動部持續補助相關機\n關（構）、法人或團體，辦理職業災害\n預防及職業災害勞工重建宣導及相關研\n究等事項。\n辦理情形：\n◆ 補助相關機關（構）、法人或團體，\n辦理職業災害預防、職業傷病調查、\n職業病防治、職業災害勞工重建宣導\n及相關研究等事項，落實強化勞工安",
+            "score": 0.580798,
+            "bm25Score": 16.497213,
+            "embeddingScore": 0.725178,
+            "rerankScore": 0.580798,
+            "matchedTerms": [
+              "2025",
+              "辦理",
+              "害預",
+              "預防",
+              "害預防"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::45",
+            "rank": 4,
+            "title": "2025年職業安全衛生年報.pdf | 第 47 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 47",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n45\nሯ\n作業環境監測與暴露風險評估，係\n用以掌握事業單位作業場所中各項危害\n因子之暴露狀況與風險程度，並作為雇主\n規劃及推動作業環境改善措施之重要依\n據。事業單位依規定辦理作業環境監測\n時，應於採樣作業前後，分別將監測計畫\n與監測結果上傳至指定資訊系統，並針對\n監測數據進行統計及趨勢分析，以辨識\n高風險作業及高風險暴露族群，進一步\n採取消除、工程控制或管理控制等措施，\n降低危害並強化勞工健康防護。\n辦理情形：\n◆ 為確保監測品質及有效性，由勞動檢\n查機構實施監測機構之作業環境監測\n業務查核，並至事業單位調查作業場\n所有害物暴露情況，以督促事業單位\n落實監測業務，採取相關改善措施。\n◆ 為強化監測機構執行業務之專業能力\n及品質，會同財團法人職業災害預防\n（以下稱職災預防及重建中心）及專\n家學者，實施監測機構業務訪查，並\n同步推動職業衛生實驗室能力試驗及\n盲樣測試計畫，以確保職業衛生實驗\n室管理與技術能力符合國際規範。\n◆ 為協助廠場化學品作業之相關人員依\n化學品危害資訊落實風險管理，辦理\n化學品危害分級管理、暴露評估工作\n坊及實務演練活動。\n2025 年成果：\n◆ 事業單位通報勞工作業環境監測及暴\n露危害資訊管理系統之監測數據數量，\n化學性因子共 225,805 筆，物理性因\n子共 150,362 筆。\n◆ 實施事業單位監測業務查核共 115場\n次，執行監測之樣本數共 730 個。\n◆ 實施監測機構業務訪查共 34 場次，辦\n理職業衛生實驗室能力試驗計 21 家及\n盲樣測試計畫計 18 家。\n◆ 辦理化學品評估及分級管理相關宣導\n訓練活動等共 17 場次。\n¸ ʝਗ\nীሞ\n¸ ࣖ",
+            "score": 0.57034,
+            "bm25Score": 20.640323,
+            "embeddingScore": 0.672981,
+            "rerankScore": 0.57034,
+            "matchedTerms": [
+              "2025",
+              "作業",
+              "防護",
+              "辦理",
+              "場次",
+              "危害",
+              "害預",
+              "預防",
+              "害預防"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          },
+          {
+            "id": "upload-9c9b1122ba1a0262a057::29",
+            "rank": 5,
+            "title": "2025年職業安全衛生年報.pdf | 第 31 頁",
+            "source": "upload-9c9b1122ba1a0262a057",
+            "page": "page 31",
+            "content": "2025ᔖุτΌሊ͛\nϋజ\n29\n¸ ݟ\n࿴ᅂൖᔖτԣᚐၣ\n影視產業工作型態多元，外景拍攝\n需架設燈光、攝影器材、移動發電設備，\n或臨時搭建場景，涉及高處作業、感電、\n燙傷、捲夾、跌倒等多種潛在危害。\n辦理情形：\n◆ 以從事外景拍攝作業之劇組製片單位\n為優先實施檢查對象，並函請各縣市\n政府協拍單位提供外景拍攝作業期程\n及地點予轄區勞動檢查機構，俾利選\n列較高風險之拍攝作業，依期程對外\n景拍攝之工作場域實施檢查。\n◆ 提供相關檢查結果及處理情形，供文\n化部影視局參考並列為該局審查業者\n申請補助案之資料。\n2025 年成果：\n辦理影視外景拍攝之工作場域檢查 93\n場次。",
+            "score": 0.553404,
+            "bm25Score": 14.060697,
+            "embeddingScore": 0.695215,
+            "rerankScore": 0.553404,
+            "matchedTerms": [
+              "2025",
+              "作業",
+              "提供",
+              "辦理",
+              "場次",
+              "危害"
+            ],
+            "documentVersionId": "",
+            "chunkRecordId": "",
+            "indexVersionId": ""
+          }
+        ],
+        "evidence_focus": {
+          "enabled": true,
+          "mode": "fine-embedding-group",
+          "candidateCount": 33,
+          "selectedUnitCount": 6,
+          "groupCount": 2,
+          "chunkChars": 240,
+          "chunkFraction": 0.333333,
+          "overlapChars": 32,
+          "keywordWeight": 0.55,
+          "embeddingWeight": 0.45,
+          "minEmbeddingScore": 0.45,
+          "fallback": false
+        }
+      }
+    }
+  ]
+}

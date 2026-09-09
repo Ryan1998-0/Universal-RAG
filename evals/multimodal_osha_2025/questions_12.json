@@ -1,0 +1,103 @@
+{
+  "benchmark_id": "taiwan_osha_2025_multimodal_12",
+  "title": "2025職業安全衛生年報多模態RAG評測",
+  "source": "2025年職業安全衛生年報.pdf",
+  "items": [
+    {
+      "id": "mm01-page3-supervision",
+      "modality": "infographic",
+      "gold_pages": [3],
+      "question": "2025年職業安全衛生監督檢查共辦理多少場次？",
+      "answer": "150,173場次",
+      "required_terms": ["150,173", "場次"]
+    },
+    {
+      "id": "mm02-page3-insurance-rate",
+      "modality": "infographic",
+      "gold_pages": [3, 20],
+      "question": "2025年勞工保險職業災害給付千人率是多少？",
+      "answer": "2.250",
+      "required_terms": ["2.250"]
+    },
+    {
+      "id": "mm03-page3-case-service",
+      "modality": "infographic",
+      "gold_pages": [3],
+      "question": "2025年職災勞工及家庭個案服務量是多少？",
+      "answer": "126,594人次",
+      "required_terms": ["126,594", "人次"]
+    },
+    {
+      "id": "mm04-page3-health-check",
+      "modality": "infographic",
+      "gold_pages": [3],
+      "question": "2025年勞工身心健康保護專案檢查實施多少場次？",
+      "answer": "1,373場次",
+      "required_terms": ["1,373", "場次"]
+    },
+    {
+      "id": "mm05-page3-type-certification",
+      "modality": "infographic",
+      "gold_pages": [3],
+      "question": "2025年機械設備型式驗證合格件數是多少？",
+      "answer": "6,103件",
+      "required_terms": ["6,103", "件"]
+    },
+    {
+      "id": "mm06-page4-contents",
+      "modality": "visual-contents",
+      "gold_pages": [4],
+      "question": "目錄中「職安法修正發布，提升我國整體勞動環境」從哪一頁開始？",
+      "answer": "第10頁",
+      "required_terms": ["10", "職安法修正發布"]
+    },
+    {
+      "id": "mm07-page12-amendment",
+      "modality": "text-and-layout",
+      "gold_pages": [12],
+      "question": "2025年職安法修法經立法院三讀與總統公布的日期各為何？共修正幾條，其中新增幾條？",
+      "answer": "2025年12月2日三讀、12月19日公布；共修正25條，其中新增6條。",
+      "required_terms": ["12月2日", "12月19日", "25條", "新增6條"]
+    },
+    {
+      "id": "mm08-page13-construction",
+      "modality": "text-and-table",
+      "gold_pages": [13],
+      "question": "2025年營造業重大職災死亡人數是多少，占全部重大職災死亡人數幾％？",
+      "answer": "113人，占43.6%。",
+      "required_terms": ["113人", "43.6%"]
+    },
+    {
+      "id": "mm09-page13-inspection",
+      "modality": "text-and-table",
+      "gold_pages": [13],
+      "question": "2025年高風險營造工地共檢查多少個工地、發現多少項違規，並依法停工多少處？",
+      "answer": "431個工地、19,767項違規、停工753處。",
+      "required_terms": ["431", "19,767", "753"]
+    },
+    {
+      "id": "mm10-page14-hospitals",
+      "modality": "text-and-table",
+      "gold_pages": [14],
+      "question": "2025年認可多少家職業傷病診治專責醫院與網絡醫院？2026年專責醫院增加到幾家？",
+      "answer": "2025年17家專責醫院、98家網絡醫院；2026年增加到19家。",
+      "required_terms": ["17家", "98家", "19家"]
+    },
+    {
+      "id": "mm11-page15-rehab",
+      "modality": "text-and-cross-page",
+      "gold_pages": [15],
+      "question": "2025年累計認可多少家職災職能復健專責醫院？2026年1月1日起增加到幾家？服務據點超過多少個？",
+      "answer": "2025年38家；2026年增加到39家；服務據點超過60個。",
+      "required_terms": ["38家", "39家", "60個"]
+    },
+    {
+      "id": "mm12-page17-asbestos",
+      "modality": "text-and-infographic",
+      "gold_pages": [17],
+      "question": "2025年災後石綿拆除作業提供多少組防護包、辦理多少場次危害預防輔導，並設置幾處服務站？",
+      "answer": "13,736組防護包、1,480場次輔導、4處服務站。",
+      "required_terms": ["13,736", "1,480", "4處"]
+    }
+  ]
+}

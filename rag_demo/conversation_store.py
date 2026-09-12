@@ -1,6 +1,7 @@
 import json
 import os
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -25,8 +26,22 @@ class ConversationStore:
         connection.execute("PRAGMA journal_mode = WAL")
         return connection
 
+    @contextmanager
+    def _connection(self):
+        """Open, transact and close a SQLite connection for one operation."""
+
+        connection = self._connect()
+        try:
+            yield connection
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+
     def _initialize(self):
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS conversations (
@@ -62,10 +77,15 @@ class ConversationStore:
                 """
             )
 
-    def create_conversation(self, profile=DEFAULT_PROFILE, title="新對話"):
-        conversation_id = uuid4().hex
+    def create_conversation(
+        self,
+        profile=DEFAULT_PROFILE,
+        title="新對話",
+        conversation_id=None,
+    ):
+        conversation_id = str(conversation_id or uuid4().hex)
         now = _utc_now()
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.execute(
                 "INSERT INTO conversations(id, title, profile, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
                 (conversation_id, _clean_title(title), str(profile or DEFAULT_PROFILE), now, now),
@@ -80,7 +100,7 @@ class ConversationStore:
         return self.create_conversation(profile=profile)
 
     def list_conversations(self, limit=30):
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """
                 SELECT c.id, c.title, c.profile, c.created_at, c.updated_at,
@@ -96,7 +116,7 @@ class ConversationStore:
         return [dict(row) for row in rows]
 
     def get_conversation(self, conversation_id):
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 "SELECT id, title, profile, created_at, updated_at FROM conversations WHERE id = ?",
                 (str(conversation_id),),
@@ -114,7 +134,7 @@ class ConversationStore:
         clean_id = str(conversation_id or "").strip()
         if not clean_id:
             return False
-        with self._connect() as connection:
+        with self._connection() as connection:
             cursor = connection.execute(
                 "DELETE FROM conversations WHERE id = ?",
                 (clean_id,),
@@ -131,7 +151,7 @@ class ConversationStore:
             raise ValueError("conversation not found")
 
         now = _utc_now()
-        with self._connect() as connection:
+        with self._connection() as connection:
             cursor = connection.execute(
                 """
                 INSERT INTO messages(conversation_id, role, content, metadata_json, created_at)
@@ -162,8 +182,25 @@ class ConversationStore:
             message_id = cursor.lastrowid
         return self.get_message(message_id)
 
+    def clear_messages(self, conversation_id):
+        """Delete messages while retaining the conversation and its memories."""
+
+        clean_id = str(conversation_id or "").strip()
+        if not clean_id:
+            return False
+        with self._connection() as connection:
+            cursor = connection.execute(
+                "DELETE FROM messages WHERE conversation_id = ?",
+                (clean_id,),
+            )
+            connection.execute(
+                "UPDATE conversations SET updated_at = ? WHERE id = ?",
+                (_utc_now(), clean_id),
+            )
+        return cursor.rowcount > 0
+
     def get_message(self, message_id):
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 "SELECT id, conversation_id, role, content, metadata_json, created_at FROM messages WHERE id = ?",
                 (int(message_id),),
@@ -176,7 +213,7 @@ class ConversationStore:
         if limit is not None:
             limit_sql = " LIMIT ?"
             params.append(max(1, min(int(limit), 200)))
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """
                 SELECT id, conversation_id, role, content, metadata_json, created_at
@@ -187,7 +224,7 @@ class ConversationStore:
         return [_message_dict(row) for row in rows]
 
     def get_recent_messages(self, conversation_id, limit=10):
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """
                 SELECT id, conversation_id, role, content, metadata_json, created_at
@@ -202,7 +239,7 @@ class ConversationStore:
         if not content:
             return None
         now = _utc_now()
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.execute(
                 """
                 INSERT INTO memories(content, category, source_conversation_id, created_at, updated_at)
@@ -218,7 +255,7 @@ class ConversationStore:
         return dict(row) if row else None
 
     def list_memories(self, limit=12):
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """
                 SELECT id, content, category, source_conversation_id, created_at, updated_at

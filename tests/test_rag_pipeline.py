@@ -111,6 +111,57 @@ class RagPipelineContractTests(unittest.TestCase):
         self.assertEqual(result["citations"][0]["run_id"], "run-server-evidence")
         self.assertEqual(len(result["citations"][0]["content_sha256"]), 64)
         self.assertEqual(result["grounding_warnings"], [])
+        self.assertEqual(result["evidence_validation"]["status"], "passed")
+
+    def test_codex_subagent_receives_no_history_or_long_term_memory(self):
+        retriever = FakeRetriever([
+            {
+                "id": "context-1",
+                "rank": 1,
+                "title": "規則",
+                "source": "rules",
+                "page": "1",
+                "content": "申請期限為三日。",
+            }
+        ])
+        route_calls = []
+        answer_prompts = []
+
+        def route_fn(question, **kwargs):
+            route_calls.append(kwargs)
+            return SimpleNamespace(
+                needs_retrieval=True,
+                reason="需要文件證據",
+                retrieval_query=question,
+                query_variants=(question,),
+            )
+
+        pipeline = RagPipeline(
+            settings_factory=lambda: self.settings,
+            retriever_factory=lambda profile: retriever,
+            route_fn=route_fn,
+            evidence_fn=lambda contexts, **kwargs: {
+                "sufficient": True,
+                "confidence": "high",
+                "reason": "evidence passed",
+            },
+            ask_model_fn=lambda prompt, model, system=None: (
+                answer_prompts.append((prompt, system)) or "申請期限為三日。來源：[1]"
+            ),
+            datetime_answer_fn=lambda question: None,
+        )
+
+        result = pipeline.run(RagPipelineRequest(
+            question="申請期限？",
+            model="codex:gpt-5.5",
+            history=[{"role": "user", "content": "這是不可提供的歷史秘密"}],
+            persist_conversation=False,
+        ))
+
+        self.assertEqual(route_calls[0]["conversation_context"], "")
+        self.assertNotIn("不可提供的歷史秘密", answer_prompts[0][0])
+        self.assertNotIn("不可提供的歷史秘密", answer_prompts[0][1])
+        self.assertEqual(result["model"], {"provider": "codex", "name": "gpt-5.5"})
 
     def test_grounded_prompt_uses_exclusive_evidence_contract_and_edge_ordering(self):
         contexts = [

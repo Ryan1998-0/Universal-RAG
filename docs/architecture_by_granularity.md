@@ -120,10 +120,13 @@ flowchart TB
             BM25[BM25]
             DENSE[Dense Embedding]
             GRAPH[Graph Retrieval<br/>可選]
-            RRF[RRF 融合]
+            RRF[候選集合合併]
         end
 
-        RERANK[Rerank]
+        FUSION[LambdaMART 分數映射與融合]
+        COMPLEXITY{問題複雜度}
+        SIMPLE[簡單問題 Top-5]
+        RERANK[複雜問題 Rerank]
         EXPAND[Parent Chunk Expansion]
         VERIFY{Evidence Quality Gate}
         PROMPT[Prompt Builder]
@@ -145,7 +148,10 @@ flowchart TB
         DENSE --> RRF
         GRAPH -.-> RRF
 
-        RRF --> RERANK --> EXPAND --> VERIFY
+        RRF --> FUSION --> COMPLEXITY
+        COMPLEXITY -->|簡單| SIMPLE --> EXPAND
+        COMPLEXITY -->|複雜| RERANK --> EXPAND
+        EXPAND --> VERIFY
         VERIFY -->|證據充分| PROMPT --> LLM --> GROUNDED
         VERIFY -->|證據不足| REFUSE
     end

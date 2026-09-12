@@ -7,6 +7,9 @@ from rag_demo.retrieval_scope import RetrievalScope
 
 
 class FakeRuntime:
+    def __init__(self):
+        self.rerank_calls = 0
+
     def embed_query(self, query):
         return [0.2, 0.8]
 
@@ -14,6 +17,7 @@ class FakeRuntime:
         return {"indices": [1, 2], "values": [0.4, 0.6]}
 
     def rerank(self, query, documents):
+        self.rerank_calls += 1
         return [0.1 if "weak" in document else 0.9 for document in documents]
 
 
@@ -52,7 +56,8 @@ def _payload(chunk_id, content):
 class ProductionHybridRetrieverTests(unittest.TestCase):
     def test_hybrid_branches_share_scope_and_cross_encoder_sets_final_order(self):
         vectors = FakeVectorRepository()
-        retriever = ProductionHybridRetriever(vectors, FakeRuntime())
+        runtime = FakeRuntime()
+        retriever = ProductionHybridRetriever(vectors, runtime)
         scope = RetrievalScope("tenant-a", "kb-a", "index-1")
 
         result = retriever.retrieve(
@@ -72,6 +77,36 @@ class ProductionHybridRetrieverTests(unittest.TestCase):
         self.assertEqual(result["contexts"][0]["bm25Score"], 4.2)
         self.assertEqual(result["contexts"][0]["embeddingScore"], 0.71)
         self.assertEqual(result["contexts"][0]["documentVersionId"], "version-1")
+        self.assertTrue(result["diagnostics"]["rerankApplied"])
+        self.assertEqual(runtime.rerank_calls, 1)
+
+    def test_simple_production_query_skips_cross_encoder_and_returns_top_three(self):
+        class ManyHitsRepository(FakeVectorRepository):
+            def search(self, **kwargs):
+                return [
+                    DenseSearchHit(f"point-{index}", 0.90 - index * 0.05, _payload(f"chunk-{index}", "apple evidence"))
+                    for index in range(5)
+                ]
+
+            def search_sparse(self, **kwargs):
+                return [
+                    DenseSearchHit(f"point-{index}", 5.0 - index, _payload(f"chunk-{index}", "apple evidence"))
+                    for index in range(5)
+                ]
+
+        vectors = ManyHitsRepository()
+        runtime = FakeRuntime()
+        retriever = ProductionHybridRetriever(vectors, runtime)
+        result = retriever.retrieve(
+            question="apple",
+            top_k=8,
+            candidate_k=8,
+            retrieval_scope=RetrievalScope("tenant-a", "kb-a", "index-1"),
+        )
+
+        self.assertEqual(len(result["contexts"]), 3)
+        self.assertFalse(result["diagnostics"]["rerankApplied"])
+        self.assertEqual(runtime.rerank_calls, 0)
 
     def test_missing_active_index_fails_closed_without_vector_query(self):
         vectors = FakeVectorRepository()

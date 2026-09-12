@@ -29,9 +29,13 @@ def bootstrap() -> dict:
     storage = S3ObjectStorage.from_settings(settings)
     vectors = QdrantChunkRepository.from_settings(settings)
     scanner = ClamAvScanner(settings.clamav_host or "", settings.clamav_port)
-    inference = OllamaInferenceProbe(
-        settings.inference_base_url,
-        settings.allowed_models,
+    ollama_models = [
+        model for model in settings.allowed_models if str(model).startswith("ollama:")
+    ]
+    inference = (
+        OllamaInferenceProbe(settings.inference_base_url, ollama_models)
+        if ollama_models
+        else None
     )
 
     _retry("object storage", storage.ensure_bucket)
@@ -40,7 +44,8 @@ def bootstrap() -> dict:
         lambda: vectors.ensure_collection(settings.embedding_dimensions),
     )
     _retry("ClamAV", scanner.ping)
-    _retry("inference", inference.ping)
+    if inference is not None:
+        _retry("inference", inference.ping)
 
     runtime = FastEmbedRuntime.from_settings(settings)
     observed_dimensions = runtime.embedding_dimensions()

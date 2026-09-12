@@ -337,7 +337,7 @@ def _chunk_payload(scope: RetrievalScope, chunk: dict, ordinal: int) -> dict:
     computed_digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
     if digest and digest != computed_digest:
         raise ValueError("chunk content_sha256 does not match content")
-    return {
+    payload = {
         "tenant_id": scope.tenant_id,
         "knowledge_base_id": scope.knowledge_base_id,
         "index_version_id": scope.index_version_id,
@@ -353,6 +353,22 @@ def _chunk_payload(scope: RetrievalScope, chunk: dict, ordinal: int) -> dict:
         "content": content,
         "content_sha256": computed_digest,
     }
+    # Parent-child metadata stays alongside the child point so retrieval can
+    # expand a hit without a second database round trip.
+    for field_name in (
+        "chunk_level",
+        "parent_id",
+        "parent_chunk_id",
+        "parent_chunk_index",
+        "child_chunk_index",
+        "parent_title_context",
+        "parent_content",
+        "parent_token_count",
+        "token_count",
+    ):
+        if field_name in chunk:
+            payload[field_name] = chunk[field_name]
+    return payload
 
 
 def _point_id(scope: RetrievalScope, chunk_id: str) -> str:

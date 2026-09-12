@@ -2,6 +2,7 @@ import re
 from typing import Callable, List, Optional, Sequence
 
 from rag_demo.chunking import Chunk
+from rag_demo.lambdamart_fusion import fuse_candidates_with_lambdamart
 
 
 def keyword_search(query: str, chunks: List[Chunk], top_k: int = 5) -> List[Chunk]:
@@ -49,38 +50,81 @@ def hybrid_search(
     embeddings: Optional[Sequence[Sequence[float]]] = None,
     embed_query_fn: Optional[Callable[[str], Sequence[float]]] = None,
     top_k: int = 5,
-    keyword_weight: float = 0.3,
-    embedding_weight: float = 0.7,
+    keyword_weight: float = 0.5,
+    embedding_weight: float = 0.5,
     metadata_boost_max: float = 0.18,
+    fusion_method: str = "rrf",
+    rrf_k: int = 60,
 ) -> List[Chunk]:
     keyword_weight, embedding_weight = _normalize_weights(keyword_weight, embedding_weight)
     keyword_results = keyword_search(query, chunks, top_k=len(chunks))
     keyword_scores = {chunk["id"]: float(chunk["score"]) for chunk in keyword_results}
-    max_keyword_score = max(keyword_scores.values(), default=1.0)
-
     embedding_scores = {}
+    embedding_results = []
     if embeddings is not None and embed_query_fn is not None:
         normalized_query = _normalize_query(query)
-        for chunk in embedding_search(normalized_query, chunks, embeddings, embed_query_fn, top_k=len(chunks)):
+        embedding_results = embedding_search(
+            normalized_query,
+            chunks,
+            embeddings,
+            embed_query_fn,
+            top_k=len(chunks),
+        )
+        for chunk in embedding_results:
             embedding_scores[chunk["id"]] = float(chunk["embedding_score"])
 
     scored = []
     for chunk in chunks:
         keyword_score = keyword_scores.get(chunk["id"], 0.0)
-        normalized_keyword = keyword_score / max_keyword_score if max_keyword_score else 0.0
         embedding_score = embedding_scores.get(chunk["id"], 0.0)
-        score = (keyword_weight * normalized_keyword) + (embedding_weight * embedding_score)
-        score += _hybrid_metadata_boost(query, chunk, metadata_boost_max=metadata_boost_max)
+        result = dict(chunk)
+        result["keyword_score"] = keyword_score
+        result["embedding_score"] = embedding_score
+        result["retrieval_method"] = "hybrid" if embedding_scores else "keyword"
+        scored.append(result)
 
+    if str(fusion_method).strip().lower() == "rrf":
+        keyword_rank = {chunk["id"]: rank for rank, chunk in enumerate(keyword_results, start=1)}
+        embedding_rank = {
+            chunk["id"]: rank
+            for rank, chunk in enumerate(embedding_results, start=1)
+        }
+        rrf_constant = max(1, int(rrf_k))
+        for result in scored:
+            result["rrf_score"] = (
+                (1.0 / (rrf_constant + keyword_rank[result["id"]]))
+                if result["id"] in keyword_rank
+                else 0.0
+            ) + (
+                (1.0 / (rrf_constant + embedding_rank[result["id"]]))
+                if result["id"] in embedding_rank
+                else 0.0
+            )
+            result["fusion_score"] = result["rrf_score"]
+            result["score"] = result["rrf_score"]
+    else:
+        scored = fuse_candidates_with_lambdamart(
+            scored,
+            keyword_weight=keyword_weight,
+            embedding_weight=embedding_weight,
+        )
+    max_keyword_score = max(keyword_scores.values(), default=1.0)
+    filtered = []
+    for result in scored:
+        score = float(
+            result.get(
+                "rrf_score" if str(fusion_method).strip().lower() == "rrf" else "lambda_mart_fusion_score",
+                0.0,
+            )
+        )
+        score += _hybrid_metadata_boost(query, result, metadata_boost_max=metadata_boost_max)
+        result["mapped_keyword_score"] = result.get("mapped_bm25_score", 0.0)
+        result["mapped_embedding_score"] = result.get("mapped_embedding_score", 0.0)
+        result["score"] = score
         if score > 0:
-            result = dict(chunk)
-            result["keyword_score"] = keyword_score
-            result["embedding_score"] = embedding_score
-            result["score"] = score
-            result["retrieval_method"] = "hybrid" if embedding_scores else "keyword"
-            scored.append(result)
+            filtered.append(result)
 
-    ranked = sorted(scored, key=lambda item: item["score"], reverse=True)
+    ranked = sorted(filtered, key=lambda item: item["score"], reverse=True)
     return _preserve_high_confidence_keyword_anchors(ranked, keyword_results, top_k, max_keyword_score)
 
 
@@ -174,7 +218,7 @@ def _normalize_weights(keyword_weight: float, embedding_weight: float):
     embedding_weight = max(0.0, float(embedding_weight))
     total = keyword_weight + embedding_weight
     if total <= 0:
-        return 0.3, 0.7
+        return 0.5, 0.5
     return keyword_weight / total, embedding_weight / total
 
 

@@ -23,6 +23,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+langchain = [
+  "langchain==1.4.0",
+  "langchain-anthropic==1.7.2",
+  "langchain-ollama==1.1.0",
+  "langchain-openai==1.6.2",
+]
 production = [
   "boto3==1.43.56",
   "celery[redis]==5.6.3",
@@ -43,3 +49,6 @@ evaluation = [
 
 [tool.setuptools.packages.find]
 include = ["rag_demo*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

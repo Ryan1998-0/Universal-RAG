@@ -9,6 +9,7 @@ from uuid import uuid4
 from rag_demo.config import RagConfig
 from rag_demo.conversation_store import ConversationStore
 from rag_demo.evidence_focus import focus_retrieved_evidence
+from rag_demo.evidence_validation import validate_answer_evidence
 from rag_demo.fine_evidence import retrieve_fine_evidence
 from rag_demo.general_answer import (
     CURRENT_DATETIME_REASON,
@@ -146,6 +147,7 @@ class RagPipeline:
             and str(message.get("role") or "") in {"user", "assistant"}
         ]
         memories: List[str] = []
+        isolated_subagent = parse_model_spec(request.model).provider == "codex"
         remembered = None
         conversation_id = ""
         store = None
@@ -164,6 +166,13 @@ class RagPipeline:
             memories = [item["content"] for item in store.list_memories(limit=12)]
             store.add_message(conversation_id, "user", request.question)
 
+        # A Codex subagent is intentionally stateless per question.  The
+        # application may still persist the conversation for the UI, but no
+        # prior messages or long-term memories are passed to routing or answer
+        # generation for this model provider.
+        model_history = [] if isolated_subagent else history
+        model_memories = [] if isolated_subagent else memories
+
         contexts: List[dict] = []
         raw_contexts: List[dict] = []
         evidence_focus = {
@@ -174,6 +183,7 @@ class RagPipeline:
         evidence_evaluation = None
         quality_evaluation = None
         grounded_request: Dict[str, str] = {}
+        evidence_validation = None
         retrieval_decision = None
         retrieval_plan = None
         answer = ""
@@ -194,7 +204,7 @@ class RagPipeline:
             retrieval_decision = self._route(
                 request.question,
                 request.model,
-                history,
+                model_history,
             )
             stage_timings["routeMs"] = _elapsed_ms(route_started)
 
@@ -261,15 +271,29 @@ class RagPipeline:
                 stage_timings["focusMs"] = 0.0
 
             if contexts:
+                evidence_query = (
+                    retrieval_plan.evidence_query
+                    if retrieval_plan is not None
+                    else request.question
+                )
                 evidence_evaluation = self._evidence_fn(
                     contexts,
                     settings=settings,
-                    question=(
-                        retrieval_plan.evidence_query
-                        if retrieval_plan is not None
-                        else request.question
-                    ),
+                    question=evidence_query,
                 )
+                if raw_contexts and evidence_focus.get("enabled"):
+                    raw_evaluation = self._evidence_fn(
+                        raw_contexts,
+                        settings=settings,
+                        question=evidence_query,
+                    )
+                    if (
+                        raw_evaluation.get("sufficient")
+                        and not evidence_evaluation.get("sufficient")
+                    ):
+                        contexts = raw_contexts
+                        evidence_evaluation = raw_evaluation
+                        evidence_focus["fallback"] = "quality_guard"
 
             generation_started = perf_counter()
             if retrieval_decision["needs_retrieval"] and (
@@ -286,14 +310,16 @@ class RagPipeline:
                     f"{evidence_reason}請補充或選擇含有直接答案的文件後再試。"
                 )
             elif contexts:
+                evidence_validation = {}
                 answer = answer_from_contexts(
                     question=request.question,
                     contexts=contexts,
                     model=request.model,
-                    history=history,
-                    memories=memories,
+                    history=model_history,
+                    memories=model_memories,
                     ask_model_fn=self._ask_model_fn,
                     capture_request=grounded_request,
+                    capture_validation=evidence_validation,
                 )
             else:
                 answer = self._ask_model_fn(
@@ -302,10 +328,10 @@ class RagPipeline:
                             request.question,
                             retrieval_decision["reason"],
                         ),
-                        history,
+                        model_history,
                     ),
                     model=request.model,
-                    system=build_qwen_direct_system_prompt(memories=memories),
+                    system=build_qwen_direct_system_prompt(memories=model_memories),
                 )
             stage_timings["generateMs"] = _elapsed_ms(generation_started)
 
@@ -346,6 +372,7 @@ class RagPipeline:
                         if quality_evaluation
                         else None
                     ),
+                    "evidence_validation": dict(evidence_validation or {}),
                 },
             )
 
@@ -381,6 +408,7 @@ class RagPipeline:
             ),
             "citations": citations,
             "grounding_warnings": grounding_warnings,
+            "evidence_validation": evidence_validation,
             "retrieval": {
                 "server_generated": True,
                 "needed": retrieval_decision["needs_retrieval"],
@@ -388,6 +416,16 @@ class RagPipeline:
                 "query": retrieval_decision["retrieval_query"],
                 "queries": list(retrieval_plan.query_variants) if retrieval_plan else [],
                 "sub_questions": list(retrieval_plan.sub_questions) if retrieval_plan else [],
+                "rewrite_semantic_validation": retrieval_decision.get(
+                    "rewrite_semantic_validation",
+                    {
+                        "status": "skipped",
+                        "similarity": None,
+                        "accepted": True,
+                        "threshold": None,
+                        "reason": "",
+                    },
+                ),
                 "intent_labels": list(retrieval_plan.intent_labels) if retrieval_plan else [],
                 "contexts": contexts,
                 "raw_contexts": raw_contexts,
@@ -409,7 +447,7 @@ class RagPipeline:
             decision = self._route_fn(
                 question,
                 model=model,
-                conversation_context=conversation_context(history),
+                conversation_context=conversation_context(history) if history else "",
             )
         except Exception as exc:
             decision = QueryRewriteDecision(
@@ -426,6 +464,13 @@ class RagPipeline:
             "retrieval_query": str(decision.retrieval_query or question).strip(),
             "sub_questions": list(getattr(decision, "sub_questions", ()) or ()),
             "query_variants": list(getattr(decision, "query_variants", ()) or ()),
+            "rewrite_semantic_validation": {
+                "status": str(getattr(decision, "semantic_validation_status", "skipped") or "skipped"),
+                "similarity": getattr(decision, "semantic_similarity", None),
+                "accepted": bool(getattr(decision, "semantic_accepted", True)),
+                "threshold": getattr(decision, "semantic_validation_threshold", None),
+                "reason": str(getattr(decision, "semantic_validation_reason", "") or ""),
+            },
         }
 
 
@@ -475,6 +520,7 @@ def answer_from_contexts(
     memories=None,
     ask_model_fn: Callable[..., str] = ask_model,
     capture_request: Optional[dict] = None,
+    capture_validation: Optional[dict] = None,
 ) -> str:
     threshold_evidence = resolve_threshold_evidence(
         question,
@@ -482,6 +528,15 @@ def answer_from_contexts(
         previous_user_question=latest_user_question(history),
     )
     if threshold_evidence is not None:
+        if capture_validation is not None:
+            capture_validation.update({
+                "sufficient": True,
+                "status": "threshold",
+                "valid_citations": [],
+                "invalid_citations": [],
+                "uncited_claims": [],
+                "reason": "由可驗證的門檻證據直接產生答案。",
+            })
         return render_threshold_answer(threshold_evidence)
 
     request = build_grounded_answer_request(
@@ -497,6 +552,9 @@ def answer_from_contexts(
         model=model,
         system=request["system"],
     )
+    validation = validate_answer_evidence(answer, contexts)
+    if capture_validation is not None:
+        capture_validation.update(validation)
     return enforce_grounded_answer_contract(answer, contexts)
 
 
@@ -571,22 +629,10 @@ def enforce_grounded_answer_contract(answer: str, contexts: Sequence[dict]) -> s
     """Fail closed when a generated factual answer has no valid evidence marker."""
 
     text = str(answer or "").strip()
-    insufficient_markers = (
-        "根據目前檢索資料無法確認",
-        "目前檢索資料不足",
-        "資料不足",
-    )
-    if any(marker in text for marker in insufficient_markers):
+    validation = validate_answer_evidence(text, contexts)
+    if validation["status"] == "refused":
         return text
-
-    valid_ranks = {
-        int(context.get("rank") or index)
-        for index, context in enumerate(contexts, start=1)
-    }
-    referenced_ranks = {
-        int(rank) for rank in re.findall(r"\[(\d+)\]", text)
-    }
-    if referenced_ranks and referenced_ranks.issubset(valid_ranks):
+    if validation["sufficient"]:
         return text
 
     return (

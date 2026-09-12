@@ -7,11 +7,27 @@ from typing import Mapping, Optional
 @dataclass(frozen=True)
 class RagConfig:
     top_k: int = 5
-    chunk_size: int = 1200
+    chunk_size: int = 600
     chunk_stride: int = 600
-    retrieval_candidate_k: int = 50
-    keyword_weight: float = 0.3
-    embedding_weight: float = 0.7
+    # `dynamic` packs complete sentence units up to chunk_size tokens and
+    # carries trailing sentences into the next chunk. `hard` is the A/B
+    # baseline: fixed character windows with no boundary correction/overlap.
+    chunk_strategy: str = "dynamic"
+    chunk_overlap_tokens: int = 200
+    # Parent-child indexing retrieves precise child windows and expands them
+    # back to coherent parent evidence before generation.
+    parent_child_enabled: bool = True
+    parent_chunk_size_tokens: int = 1024
+    child_chunk_size_tokens: int = 256
+    parent_chunk_overlap_tokens: int = 0
+    child_chunk_overlap_tokens: int = 0
+    # Guard model-generated retrieval rewrites by comparing them with the
+    # user's original question in embedding space.
+    query_rewrite_semantic_enabled: bool = True
+    query_rewrite_min_similarity: float = 0.60
+    retrieval_candidate_k: int = 100
+    keyword_weight: float = 0.5
+    embedding_weight: float = 0.5
     metadata_boost_max: float = 0.18
     verifier_auto_accept_enabled: bool = False
     verifier_auto_accept_score: float = 0.52
@@ -19,13 +35,28 @@ class RagConfig:
     verifier_min_keyword_score: float = 8.0
     verifier_min_embedding_score: float = 0.35
     verifier_context_chars: int = 600
-    hybrid_top_k: int = 8
-    hybrid_candidate_k: int = 24
+    hybrid_top_k: int = 5
+    # Number of hybrid candidates sent to the second-stage reranker.  The
+    # final answer still respects the request's top_k value.
+    rerank_top_k: int = 5
+    # 32 preserves more answer-bearing candidates than 24 at nearly identical
+    # latency on the bundled IFRS 17 retrieval benchmark.
+    hybrid_candidate_k: int = 100
     hybrid_max_top_k: int = 12
-    hybrid_max_candidate_k: int = 80
+    hybrid_max_candidate_k: int = 200
     hybrid_rrf_k: int = 60
+    # RRF combines BM25 and dense result ranks without assuming their raw
+    # scores share a numeric scale. LambdaMART remains available for legacy
+    # profiles that explicitly select it.
+    hybrid_fusion_method: str = "rrf"
+    complexity_routing_enabled: bool = True
+    query_complexity_threshold: float = 2.0
+    simple_query_top_k: int = 5
     multi_query_enabled: bool = True
-    multi_query_max_variants: int = 4
+    # Two complementary queries preserve the strongest quality/latency balance
+    # on the bundled IFRS retrieval benchmark; callers can raise this to 3-4
+    # for unusually ambiguous or multi-part questions.
+    multi_query_max_variants: int = 2
     hybrid_bm25_k1: float = 1.4
     hybrid_bm25_b: float = 0.72
     hybrid_min_bm25_score: float = 1.0
@@ -62,6 +93,49 @@ class RagConfig:
             top_k=_int_value(values, "RAG_TOP_K", cls.top_k),
             chunk_size=_int_value(values, "RAG_CHUNK_SIZE", cls.chunk_size),
             chunk_stride=_int_value(values, "RAG_CHUNK_STRIDE", cls.chunk_stride),
+            chunk_strategy=str(
+                values.get("RAG_CHUNK_STRATEGY", cls.chunk_strategy)
+            ).strip().lower(),
+            chunk_overlap_tokens=_int_value(
+                values,
+                "RAG_CHUNK_OVERLAP_TOKENS",
+                cls.chunk_overlap_tokens,
+            ),
+            parent_child_enabled=_bool_value(
+                values,
+                "RAG_PARENT_CHILD_ENABLED",
+                cls.parent_child_enabled,
+            ),
+            parent_chunk_size_tokens=_int_value(
+                values,
+                "RAG_PARENT_CHUNK_SIZE_TOKENS",
+                cls.parent_chunk_size_tokens,
+            ),
+            child_chunk_size_tokens=_int_value(
+                values,
+                "RAG_CHILD_CHUNK_SIZE_TOKENS",
+                cls.child_chunk_size_tokens,
+            ),
+            parent_chunk_overlap_tokens=_int_value(
+                values,
+                "RAG_PARENT_CHUNK_OVERLAP_TOKENS",
+                cls.parent_chunk_overlap_tokens,
+            ),
+            child_chunk_overlap_tokens=_int_value(
+                values,
+                "RAG_CHILD_CHUNK_OVERLAP_TOKENS",
+                cls.child_chunk_overlap_tokens,
+            ),
+            query_rewrite_semantic_enabled=_bool_value(
+                values,
+                "RAG_QUERY_REWRITE_SEMANTIC_ENABLED",
+                cls.query_rewrite_semantic_enabled,
+            ),
+            query_rewrite_min_similarity=_float_value(
+                values,
+                "RAG_QUERY_REWRITE_MIN_SIMILARITY",
+                cls.query_rewrite_min_similarity,
+            ),
             retrieval_candidate_k=_int_value(
                 values,
                 "RAG_RETRIEVAL_CANDIDATE_K",
@@ -101,6 +175,7 @@ class RagConfig:
                 cls.verifier_context_chars,
             ),
             hybrid_top_k=_int_value(values, "RAG_HYBRID_TOP_K", cls.hybrid_top_k),
+            rerank_top_k=_int_value(values, "RAG_RERANK_TOP_K", cls.rerank_top_k),
             hybrid_candidate_k=_int_value(
                 values,
                 "RAG_HYBRID_CANDIDATE_K",
@@ -117,6 +192,24 @@ class RagConfig:
                 cls.hybrid_max_candidate_k,
             ),
             hybrid_rrf_k=_int_value(values, "RAG_HYBRID_RRF_K", cls.hybrid_rrf_k),
+            hybrid_fusion_method=str(
+                values.get("RAG_HYBRID_FUSION_METHOD", cls.hybrid_fusion_method)
+            ).strip().lower(),
+            complexity_routing_enabled=_bool_value(
+                values,
+                "RAG_COMPLEXITY_ROUTING_ENABLED",
+                cls.complexity_routing_enabled,
+            ),
+            query_complexity_threshold=_float_value(
+                values,
+                "RAG_QUERY_COMPLEXITY_THRESHOLD",
+                cls.query_complexity_threshold,
+            ),
+            simple_query_top_k=_int_value(
+                values,
+                "RAG_SIMPLE_QUERY_TOP_K",
+                cls.simple_query_top_k,
+            ),
             multi_query_enabled=_bool_value(
                 values,
                 "RAG_MULTI_QUERY_ENABLED",
@@ -259,7 +352,7 @@ class RagConfig:
         embedding_weight = max(0.0, float(self.embedding_weight))
         total = keyword_weight + embedding_weight
         if total <= 0:
-            keyword_weight, embedding_weight = 0.3, 0.7
+            keyword_weight, embedding_weight = 0.5, 0.5
         else:
             keyword_weight = keyword_weight / total
             embedding_weight = embedding_weight / total
@@ -293,10 +386,45 @@ class RagConfig:
             fine_evidence_embedding_weight /= fine_evidence_total
         hybrid_max_top_k = max(1, int(self.hybrid_max_top_k))
         hybrid_max_candidate_k = max(hybrid_max_top_k, int(self.hybrid_max_candidate_k))
+        parent_chunk_size_tokens = max(128, int(self.parent_chunk_size_tokens))
+        child_chunk_size_tokens = max(32, int(self.child_chunk_size_tokens))
+        hybrid_fusion_method = str(self.hybrid_fusion_method).strip().lower()
+        if hybrid_fusion_method not in {"lambdamart", "rrf"}:
+            hybrid_fusion_method = "rrf"
+        simple_query_top_k = max(1, int(self.simple_query_top_k))
+        hybrid_top_k = min(max(1, int(self.hybrid_top_k)), hybrid_max_top_k)
+        rerank_top_k = min(max(1, int(self.rerank_top_k)), hybrid_max_candidate_k)
+        if hybrid_fusion_method == "rrf":
+            # The RRF + Cross-Encoder route uses the requested five-item
+            # answer budget unless a caller explicitly supplies another value.
+            simple_query_top_k = max(5, simple_query_top_k)
+            if hybrid_top_k == 8:
+                hybrid_top_k = 5
+        chunk_strategy = str(self.chunk_strategy).strip().lower()
+        if chunk_strategy not in {"boundary", "hard", "dynamic"}:
+            chunk_strategy = "dynamic"
         return RagConfig(
             top_k=max(1, int(self.top_k)),
             chunk_size=chunk_size,
             chunk_stride=chunk_stride,
+            chunk_strategy=chunk_strategy,
+            chunk_overlap_tokens=max(0, int(self.chunk_overlap_tokens)),
+            parent_child_enabled=bool(self.parent_child_enabled),
+            parent_chunk_size_tokens=parent_chunk_size_tokens,
+            child_chunk_size_tokens=child_chunk_size_tokens,
+            parent_chunk_overlap_tokens=min(
+                max(0, int(self.parent_chunk_overlap_tokens)),
+                parent_chunk_size_tokens - 1,
+            ),
+            child_chunk_overlap_tokens=min(
+                max(0, int(self.child_chunk_overlap_tokens)),
+                child_chunk_size_tokens - 1,
+            ),
+            query_rewrite_semantic_enabled=bool(self.query_rewrite_semantic_enabled),
+            query_rewrite_min_similarity=min(
+                max(-1.0, float(self.query_rewrite_min_similarity)),
+                1.0,
+            ),
             retrieval_candidate_k=max(1, int(self.retrieval_candidate_k)),
             keyword_weight=keyword_weight,
             embedding_weight=embedding_weight,
@@ -307,7 +435,8 @@ class RagConfig:
             verifier_min_keyword_score=max(0.0, float(self.verifier_min_keyword_score)),
             verifier_min_embedding_score=max(0.0, float(self.verifier_min_embedding_score)),
             verifier_context_chars=max(100, int(self.verifier_context_chars)),
-            hybrid_top_k=min(max(1, int(self.hybrid_top_k)), hybrid_max_top_k),
+            hybrid_top_k=hybrid_top_k,
+            rerank_top_k=rerank_top_k,
             hybrid_candidate_k=min(
                 max(1, int(self.hybrid_candidate_k)),
                 hybrid_max_candidate_k,
@@ -315,6 +444,10 @@ class RagConfig:
             hybrid_max_top_k=hybrid_max_top_k,
             hybrid_max_candidate_k=hybrid_max_candidate_k,
             hybrid_rrf_k=max(1, int(self.hybrid_rrf_k)),
+            hybrid_fusion_method=hybrid_fusion_method,
+            complexity_routing_enabled=bool(self.complexity_routing_enabled),
+            query_complexity_threshold=max(1.0, float(self.query_complexity_threshold)),
+            simple_query_top_k=simple_query_top_k,
             multi_query_enabled=bool(self.multi_query_enabled),
             multi_query_max_variants=min(
                 max(2, int(self.multi_query_max_variants)),

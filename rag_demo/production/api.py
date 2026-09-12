@@ -256,7 +256,11 @@ def create_app(
         owned_vector_repository = True
     if object_storage is None and production_environment:
         object_storage = S3ObjectStorage.from_settings(resolved_settings)
-    if inference_probe is None and production_environment:
+    if (
+        inference_probe is None
+        and production_environment
+        and any(str(model).startswith("ollama:") for model in resolved_settings.allowed_models)
+    ):
         inference_probe = OllamaInferenceProbe(
             resolved_settings.inference_base_url,
             resolved_settings.allowed_models,
@@ -1714,6 +1718,29 @@ def _public_result(
             "confidence": str(evidence.get("confidence") or ""),
             "reason": str(evidence.get("reason") or ""),
         }
+    validation = result.get("evidence_validation")
+    public_validation = None
+    if isinstance(validation, dict):
+        public_validation = {
+            "sufficient": bool(validation.get("sufficient")),
+            "status": str(validation.get("status") or ""),
+            "valid_citations": [
+                int(rank)
+                for rank in validation.get("valid_citations") or []
+                if str(rank).isdigit()
+            ],
+            "invalid_citations": [
+                int(rank)
+                for rank in validation.get("invalid_citations") or []
+                if str(rank).isdigit()
+            ],
+            "uncited_claims": [
+                str(claim)[:500]
+                for claim in validation.get("uncited_claims") or []
+                if str(claim).strip()
+            ][:20],
+            "reason": str(validation.get("reason") or ""),
+        }
     return {
         "schema_version": str(result.get("schema_version") or AGENT_RESPONSE_SCHEMA),
         "run_id": str(result.get("run_id") or ""),
@@ -1723,6 +1750,7 @@ def _public_result(
         "confidence": str(result.get("confidence") or "medium"),
         "citations": _public_citations(result),
         "grounding_warnings": list(result.get("grounding_warnings") or []),
+        "evidence_validation": public_validation,
         "retrieval": {
             "server_generated": True,
             "needed": bool(retrieval.get("needed")),

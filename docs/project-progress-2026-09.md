@@ -10,7 +10,7 @@
 
 - 多格式匯入：PDF、掃描 PDF、圖片、DOCX、TXT、Markdown、JSON。
 - OCR 與 DOCX 內嵌圖片處理，支援本機 VLM 延伸描述。
-- 父子 chunk、Embedding、BM25、RRF、Rerank、來源引用。
+- 父子 chunk、Embedding、BM25、RRF、簡單問題 Top-5、複雜問題 Cross-Encoder 重排、來源引用。
 - 多查詢問題拆解與查詢擴展。
 - 第二階段 evidence focus 與更細粒度 fine evidence 流程。
 - Evidence Gate 與 fail-closed 證據不足拒答。

@@ -113,7 +113,9 @@ class QueryRewriterDecisionTest(unittest.TestCase):
 
         ask_model.assert_called_once()
         self.assertTrue(decision.needs_retrieval)
-        self.assertIn("延長工時", decision.retrieval_query)
+        self.assertEqual(decision.retrieval_query, "公司這樣做是否合法？")
+        self.assertFalse(decision.semantic_accepted)
+        self.assertEqual(decision.semantic_validation_status, "filtered")
 
     def test_ambiguous_document_question_uses_router_rewrite(self):
         model_output = "\n".join(

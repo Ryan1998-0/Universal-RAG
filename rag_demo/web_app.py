@@ -347,7 +347,7 @@ class RagRequestHandler(BaseHTTPRequestHandler):
                 "model": DEFAULT_MODEL,
                 "profile": DEFAULT_PROFILE,
                 "static_root": str(STATIC_ROOT),
-                "retrieval": "bm25+embedding+rrf+rerank",
+                "retrieval": "parent-child(1024/256)+bm25+dense+rrf+complexity-gated-cross-encoder",
                 "document_upload": sorted(SUPPORTED_FORMATS),
                 "document_folders": True,
             })
@@ -520,6 +520,13 @@ class RagRequestHandler(BaseHTTPRequestHandler):
                 "retrieval_query": decision.retrieval_query,
                 "sub_questions": list(getattr(decision, "sub_questions", ()) or ()),
                 "query_variants": list(getattr(decision, "query_variants", ()) or ()),
+                "rewrite_semantic_validation": {
+                    "status": str(getattr(decision, "semantic_validation_status", "skipped") or "skipped"),
+                    "similarity": getattr(decision, "semantic_similarity", None),
+                    "accepted": bool(getattr(decision, "semantic_accepted", True)),
+                    "threshold": getattr(decision, "semantic_validation_threshold", None),
+                    "reason": str(getattr(decision, "semantic_validation_reason", "") or ""),
+                },
                 "timing_ms": round((perf_counter() - started_at) * 1000, 2),
             })
         except Exception as exc:
@@ -973,9 +980,21 @@ def _runtime_config_payload() -> dict:
             }
         ],
         "retrieval": {
+            "chunk_strategy": settings.chunk_strategy,
+            "chunk_size": settings.chunk_size,
+            "chunk_overlap_tokens": settings.chunk_overlap_tokens,
+            "query_rewrite_semantic_enabled": settings.query_rewrite_semantic_enabled,
+            "query_rewrite_min_similarity": settings.query_rewrite_min_similarity,
             "top_k": settings.hybrid_top_k,
             "candidate_k": settings.hybrid_candidate_k,
+            "rerank_top_k": settings.rerank_top_k,
             "max_top_k": settings.hybrid_max_top_k,
+            "fusion_method": settings.hybrid_fusion_method,
+            "complexity_routing_enabled": settings.complexity_routing_enabled,
+            "query_complexity_threshold": settings.query_complexity_threshold,
+            "simple_query_top_k": settings.simple_query_top_k,
+            "keyword_weight": settings.keyword_weight,
+            "embedding_weight": settings.embedding_weight,
         },
         "profiles": [
             {
@@ -1069,11 +1088,16 @@ def _is_text_file(path: Path) -> bool:
 def _normalize_retrieval_decision(raw_decision: object):
     if not isinstance(raw_decision, dict):
         return None
-    return {
+    normalized = {
         "needs_retrieval": bool(raw_decision.get("needs_retrieval")),
         "reason": str(raw_decision.get("reason") or ""),
         "retrieval_query": str(raw_decision.get("retrieval_query") or ""),
     }
+    if "rewrite_semantic_validation" in raw_decision:
+        normalized["rewrite_semantic_validation"] = dict(
+            raw_decision.get("rewrite_semantic_validation") or {}
+        )
+    return normalized
 
 
 def main() -> None:

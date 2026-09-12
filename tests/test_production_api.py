@@ -67,6 +67,14 @@ class FakePipeline:
                 }
             ],
             "grounding_warnings": [],
+            "evidence_validation": {
+                "sufficient": True,
+                "status": "passed",
+                "valid_citations": [1],
+                "invalid_citations": [],
+                "uncited_claims": [],
+                "reason": "通過來源標記與證據範圍檢查。",
+            },
             "retrieval": {
                 "server_generated": True,
                 "needed": True,
@@ -465,6 +473,10 @@ class ProductionApiTests(unittest.TestCase):
         self.assertNotIn(
             "private_debug",
             response.json()["retrieval"]["evidence_evaluation"],
+        )
+        self.assertEqual(
+            response.json()["evidence_validation"]["status"],
+            "passed",
         )
         self.assertEqual(response.headers["x-content-type-options"], "nosniff")
 

@@ -15,11 +15,19 @@ from rag_demo.embeddings import (
     DEFAULT_EMBEDDING_MODEL,
     embed_chunks,
     embed_query,
+    embed_texts,
     load_embedding_matrix,
     save_embedding_matrix,
 )
 from rag_demo.config import RagConfig
 from rag_demo.document_pipeline import DocumentStore
+from rag_demo.lambdamart_fusion import (
+    LAMBDA_MART_FUSION_METHOD,
+    fuse_candidates_with_lambdamart,
+)
+from rag_demo.parent_child import expand_child_contexts
+from rag_demo.cross_encoder import CrossEncoderReranker
+from rag_demo.query_complexity import classify_query_complexity
 from rag_demo.retrieval_planner import extract_focus_terms
 from rag_demo.retrieval_scope import RetrievalScope
 
@@ -27,6 +35,7 @@ from rag_demo.retrieval_scope import RetrievalScope
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PROFILE_RETRIEVAL_CONFIG = "retrieval.json"
 DEFAULT_PROFILE = "default"
+RRF_FUSION_METHOD = "rrf_v1"
 _PROFILE_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 _STOP_WORDS = {
@@ -82,6 +91,14 @@ class Bm25Index:
         self.average_length = (
             sum(self.document_lengths) / self.document_count if self.document_count else 1.0
         )
+        self.inverse_document_frequency = {
+            term: math.log(
+                1.0
+                + (self.document_count - document_frequency + 0.5)
+                / (document_frequency + 0.5)
+            )
+            for term, document_frequency in self.document_frequency.items()
+        }
 
     def search(
         self,
@@ -104,12 +121,7 @@ class Bm25Index:
                 term_frequency = counts.get(term, 0)
                 if not term_frequency:
                     continue
-                document_frequency = self.document_frequency.get(term, 0)
-                inverse_document_frequency = math.log(
-                    1.0
-                    + (self.document_count - document_frequency + 0.5)
-                    / (document_frequency + 0.5)
-                )
+                inverse_document_frequency = self.inverse_document_frequency.get(term, 0.0)
                 denominator = term_frequency + self.k1 * (
                     1.0 - self.b + self.b * (document_length / self.average_length)
                 )
@@ -140,6 +152,7 @@ class HybridRetriever:
         aliases: Sequence[dict],
         embeddings: Sequence[Sequence[float]],
         embed_query_fn: Callable[[str], Sequence[float]] = embed_query,
+        embed_queries_fn: Optional[Callable[[Sequence[str]], Sequence[Sequence[float]]]] = None,
         embedding_model: str = DEFAULT_EMBEDDING_MODEL,
         sources: Optional[Sequence[dict]] = None,
         profile: str = DEFAULT_PROFILE,
@@ -155,13 +168,32 @@ class HybridRetriever:
         if not len(chunks):
             matrix = np.empty((0, 0), dtype=np.float32)
 
-        self.settings = (settings or RagConfig.from_env()).normalized()
+        resolved_settings = settings or RagConfig.from_env()
+        # Keep legacy one-level fixtures and old profile snapshots on their
+        # explicit LambdaMART-compatible path. New parent-child indexes use
+        # RRF by default.
+        if (
+            settings is None
+            and resolved_settings.hybrid_fusion_method == "rrf"
+            and not any(str(chunk.get("chunk_level") or "").lower() == "child" for chunk in chunks)
+        ):
+            resolved_settings = RagConfig(
+                **{
+                    **resolved_settings.__dict__,
+                    "hybrid_fusion_method": "lambdamart",
+                    "hybrid_top_k": 8,
+                    "simple_query_top_k": 3,
+                    "rerank_top_k": 8,
+                }
+            )
+        self.settings = resolved_settings.normalized()
         self.profile = _normalize_profile_name(profile)
         self.chunks = [dict(chunk) for chunk in chunks]
         self.aliases = [dict(alias) for alias in aliases]
         self.query_expansions = _normalize_query_expansions(query_expansions)
         self.embeddings = _normalize_matrix(matrix) if matrix.size else matrix
         self.embed_query_fn = embed_query_fn
+        self.embed_queries_fn = embed_queries_fn
         self.embedding_model = embedding_model
         self.sources = [dict(source) for source in (sources or [])]
         self.metadata = dict(metadata or {})
@@ -175,7 +207,13 @@ class HybridRetriever:
             k1=self.settings.hybrid_bm25_k1,
             b=self.settings.hybrid_bm25_b,
         )
+        self._chunk_token_sets = [
+            set(counts.keys()) for counts in self.bm25.term_frequencies
+        ]
         self._index_lock = threading.RLock()
+        self._query_embedding_cache: Dict[str, np.ndarray] = {}
+        self._query_embedding_cache_limit = 256
+        self._cross_encoder: Optional[CrossEncoderReranker] = None
 
     @classmethod
     def from_profile(
@@ -231,6 +269,7 @@ class HybridRetriever:
             aliases=aliases,
             embeddings=embeddings,
             embed_query_fn=lambda text: embed_query(text, model_name=embedding_model),
+            embed_queries_fn=lambda texts: embed_texts(texts, model_name=embedding_model),
             embedding_model=embedding_model,
             sources=data.get("sources") or [],
             profile=clean_profile,
@@ -290,6 +329,11 @@ class HybridRetriever:
         retrieval_scope: Optional[RetrievalScope] = None,
     ) -> dict:
         started_at = perf_counter()
+        complexity_decision = classify_query_complexity(
+            question,
+            query_variants=query_variants or (),
+            threshold=self.settings.query_complexity_threshold,
+        )
         top_k = max(
             1,
             min(
@@ -352,15 +396,12 @@ class HybridRetriever:
         bm25_ms = _elapsed_ms(bm25_started)
 
         embedding_started = perf_counter()
-        dense_result_sets = [
-            self._embedding_search(
-                question=question,
-                retrieval_query=query,
-                top_k=candidate_k,
-                allowed_indices=allowed_indices,
-            )
-            for query in combined_queries
-        ]
+        dense_result_sets = self._embedding_search_many(
+            question=question,
+            retrieval_queries=combined_queries,
+            top_k=candidate_k,
+            allowed_indices=allowed_indices,
+        )
         embedding_ms = _elapsed_ms(embedding_started)
 
         fusion_started = perf_counter()
@@ -369,36 +410,148 @@ class HybridRetriever:
             embedding_result_sets=dense_result_sets,
             rrf_k=self.settings.hybrid_rrf_k,
         )
+        candidates = candidates[: min(100, max(top_k, candidate_k))]
+        if self.settings.hybrid_fusion_method == "rrf":
+            for candidate in candidates:
+                candidate["rrf_score"] = float(candidate.get("fusion_score", 0.0))
+                candidate.setdefault("lambda_mart_fusion_score", 0.0)
+                candidate.setdefault("mapped_bm25_score", 0.0)
+                candidate.setdefault("mapped_embedding_score", 0.0)
+        else:
+            candidates = fuse_candidates_with_lambdamart(
+                candidates,
+                keyword_weight=self.settings.keyword_weight,
+                embedding_weight=self.settings.embedding_weight,
+            )
         fusion_ms = _elapsed_ms(fusion_started)
 
-        rerank_started = perf_counter()
         answerability_query = str(evidence_query or "").strip() or " ".join(combined_queries)
-        reranked = rerank_candidates(
-            candidates=candidates,
-            chunks=self.chunks,
-            query=answerability_query,
-            top_k=top_k,
-            settings=self.settings,
+        rerank_applied = bool(
+            not self.settings.complexity_routing_enabled
+            or complexity_decision.is_complex
         )
-        rerank_ms = _elapsed_ms(rerank_started)
+        if rerank_applied:
+            rerank_started = perf_counter()
+            rerank_pool_k = min(
+                len(candidates),
+                max(100, top_k, self.settings.rerank_top_k),
+            )
+            rerank_pool = candidates[:rerank_pool_k]
+            if self.settings.hybrid_fusion_method == "rrf":
+                if self._cross_encoder is None:
+                    self._cross_encoder = CrossEncoderReranker()
+                documents = [
+                    str(self.chunks[int(candidate["index"])].get("content") or "")
+                    for candidate in rerank_pool
+                ]
+                scores = self._cross_encoder.score(answerability_query, documents)
+                if len(scores) != len(rerank_pool):
+                    raise RuntimeError("Cross-Encoder returned a different number of scores")
+                reranked = [
+                    {**candidate, "rerank_score": float(score), "rerank_applied": True}
+                    for candidate, score in zip(rerank_pool, scores)
+                ]
+                reranked.sort(
+                    key=lambda item: (
+                        float(item.get("rerank_score", 0.0)),
+                        float(item.get("rrf_score", item.get("fusion_score", 0.0))),
+                    ),
+                    reverse=True,
+                )
+            else:
+                reranked = rerank_candidates(
+                    candidates=rerank_pool,
+                    chunks=self.chunks,
+                    query=answerability_query,
+                    top_k=rerank_pool_k,
+                    settings=self.settings,
+                    chunk_token_sets=self._chunk_token_sets,
+                )
+            rerank_ms = _elapsed_ms(rerank_started)
+        else:
+            # A simple factual query does not need an expensive second-stage
+            # reranker. RRF already provides a stable rank signal, so keep
+            # only the configured direct top-N.
+            reranked = []
+            for candidate in candidates[: min(top_k, self.settings.simple_query_top_k)]:
+                direct = dict(candidate)
+                direct["rerank_score"] = float(
+                    direct.get(
+                        "lambda_mart_fusion_score"
+                        if self.settings.hybrid_fusion_method != "rrf"
+                        else "rrf_score",
+                        direct.get("fusion_score", 0.0),
+                    )
+                )
+                direct["rerank_applied"] = False
+                reranked.append(direct)
+            rerank_ms = 0.0
 
+        selected_candidates = reranked[:top_k]
+        parent_by_id = {
+            str(chunk.get("id")): chunk
+            for chunk in self.chunks
+            if str(chunk.get("chunk_level") or "").lower() == "parent"
+        }
+        evidence_candidates = [
+            {**self.chunks[int(candidate["index"])], **candidate}
+            for candidate in selected_candidates
+        ]
+        evidence_chunks = expand_child_contexts(
+            evidence_candidates,
+            parent_by_id=parent_by_id,
+            limit=top_k,
+        )
+        candidate_by_child_id = {
+            str(candidate.get("id") or self.chunks[int(candidate["index"])].get("id") or ""): candidate
+            for candidate in selected_candidates
+        }
         contexts = []
-        for rank, candidate in enumerate(reranked, start=1):
-            chunk = self.chunks[candidate["index"]]
+        for rank, chunk in enumerate(evidence_chunks, start=1):
+            candidate = candidate_by_child_id.get(str(chunk.get("retrieval_child_id") or ""), {})
             contexts.append(
                 {
                     "id": str(chunk.get("id") or candidate["index"]),
+                    "childChunkId": str(candidate.get("id") or self.chunks[int(candidate["index"])].get("id") or ""),
+                    "parentChunkId": str(chunk.get("parent_chunk_id") or chunk.get("id") or ""),
                     "rank": rank,
                     "title": str(chunk.get("title") or chunk.get("id") or "Untitled"),
                     "source": str(chunk.get("source_id") or chunk.get("source") or ""),
                     "page": str(chunk.get("page") or ""),
                     "content": str(chunk.get("content") or ""),
-                    "branch": "Hybrid reranker",
-                    "score": round(float(candidate["rerank_score"]), 6),
+                    "branch": (
+                        "RRF fusion (direct top-k)"
+                        if not rerank_applied
+                        else "RRF fusion + cross-encoder reranker"
+                    ),
+                    "score": round(float(candidate.get("rerank_score", candidate.get("fusion_score", 0.0))), 6),
                     "bm25Score": round(float(candidate.get("bm25_score", 0.0)), 6),
                     "embeddingScore": round(float(candidate.get("embedding_score", 0.0)), 6),
-                    "fusionScore": round(float(candidate.get("fusion_score", 0.0)), 6),
-                    "rerankScore": round(float(candidate["rerank_score"]), 6),
+                    "fusionScore": round(
+                        float(
+                            candidate.get(
+                                "lambda_mart_fusion_score"
+                                if self.settings.hybrid_fusion_method != "rrf"
+                                else "rrf_score",
+                                candidate.get("fusion_score", 0.0),
+                            )
+                        ),
+                        6,
+                    ),
+                    "rrfScore": round(float(candidate.get("rrf_score", candidate.get("fusion_score", 0.0))), 6),
+                    "mappedBm25Score": round(
+                        float(candidate.get("mapped_bm25_score", 0.0)),
+                        6,
+                    ),
+                    "mappedEmbeddingScore": round(
+                        float(candidate.get("mapped_embedding_score", 0.0)),
+                        6,
+                    ),
+                    "lambdaMARTScore": round(
+                        float(candidate.get("lambda_mart_fusion_score", 0.0)),
+                        6,
+                    ),
+                    "rerankScore": round(float(candidate.get("rerank_score", candidate.get("fusion_score", 0.0))), 6),
                     "matchedTerms": list(candidate.get("matched_terms") or []),
                     "documentVersionId": str(chunk.get("document_version_id") or ""),
                     "indexVersionId": str(chunk.get("index_version_id") or ""),
@@ -426,7 +579,10 @@ class HybridRetriever:
             "pipeline": [
                 {
                     "name": "Query Planning",
-                    "detail": f"Run {len(combined_queries)} complementary retrieval queries.",
+                    "detail": (
+                        f"Run {len(combined_queries)} complementary retrieval queries; "
+                        f"complexity gate={complexity_decision.label}."
+                    ),
                 },
                 {
                     "name": "BM25",
@@ -438,11 +594,17 @@ class HybridRetriever:
                 },
                 {
                     "name": "RRF Merge",
-                    "detail": f"Fuse {len(candidates)} unique BM25 and embedding candidates.",
+                    "detail": (
+                        f"RRF fused {len(candidates)} unique retrieval units with k={self.settings.hybrid_rrf_k}; "
+                        f"fusion method={self.settings.hybrid_fusion_method}."
+                    ),
                 },
                 {
                     "name": "Hybrid Relevance Reranker",
-                    "detail": f"Re-score fused candidates and keep top {len(contexts)}.",
+                    "detail": (
+                        f"{'Complex query: rerank candidates' if rerank_applied else 'Simple query: skip reranker'}; "
+                        f"keep top {len(contexts)} (simple cap {self.settings.simple_query_top_k})."
+                    ),
                 },
                 {
                     "name": "Evidence Relevance Gate",
@@ -461,8 +623,18 @@ class HybridRetriever:
                 "hubWarning": False,
                 "denseMatchedAliases": matched_aliases,
                 "embeddingModel": self.embedding_model,
-                "reranker": "weighted-hybrid-relevance-v1",
+                "reranker": "cross-encoder" if rerank_applied else "skipped-simple-query",
+                "rerankApplied": rerank_applied,
+                "queryComplexity": complexity_decision.as_dict(),
+                "fusionMethod": RRF_FUSION_METHOD if self.settings.hybrid_fusion_method == "rrf" else LAMBDA_MART_FUSION_METHOD,
+                "fusionDimension": "reciprocal-rank" if self.settings.hybrid_fusion_method == "rrf" else "[0, 1]",
+                "fusionKeywordWeight": self.settings.keyword_weight,
+                "fusionEmbeddingWeight": self.settings.embedding_weight,
+                "simpleQueryTopK": self.settings.simple_query_top_k,
+                "rerankTopK": self.settings.rerank_top_k,
                 "candidateCount": len(candidates),
+                "retrievalChunkLevel": "child" if any(str(item.get("chunk_level") or "").lower() == "child" for item in self.chunks) else "single",
+                "evidenceChunkLevel": "parent" if any(str(item.get("chunk_level") or "").lower() == "child" for item in self.chunks) else "same",
                 "queryCount": len(combined_queries),
                 "selectedSourceCount": len(set(source_ids or [])),
                 "profile": self.profile,
@@ -524,6 +696,9 @@ class HybridRetriever:
                 k1=self.settings.hybrid_bm25_k1,
                 b=self.settings.hybrid_bm25_b,
             )
+            self._chunk_token_sets = [
+                set(counts.keys()) for counts in self.bm25.term_frequencies
+            ]
             if not any(item.get("source_id") == source_id for item in self.sources):
                 self.sources.append(dict(source))
             return True
@@ -619,11 +794,15 @@ class HybridRetriever:
         retrieval_query: str,
         top_k: int,
         allowed_indices: Sequence[int],
+        query_vector: Optional[Sequence[float]] = None,
     ) -> List[dict]:
         if not allowed_indices:
             return []
         dense_query = str(retrieval_query or question).strip()
-        query_vector = _normalize_vector(np.asarray(self.embed_query_fn(dense_query), dtype=np.float32))
+        if query_vector is None:
+            query_vector = self._query_vector(dense_query)
+        else:
+            query_vector = _normalize_vector(np.asarray(query_vector, dtype=np.float32))
         index_array = np.asarray(allowed_indices, dtype=np.int64)
         scores = np.einsum(
             "ij,j->i",
@@ -643,6 +822,71 @@ class HybridRetriever:
             }
             for local_index in local_order
         ]
+
+    def _embedding_search_many(
+        self,
+        question: str,
+        retrieval_queries: Sequence[str],
+        top_k: int,
+        allowed_indices: Sequence[int],
+    ) -> List[List[dict]]:
+        if not allowed_indices:
+            return [[] for _ in retrieval_queries]
+
+        queries = [
+            str(query or question).strip()
+            for query in retrieval_queries
+        ]
+        if self.embed_queries_fn is None:
+            return [
+                self._embedding_search(
+                    question=question,
+                    retrieval_query=query,
+                    top_k=top_k,
+                    allowed_indices=allowed_indices,
+                )
+                for query in queries
+            ]
+
+        missing_queries = [
+            query for query in queries if query not in self._query_embedding_cache
+        ]
+        if missing_queries:
+            vectors = self.embed_queries_fn(missing_queries)
+            if len(vectors) != len(missing_queries):
+                raise ValueError("Batch embedding count does not match query count.")
+            for query, vector in zip(missing_queries, vectors):
+                self._remember_query_vector(query, vector)
+
+        return [
+            self._embedding_search(
+                question=question,
+                retrieval_query=query,
+                top_k=top_k,
+                allowed_indices=allowed_indices,
+                query_vector=self._query_embedding_cache[query],
+            )
+            for query in queries
+        ]
+
+    def _query_vector(self, query: str) -> np.ndarray:
+        cached = self._query_embedding_cache.get(query)
+        if cached is not None:
+            return cached
+        vector = self._remember_query_vector(query, self.embed_query_fn(query))
+        return vector
+
+    def _remember_query_vector(
+        self,
+        query: str,
+        vector: Sequence[float],
+    ) -> np.ndarray:
+        normalized = _normalize_vector(np.asarray(vector, dtype=np.float32))
+        if self._query_embedding_cache_limit > 0:
+            if len(self._query_embedding_cache) >= self._query_embedding_cache_limit:
+                self._query_embedding_cache.pop(next(iter(self._query_embedding_cache)))
+            self._query_embedding_cache[query] = normalized
+        return normalized
 
 
 def get_hybrid_retriever(profile: str = None) -> HybridRetriever:
@@ -785,6 +1029,8 @@ def reciprocal_rank_fusion_many(
                     float(result.get("score", 0.0)),
                 )
 
+    for candidate in candidates.values():
+        candidate["rrf_score"] = float(candidate.get("fusion_score", 0.0))
     return sorted(candidates.values(), key=lambda item: item["fusion_score"], reverse=True)
 
 
@@ -794,6 +1040,7 @@ def rerank_candidates(
     query: str,
     top_k: int,
     settings: Optional[RagConfig] = None,
+    chunk_token_sets: Optional[Sequence[Set[str]]] = None,
 ) -> List[dict]:
     if not candidates:
         return []
@@ -802,13 +1049,28 @@ def rerank_candidates(
     minimum_embedding = min(embedding_values, default=0.0)
     maximum_embedding = max(embedding_values, default=1.0)
     embedding_span = max(maximum_embedding - minimum_embedding, 1e-9)
-    maximum_fusion = max((float(item.get("fusion_score", 0.0)) for item in candidates), default=1.0)
+    maximum_fusion = max(
+        (
+            float(
+                item.get(
+                    "lambda_mart_fusion_score",
+                    item.get("fusion_score", 0.0),
+                )
+            )
+            for item in candidates
+        ),
+        default=1.0,
+    )
     query_terms = list(dict.fromkeys(tokenize_bm25(query)))
 
     settings = (settings or RagConfig.from_env()).normalized()
     reranked = []
     for candidate in candidates:
-        text_tokens = set(tokenize_bm25(_chunk_text(chunks[int(candidate["index"])])))
+        chunk_index = int(candidate["index"])
+        if chunk_token_sets is not None and chunk_index < len(chunk_token_sets):
+            text_tokens = chunk_token_sets[chunk_index]
+        else:
+            text_tokens = set(tokenize_bm25(_chunk_text(chunks[chunk_index])))
         covered_terms = [term for term in query_terms if term in text_tokens]
         coverage = len(covered_terms) / max(1, len(query_terms))
         normalized_bm25 = (
@@ -818,7 +1080,15 @@ def rerank_candidates(
             float(candidate.get("embedding_score", 0.0)) - minimum_embedding
         ) / embedding_span
         normalized_fusion = (
-            float(candidate.get("fusion_score", 0.0)) / maximum_fusion if maximum_fusion else 0.0
+            float(
+                candidate.get(
+                    "lambda_mart_fusion_score",
+                    candidate.get("fusion_score", 0.0),
+                )
+            )
+            / maximum_fusion
+            if maximum_fusion
+            else 0.0
         )
         exact_phrase_bonus = _exact_phrase_bonus(query, _chunk_text(chunks[int(candidate["index"])]))
         rerank_score = (

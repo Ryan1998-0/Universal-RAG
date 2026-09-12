@@ -1,7 +1,10 @@
+import os
 import re
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Callable, List, Optional, Sequence, Tuple
 
+from rag_demo.config import RagConfig
+from rag_demo.embeddings import DEFAULT_EMBEDDING_MODEL, embed_texts
 from rag_demo.general_answer import CURRENT_DATETIME_REASON, is_current_datetime_question
 from rag_demo.model_providers import ask_model
 
@@ -39,6 +42,11 @@ class QueryRewriteDecision:
     raw_output: str = ""
     sub_questions: Tuple[str, ...] = ()
     query_variants: Tuple[str, ...] = ()
+    semantic_similarity: Optional[float] = None
+    semantic_accepted: bool = True
+    semantic_validation_status: str = "skipped"
+    semantic_validation_reason: str = ""
+    semantic_validation_threshold: Optional[float] = None
 
 
 def build_rewrite_prompt(question: str, conversation_context: str = "") -> str:
@@ -125,20 +133,153 @@ def decide_and_rewrite_query_for_retrieval(
     if acronym_reason:
         needs_retrieval = True
         reason = acronym_reason
+    candidate_queries = [
+        sanitized_query,
+        *(
+            sanitize_retrieval_query(question, query)
+            for query in retrieval_queries
+            if str(query).strip()
+        ),
+    ]
+    semantic_validation = validate_rewrite_semantics(
+        original_question=question,
+        rewritten_queries=candidate_queries,
+    )
+    validated_queries = semantic_validation["queries"]
+    validated_acceptance = semantic_validation["accepted"]
+    primary_similarity = semantic_validation["similarities"][0] if semantic_validation["similarities"] else None
+    primary_accepted = bool(validated_acceptance[0]) if validated_acceptance else True
+    accepted_queries = [
+        query
+        for query, accepted in zip(validated_queries[1:], validated_acceptance[1:])
+        if accepted
+    ]
+    primary_query = validated_queries[0] if primary_accepted and validated_queries else question
+    if not primary_accepted:
+        primary_query = question
+    accepted_queries = list(dict.fromkeys([primary_query, *accepted_queries]))
     return QueryRewriteDecision(
         needs_retrieval=needs_retrieval,
         reason=reason,
-        retrieval_query=sanitized_query,
+        retrieval_query=primary_query,
         raw_output=output,
         sub_questions=tuple(extract_sub_questions(output)),
-        query_variants=tuple(
-            dict.fromkeys(
-                sanitize_retrieval_query(question, query)
-                for query in [sanitized_query, *retrieval_queries]
-                if str(query).strip()
-            )
-        ),
+        query_variants=tuple(accepted_queries),
+        semantic_similarity=primary_similarity,
+        semantic_accepted=primary_accepted,
+        semantic_validation_status=semantic_validation["status"],
+        semantic_validation_reason=semantic_validation["reason"],
+        semantic_validation_threshold=semantic_validation["threshold"],
     )
+
+
+def validate_rewrite_semantics(
+    original_question: str,
+    rewritten_queries: Sequence[str],
+    min_similarity: Optional[float] = None,
+    enabled: Optional[bool] = None,
+    embedding_fn: Optional[Callable[..., Sequence[Sequence[float]]]] = None,
+    model_name: Optional[str] = None,
+) -> dict:
+    """Keep only rewrites semantically close to the user's original query.
+
+    The primary rewrite and every auxiliary query are compared in one batched
+    embedding call. A candidate below the configured cosine threshold is
+    discarded; the original question is retained as the safe retrieval
+    fallback. If the embedding service is unavailable, the rewrite is kept and
+    the result is marked ``unavailable`` so a temporary model outage does not
+    disable retrieval entirely.
+    """
+
+    config = RagConfig.from_env().normalized()
+    is_enabled = config.query_rewrite_semantic_enabled if enabled is None else bool(enabled)
+    threshold = (
+        config.query_rewrite_min_similarity
+        if min_similarity is None
+        else min(1.0, max(-1.0, float(min_similarity)))
+    )
+    threshold = min(1.0, max(-1.0, float(threshold)))
+    original = str(original_question or "").strip()
+    candidates = list(dict.fromkeys(str(query or "").strip() for query in rewritten_queries if str(query or "").strip()))
+    if not candidates:
+        candidates = [original]
+    if not is_enabled:
+        return {
+            "status": "disabled",
+            "reason": "semantic query rewrite validation is disabled",
+            "threshold": threshold,
+            "queries": candidates,
+            "similarities": [None for _ in candidates],
+            "accepted": [True for _ in candidates],
+        }
+
+    similarities: List[Optional[float]] = []
+    needs_embedding = []
+    for index, candidate in enumerate(candidates):
+        if _compact_query(original) == _compact_query(candidate):
+            similarities.append(1.0)
+        else:
+            similarities.append(None)
+            needs_embedding.append(index)
+    if needs_embedding:
+        try:
+            embedder = embedding_fn or embed_texts
+            texts = [original, *(candidates[index] for index in needs_embedding)]
+            try:
+                vectors = embedder(
+                    texts,
+                    model_name=(model_name or os.getenv("RAG_EMBEDDING_MODEL") or DEFAULT_EMBEDDING_MODEL),
+                )
+            except TypeError:
+                # Small test doubles and custom adapters may accept only the
+                # text sequence; the production embed_texts supports model_name.
+                vectors = embedder(texts)
+            original_vector = vectors[0]
+            for vector_index, candidate_index in enumerate(needs_embedding, start=1):
+                similarities[candidate_index] = round(
+                    _cosine_similarity(original_vector, vectors[vector_index]),
+                    6,
+                )
+        except Exception as exc:
+            return {
+                "status": "unavailable",
+                "reason": f"embedding validation unavailable; rewrites preserved: {type(exc).__name__}",
+                "threshold": threshold,
+                "queries": candidates,
+                "similarities": similarities,
+                "accepted": [True for _ in candidates],
+            }
+
+    accepted = [
+        similarity is not None and similarity >= threshold
+        for similarity in similarities
+    ]
+    return {
+        "status": "passed" if all(accepted) else "filtered",
+        "reason": (
+            f"cosine similarity threshold {threshold:.2f}; "
+            f"kept {sum(accepted)}/{len(accepted)} rewrites"
+        ),
+        "threshold": threshold,
+        "queries": candidates,
+        "similarities": similarities,
+        "accepted": accepted,
+    }
+
+
+def _compact_query(value: object) -> str:
+    return re.sub(r"\s+", "", str(value or "")).casefold()
+
+
+def _cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
+    if len(left) != len(right) or len(left) == 0:
+        raise ValueError("embedding dimensions differ")
+    dot = sum(float(a) * float(b) for a, b in zip(left, right))
+    left_norm = sum(float(value) * float(value) for value in left) ** 0.5
+    right_norm = sum(float(value) * float(value) for value in right) ** 0.5
+    if left_norm <= 0.0 or right_norm <= 0.0:
+        raise ValueError("embedding vector is empty")
+    return dot / (left_norm * right_norm)
 
 
 def deterministic_retrieval_decision(question: str, original_question: str = None):

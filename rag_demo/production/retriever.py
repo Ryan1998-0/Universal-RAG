@@ -5,11 +5,18 @@ from typing import Optional, Sequence
 
 from rag_demo.config import RagConfig
 from rag_demo.hybrid_retrieval import tokenize_bm25
+from rag_demo.lambdamart_fusion import (
+    LAMBDA_MART_FUSION_METHOD,
+    fuse_candidates_with_lambdamart,
+)
+from rag_demo.hybrid_retrieval import RRF_FUSION_METHOD
+from rag_demo.parent_child import expand_child_contexts
+from rag_demo.query_complexity import classify_query_complexity
 from rag_demo.retrieval_scope import RetrievalScope
 
 
 class ProductionHybridRetriever:
-    """Server-backed BM25 + dense retrieval followed by true cross-encoder rerank."""
+    """Server-backed sparse/dense retrieval with gated second-stage reranking."""
 
     def __init__(self, vector_repository, embedding_runtime, settings: RagConfig | None = None):
         self.vector_repository = vector_repository
@@ -24,8 +31,15 @@ class ProductionHybridRetriever:
         top_k: Optional[int] = None,
         candidate_k: Optional[int] = None,
         retrieval_scope: Optional[RetrievalScope] = None,
+        query_variants: Optional[Sequence[str]] = None,
+        evidence_query: str = "",
     ) -> dict:
         started_at = perf_counter()
+        complexity_decision = classify_query_complexity(
+            question,
+            query_variants=query_variants or (),
+            threshold=self.settings.query_complexity_threshold,
+        )
         top_k = max(1, min(int(top_k or self.settings.hybrid_top_k), 50))
         candidate_k = max(top_k, min(int(candidate_k or self.settings.hybrid_candidate_k), 200))
         combined_query = " ".join(dict.fromkeys(
@@ -65,45 +79,141 @@ class ProductionHybridRetriever:
         sparse_ms = _elapsed_ms(sparse_started)
 
         fusion_started = perf_counter()
-        candidates = _reciprocal_rank_fusion(dense_hits, sparse_hits)
+        candidates = _reciprocal_rank_fusion(
+            dense_hits,
+            sparse_hits,
+            rrf_k=self.settings.hybrid_rrf_k,
+        )
+        candidates = candidates[: min(100, max(top_k, candidate_k))]
+        legacy_single_level = not any(
+            str(item.get("payload", {}).get("chunk_level") or "").lower() == "child"
+            for item in candidates
+        )
+        simple_query_top_k = (
+            3
+            if legacy_single_level and self.settings.hybrid_fusion_method == "rrf"
+            else self.settings.simple_query_top_k
+        )
+        if self.settings.hybrid_fusion_method == "rrf":
+            for candidate in candidates:
+                candidate.setdefault("lambda_mart_fusion_score", 0.0)
+                candidate.setdefault("mapped_bm25_score", 0.0)
+                candidate.setdefault("mapped_embedding_score", 0.0)
+        else:
+            candidates = fuse_candidates_with_lambdamart(
+                candidates,
+                keyword_weight=self.settings.keyword_weight,
+                embedding_weight=self.settings.embedding_weight,
+            )
         fusion_ms = _elapsed_ms(fusion_started)
 
-        rerank_started = perf_counter()
-        documents = [str(item["payload"].get("content") or "") for item in candidates]
-        scores = self.embedding_runtime.rerank(combined_query, documents) if documents else []
-        if len(scores) != len(candidates):
-            raise RuntimeError("reranker returned a different number of scores")
-        for candidate, score in zip(candidates, scores):
-            candidate["rerank_score"] = float(score)
-        candidates.sort(
-            key=lambda item: (item["rerank_score"], item["rrf_score"]),
-            reverse=True,
+        rerank_applied = bool(
+            not self.settings.complexity_routing_enabled
+            or complexity_decision.is_complex
         )
-        rerank_ms = _elapsed_ms(rerank_started)
+        if rerank_applied:
+            rerank_started = perf_counter()
+            # The first stage deliberately produces a broad pool. Cross
+            # encoder work is limited to that pool and the final answer is
+            # always capped at top_k.
+            rerank_pool_k = min(len(candidates), max(100, top_k, self.settings.rerank_top_k))
+            rerank_candidates = candidates[:rerank_pool_k]
+            documents = [str(item["payload"].get("content") or "") for item in rerank_candidates]
+            scores = self.embedding_runtime.rerank(combined_query, documents) if documents else []
+            if len(scores) != len(rerank_candidates):
+                raise RuntimeError("reranker returned a different number of scores")
+            for candidate, score in zip(rerank_candidates, scores):
+                candidate["rerank_score"] = float(score)
+            reranked = sorted(
+                rerank_candidates,
+                key=lambda item: (
+                    item["rerank_score"],
+                    item.get("lambda_mart_fusion_score", 0.0),
+                    item["rrf_score"],
+                ),
+                reverse=True,
+            )
+            rerank_ms = _elapsed_ms(rerank_started)
+        else:
+            rerank_ms = 0.0
+            reranked = []
+            for candidate in candidates[: min(top_k, simple_query_top_k)]:
+                candidate["rerank_score"] = float(
+                    candidate.get("lambda_mart_fusion_score", candidate.get("rrf_score", 0.0))
+                )
+                reranked.append(candidate)
+            reranked.sort(
+                key=lambda item: (
+                    item["rerank_score"],
+                    item["rrf_score"],
+                ),
+                reverse=True,
+            )
 
         query_terms = set(tokenize_bm25(combined_query))
-        contexts = []
-        for rank, candidate in enumerate(candidates[:top_k], start=1):
+        output_limit = top_k if rerank_applied else min(top_k, simple_query_top_k)
+        selected_candidates = reranked[:output_limit]
+        evidence_candidates = []
+        for candidate in selected_candidates:
             payload = candidate["payload"]
-            content = str(payload.get("content") or "")
+            evidence_candidates.append({
+                **payload,
+                "id": str(payload.get("chunk_id") or candidate["point_id"]),
+                "bm25_score": candidate.get("sparse_score", 0.0),
+                "embedding_score": candidate.get("dense_score", 0.0),
+                "fusion_score": candidate.get("rrf_score", 0.0),
+                "rrf_score": candidate.get("rrf_score", 0.0),
+                "rerank_score": candidate.get("rerank_score", candidate.get("rrf_score", 0.0)),
+            })
+        evidence_chunks = expand_child_contexts(evidence_candidates, limit=output_limit)
+        candidate_by_child_id = {
+            str(candidate["payload"].get("chunk_id") or candidate["point_id"]): candidate
+            for candidate in selected_candidates
+        }
+        contexts = []
+        for rank, evidence in enumerate(evidence_chunks, start=1):
+            candidate = candidate_by_child_id.get(str(evidence.get("retrieval_child_id") or ""), {})
+            payload = candidate.get("payload") or evidence
+            content = str(evidence.get("content") or payload.get("content") or "")
             matched_terms = sorted(query_terms.intersection(tokenize_bm25(content)))[:20]
             contexts.append({
-                "id": str(payload.get("chunk_id") or candidate["point_id"]),
+                "id": str(evidence.get("id") or payload.get("chunk_id") or candidate.get("point_id") or ""),
+                "childChunkId": str(payload.get("chunk_id") or candidate.get("point_id") or ""),
+                "parentChunkId": str(evidence.get("parent_chunk_id") or evidence.get("id") or ""),
                 "rank": rank,
-                "title": str(payload.get("title") or payload.get("chunk_id") or "Untitled"),
-                "source": str(payload.get("source_id") or ""),
-                "page": str(payload.get("page") or ""),
+                "title": str(evidence.get("title") or payload.get("title") or payload.get("chunk_id") or "Untitled"),
+                "source": str(evidence.get("source_id") or payload.get("source_id") or ""),
+                "page": str(evidence.get("page") or payload.get("page") or ""),
                 "content": content,
-                "branch": "Qdrant hybrid + cross encoder",
-                "score": round(float(candidate["rerank_score"]), 6),
+                "branch": (
+                    "Qdrant hybrid + RRF fusion (direct top-k)"
+                    if not rerank_applied
+                    else "Qdrant hybrid + RRF fusion + cross encoder"
+                ),
+                "score": round(float(candidate.get("rerank_score", candidate.get("rrf_score", 0.0))), 6),
                 "bm25Score": round(float(candidate["sparse_score"]), 6),
                 "embeddingScore": round(float(candidate["dense_score"]), 6),
-                "fusionScore": round(float(candidate["rrf_score"]), 6),
-                "rerankScore": round(float(candidate["rerank_score"]), 6),
+                "fusionScore": round(
+                    float(candidate.get("lambda_mart_fusion_score", candidate.get("rrf_score", 0.0)))
+                    if self.settings.hybrid_fusion_method != "rrf"
+                    else float(candidate.get("rrf_score", 0.0)),
+                    6,
+                ),
+                "rrfScore": round(float(candidate["rrf_score"]), 6),
+                "mappedBm25Score": round(float(candidate.get("mapped_bm25_score", 0.0)), 6),
+                "mappedEmbeddingScore": round(
+                    float(candidate.get("mapped_embedding_score", 0.0)),
+                    6,
+                ),
+                "lambdaMARTScore": round(
+                    float(candidate.get("lambda_mart_fusion_score", 0.0)),
+                    6,
+                ),
+                "rerankScore": round(float(candidate.get("rerank_score", candidate.get("rrf_score", 0.0))), 6),
                 "matchedTerms": matched_terms,
-                "documentVersionId": str(payload.get("document_version_id") or ""),
-                "chunkRecordId": str(payload.get("chunk_record_id") or ""),
-                "indexVersionId": str(payload.get("index_version_id") or ""),
+                "documentVersionId": str(evidence.get("document_version_id") or payload.get("document_version_id") or ""),
+                "chunkRecordId": str(evidence.get("chunk_record_id") or payload.get("chunk_record_id") or ""),
+                "indexVersionId": str(evidence.get("index_version_id") or payload.get("index_version_id") or ""),
             })
 
         return {
@@ -114,8 +224,21 @@ class ProductionHybridRetriever:
             "pipeline": [
                 {"name": "BM25 sparse", "detail": f"Qdrant sparse candidates: {len(sparse_hits)}."},
                 {"name": "Dense embedding", "detail": f"Qdrant dense candidates: {len(dense_hits)}."},
-                {"name": "RRF", "detail": f"Fused unique candidates: {len(candidates)}."},
-                {"name": "Cross encoder", "detail": f"Reranked top {len(contexts)} contexts."},
+                {
+                    "name": "Candidate Merge",
+                    "detail": f"Union {len(candidates)} candidates for rank diagnostics.",
+                },
+                {
+                    "name": "RRF Fusion",
+                    "detail": f"Fuse sparse and dense ranks with reciprocal-rank k={self.settings.hybrid_rrf_k}; keep the first {min(100, len(candidates))} candidates.",
+                },
+                {
+                    "name": "Cross encoder",
+                    "detail": (
+                        f"{'Reranked' if rerank_applied else 'Skipped for simple query; direct selected'} "
+                        f"top {len(contexts)} contexts."
+                    ),
+                },
             ],
             "timings": {
                 "bm25Ms": sparse_ms,
@@ -128,6 +251,16 @@ class ProductionHybridRetriever:
                 "tenantScopeApplied": True,
                 "indexVersionId": retrieval_scope.index_version_id,
                 "candidateCount": len(candidates),
+                "rerankApplied": rerank_applied,
+                "queryComplexity": complexity_decision.as_dict(),
+                "fusionMethod": RRF_FUSION_METHOD if self.settings.hybrid_fusion_method == "rrf" else LAMBDA_MART_FUSION_METHOD,
+                "fusionDimension": "reciprocal-rank" if self.settings.hybrid_fusion_method == "rrf" else "[0, 1]",
+                "fusionKeywordWeight": self.settings.keyword_weight,
+                "fusionEmbeddingWeight": self.settings.embedding_weight,
+                "simpleQueryTopK": simple_query_top_k,
+                "rerankTopK": self.settings.rerank_top_k,
+                "retrievalChunkLevel": "child" if any(str(item.get("payload", {}).get("chunk_level") or "").lower() == "child" for item in candidates) else "single",
+                "evidenceChunkLevel": "parent" if any(str(item.get("payload", {}).get("chunk_level") or "").lower() == "child" for item in candidates) else "same",
             },
         }
 

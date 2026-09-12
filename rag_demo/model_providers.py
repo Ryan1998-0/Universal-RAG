@@ -26,7 +26,9 @@ def parse_model_spec(model_spec: str) -> ModelSpec:
         return ModelSpec(provider="ollama", model="qwen2.5:7b")
 
     provider, separator, model = model_spec.partition(":")
-    if separator and provider in {"ollama", "openai", "anthropic"}:
+    if separator and provider in {"ollama", "openai", "anthropic", "codex", "subagent"}:
+        if provider == "subagent":
+            provider = "codex"
         return ModelSpec(provider=provider, model=model)
 
     return ModelSpec(provider="ollama", model=model_spec)
@@ -38,6 +40,40 @@ def ask_model(
     system: Optional[str] = None,
 ) -> str:
     spec = parse_model_spec(model)
+    if spec.provider == "codex":
+        from rag_demo.codex_subagent import ask_codex_subagent
+
+        return ask_codex_subagent(
+            prompt=prompt,
+            model=spec.model,
+            system=system,
+            timeout_seconds=_MODEL_REQUEST_TIMEOUT_SECONDS.get(),
+        )
+
+    # Keep the legacy direct API as the safe default for existing deployments.
+    # Set RAG_MODEL_BACKEND=langchain to opt into the new adapter explicitly.
+    backend = os.getenv("RAG_MODEL_BACKEND", "direct").strip().lower()
+    if backend not in {"auto", "direct", "langchain"}:
+        raise ValueError(
+            "RAG_MODEL_BACKEND must be one of: auto, direct, langchain."
+        )
+    if backend in {"auto", "langchain"}:
+        from rag_demo.langchain_integration import (
+            LangChainUnavailableError,
+            ask_langchain,
+        )
+
+        try:
+            return ask_langchain(
+                prompt=prompt,
+                model=model,
+                system=system,
+                timeout_seconds=_MODEL_REQUEST_TIMEOUT_SECONDS.get(),
+            )
+        except LangChainUnavailableError:
+            if backend == "langchain":
+                raise
+
     timeout_seconds = _MODEL_REQUEST_TIMEOUT_SECONDS.get()
     if spec.provider == "ollama":
         return ask_ollama(

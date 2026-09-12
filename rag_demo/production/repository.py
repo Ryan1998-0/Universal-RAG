@@ -591,6 +591,11 @@ class SqlAlchemyTenantRepository:
                 "retrieval": {"needed": answer_run.retrieval_needed},
                 "model": {"name": answer_run.model},
                 "timings": answer_run.timings_json,
+                "evidence_validation": (
+                    dict((answer_run.retrieval_json or {}).get("evidence_validation") or {})
+                    if isinstance(answer_run.retrieval_json, dict)
+                    else None
+                ),
                 "citations": [],
             }
         return payload
@@ -699,6 +704,11 @@ class SqlAlchemyTenantRepository:
                 "answer": run.answer,
                 "retrieval_needed": run.retrieval_needed,
                 "timings": run.timings_json,
+                "evidence_validation": (
+                    dict((run.retrieval_json or {}).get("evidence_validation") or {})
+                    if isinstance(run.retrieval_json, dict)
+                    else None
+                ),
                 "created_at": run.created_at.isoformat(),
                 "citations": evidence,
             }
@@ -1558,10 +1568,14 @@ class SqlAlchemyTenantRepository:
                 retrieval_needed=bool(result.get("retrieval", {}).get("needed")),
                 source_ids_json=list(authorized.source_ids),
                 timings_json=dict(result.get("timings") or {}),
-                retrieval_json=_safe_retrieval_record(result.get("retrieval")),
+                retrieval_json=_safe_retrieval_record(
+                    result.get("retrieval"),
+                    result.get("evidence_validation"),
+                ),
             )
             session.add(run)
             if conversation is not None:
+                message_created_at = utc_now()
                 previous_user_count = session.scalar(
                     select(func.count(MessageRecord.id)).where(
                         MessageRecord.tenant_id == principal.tenant_id,
@@ -1576,6 +1590,7 @@ class SqlAlchemyTenantRepository:
                         role="user",
                         content=question,
                         metadata_json={"run_id": run.id},
+                        created_at=message_created_at,
                     ),
                     MessageRecord(
                         tenant_id=principal.tenant_id,
@@ -1585,7 +1600,11 @@ class SqlAlchemyTenantRepository:
                         metadata_json={
                             "run_id": run.id,
                             "confidence": str(result.get("confidence") or ""),
+                            "evidence_validation": dict(
+                                result.get("evidence_validation") or {}
+                            ),
                         },
+                        created_at=message_created_at + timedelta(microseconds=1),
                     ),
                 ])
                 if int(previous_user_count) == 0:
@@ -1635,7 +1654,7 @@ class SqlAlchemyTenantRepository:
             ))
 
 
-def _safe_retrieval_record(raw_retrieval) -> dict:
+def _safe_retrieval_record(raw_retrieval, raw_evidence_validation=None) -> dict:
     retrieval = dict(raw_retrieval or {})
     contexts = list(retrieval.pop("contexts", []) or [])
     retrieval["context_ids"] = [
@@ -1643,6 +1662,27 @@ def _safe_retrieval_record(raw_retrieval) -> dict:
         for context in contexts
         if isinstance(context, dict)
     ]
+    if isinstance(raw_evidence_validation, dict):
+        retrieval["evidence_validation"] = {
+            "sufficient": bool(raw_evidence_validation.get("sufficient")),
+            "status": str(raw_evidence_validation.get("status") or ""),
+            "valid_citations": [
+                int(rank)
+                for rank in raw_evidence_validation.get("valid_citations") or []
+                if str(rank).isdigit()
+            ],
+            "invalid_citations": [
+                int(rank)
+                for rank in raw_evidence_validation.get("invalid_citations") or []
+                if str(rank).isdigit()
+            ],
+            "uncited_claims": [
+                str(claim)[:500]
+                for claim in raw_evidence_validation.get("uncited_claims") or []
+                if str(claim).strip()
+            ][:20],
+            "reason": str(raw_evidence_validation.get("reason") or ""),
+        }
     return retrieval
 
 

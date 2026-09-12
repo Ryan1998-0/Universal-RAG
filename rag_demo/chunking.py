@@ -3,12 +3,15 @@ import re
 from typing import Dict, List
 
 from rag_demo.config import RagConfig
+from rag_demo.chunk_strategies import split_text
+from rag_demo.parent_child import build_parent_child_index
 
 
 Chunk = Dict[str, object]
 
 
 def chunk_markdown(markdown_text: str, source: str) -> List[Chunk]:
+    config = RagConfig.from_env()
     chunks: List[Chunk] = []
     current_parent_title = ""
     current_title = None
@@ -18,16 +21,18 @@ def chunk_markdown(markdown_text: str, source: str) -> List[Chunk]:
     for line in markdown_text.splitlines():
         if line.startswith("## ") and not line.startswith("### "):
             if current_title and current_lines:
-                chunks.append(
-                    _make_chunk(
-                        source,
-                        chunk_index,
-                        current_parent_title,
-                        current_title,
-                        current_lines,
-                    )
+                chunk_index = _append_sized_chunks(
+                    chunks,
+                    source,
+                    chunk_index,
+                    current_parent_title,
+                    current_title,
+                    current_lines,
+                    config.chunk_size,
+                    config.chunk_stride,
+                    config.chunk_strategy,
+                    config.chunk_overlap_tokens,
                 )
-                chunk_index += 1
                 current_title = None
                 current_lines = []
             current_parent_title = line.removeprefix("## ").strip()
@@ -35,16 +40,18 @@ def chunk_markdown(markdown_text: str, source: str) -> List[Chunk]:
 
         if line.startswith("### "):
             if current_title and current_lines:
-                chunks.append(
-                    _make_chunk(
-                        source,
-                        chunk_index,
-                        current_parent_title,
-                        current_title,
-                        current_lines,
-                    )
+                chunk_index = _append_sized_chunks(
+                    chunks,
+                    source,
+                    chunk_index,
+                    current_parent_title,
+                    current_title,
+                    current_lines,
+                    config.chunk_size,
+                    config.chunk_stride,
+                    config.chunk_strategy,
+                    config.chunk_overlap_tokens,
                 )
-                chunk_index += 1
             current_title = line.removeprefix("### ").strip()
             current_lines = []
             continue
@@ -53,14 +60,17 @@ def chunk_markdown(markdown_text: str, source: str) -> List[Chunk]:
             current_lines.append(line)
 
     if current_title and current_lines:
-        chunks.append(
-            _make_chunk(
-                source,
-                chunk_index,
-                current_parent_title,
-                current_title,
-                current_lines,
-            )
+        _append_sized_chunks(
+            chunks,
+            source,
+            chunk_index,
+            current_parent_title,
+            current_title,
+            current_lines,
+            config.chunk_size,
+            config.chunk_stride,
+            config.chunk_strategy,
+            config.chunk_overlap_tokens,
         )
 
     return chunks
@@ -134,6 +144,8 @@ def chunk_sectioned_text(
                     current_lines,
                     chunk_size,
                     chunk_stride,
+                    config.chunk_strategy,
+                    config.chunk_overlap_tokens,
                 )
             current_title = _clean_delimited_section_heading(stripped)
             current_lines = []
@@ -152,6 +164,8 @@ def chunk_sectioned_text(
             current_lines,
             chunk_size,
             chunk_stride,
+            config.chunk_strategy,
+            config.chunk_overlap_tokens,
         )
 
     return chunks
@@ -176,6 +190,8 @@ def chunk_plain_text(
         text.splitlines(),
         chunk_size,
         chunk_stride,
+        config.chunk_strategy,
+        config.chunk_overlap_tokens,
     )
     return chunks
 
@@ -222,6 +238,8 @@ def chunk_narrative_text(
                     current_lines,
                     chunk_size,
                     chunk_stride,
+                    config.chunk_strategy,
+                    config.chunk_overlap_tokens,
                 )
             current_title = _clean_narrative_heading(stripped)
             current_lines = []
@@ -240,6 +258,8 @@ def chunk_narrative_text(
             current_lines,
             chunk_size,
             chunk_stride,
+            config.chunk_strategy,
+            config.chunk_overlap_tokens,
         )
 
     return chunks
@@ -280,7 +300,36 @@ def load_knowledge_base_chunks(kb_dir: Path) -> List[Chunk]:
                 chunk_stride=config.chunk_stride,
             )
         )
-    return chunks
+    if not config.parent_child_enabled or not chunks:
+        return chunks
+
+    # Legacy local knowledge-base files already carry section titles. Convert
+    # those sections into the same child-index schema used by uploaded files;
+    # the canonical document pipeline can still build larger parents directly
+    # from extraction units.
+    units = [
+        {
+            "title": chunk.get("title") or chunk.get("parent_title") or "Section",
+            "page": chunk.get("page") or "",
+            "content": chunk.get("content") or "",
+        }
+        for chunk in chunks
+        if str(chunk.get("content") or "").strip()
+    ]
+    if not units:
+        return chunks
+    parent_child = build_parent_child_index(
+        units,
+        source_id=str(kb_dir),
+        filename=kb_dir.name or "knowledge-base",
+        source_type="local",
+        extraction_method="legacy-local-chunking",
+        parent_size_tokens=config.parent_chunk_size_tokens,
+        child_size_tokens=config.child_chunk_size_tokens,
+        parent_overlap_tokens=config.parent_chunk_overlap_tokens,
+        child_overlap_tokens=config.child_chunk_overlap_tokens,
+    )
+    return parent_child.children
 
 
 def _is_delimited_section_heading(line: str) -> bool:
@@ -354,30 +403,30 @@ def _append_sized_chunks(
     lines: List[str],
     chunk_size: int,
     chunk_stride: int,
+    chunk_strategy: str = "boundary",
+    overlap_tokens: int = 200,
 ) -> int:
     content = "\n".join(line for line in lines).strip()
-    if len(content) <= chunk_size:
-        chunks.append(_make_chunk_from_content(source, start_index, parent_title, title, content))
-        return start_index + 1
-
     index = start_index
-    part = 1
-    start = 0
-    while start < len(content):
-        piece = content[start : start + chunk_size].strip()
+    pieces = list(
+        split_text(
+            content,
+            chunk_size=chunk_size,
+            chunk_stride=chunk_stride,
+            strategy=chunk_strategy,
+            overlap_tokens=overlap_tokens,
+        )
+    )
+    for part, piece in enumerate(pieces, start=1):
         if piece:
             chunks.append(
                 _make_chunk_from_content(
                     source,
                     index,
                     parent_title,
-                    f"{title} / part {part}",
+                    f"{title} / part {part}" if len(pieces) > 1 else title,
                     piece,
                 )
             )
             index += 1
-            part += 1
-        if start + chunk_size >= len(content):
-            break
-        start += chunk_stride
     return index

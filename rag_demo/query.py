@@ -8,6 +8,7 @@ from time import perf_counter
 from rag_demo.action_result_resolution import answer_action_result
 from rag_demo.chunking import load_knowledge_base_chunks
 from rag_demo.config import RagConfig
+from rag_demo.cross_encoder import CrossEncoderReranker
 from rag_demo.embeddings import embed_query, load_embedding_matrix
 from rag_demo.entity_aliases import expand_query_with_aliases
 from rag_demo.entity_resolution import answer_entity_existence
@@ -19,12 +20,15 @@ from rag_demo.graph_retrieval import retrieve_graph_context
 from rag_demo.index_store import load_index
 from rag_demo.knowledge_base import active_knowledge_base
 from rag_demo.keyword_extraction import extract_keywords
+from rag_demo.lambdamart_fusion import fuse_candidates_with_lambdamart
 from rag_demo.model_providers import ask_model
 from rag_demo.prompting import build_answer_prompt
 from rag_demo.qa_agent import answer_with_qa_agent
 from rag_demo.question_extraction import extract_real_question
 from rag_demo.rag_pipeline import RagPipeline, RagPipelineRequest
 from rag_demo.query_rewriter import QueryRewriteDecision, decide_and_rewrite_query_for_retrieval
+from rag_demo.query_complexity import classify_query_complexity
+from rag_demo.parent_child import expand_child_contexts
 from rag_demo.retrieval import embedding_search, hybrid_search, keyword_search
 from rag_demo.self_rag_reflection import (
     AnswerSupportCritique,
@@ -98,6 +102,7 @@ def answer_question(question: str, model: str, top_k: int = 5) -> str:
         vector_store=vector_store,
         top_k=top_k,
         candidate_k=config.retrieval_candidate_k,
+        settings=config,
     )
     timing["retrieval"] = perf_counter() - started_at
 
@@ -193,6 +198,7 @@ def answer_question_sparse_dense_refined_keywords(question: str, model: str, top
         vector_store=vector_store,
         top_k=top_k,
         candidate_k=config.retrieval_candidate_k,
+        settings=config,
     )
     timing["sparse_dense_retrieval"] = perf_counter() - started_at
 
@@ -301,6 +307,7 @@ def answer_question_sparse_dense_original_refined_keywords(question: str, model:
         vector_store=vector_store,
         top_k=top_k,
         candidate_k=config.retrieval_candidate_k,
+        settings=config,
     )
     timing["sparse_dense_retrieval"] = perf_counter() - started_at
 
@@ -711,9 +718,11 @@ def _sparse_dense_refined_results(
     top_k: int,
     candidate_k: int,
     vector_store=None,
+    settings: RagConfig | None = None,
 ):
+    settings = (settings or RagConfig.from_env()).normalized()
     candidates = {}
-    candidate_k = max(top_k, int(candidate_k or top_k))
+    candidate_k = max(top_k, min(100, int(candidate_k or 100)))
 
     for variant in query_variants:
         query_text = variant["query"]
@@ -757,9 +766,37 @@ def _sparse_dense_refined_results(
                     embedding_score=raw_embedding,
                 )
 
-    _apply_rerank_lexical_coverage_boost(candidates, question, refined_question, keywords)
-    ranked = sorted(candidates.values(), key=lambda item: item["score"], reverse=True)
-    return [_strip_rerank_candidate_metadata(item) for item in ranked[:top_k]]
+    fused = fuse_candidates_with_lambdamart(
+        list(candidates.values()),
+        keyword_weight=settings.keyword_weight,
+        embedding_weight=settings.embedding_weight,
+    )
+    candidate_map = {str(item["id"]): item for item in fused}
+    for item in fused:
+        item["score"] = float(item.get("lambda_mart_fusion_score", 0.0))
+
+    complexity = classify_query_complexity(
+        question,
+        query_variants=[variant.get("query", "") for variant in query_variants],
+        threshold=settings.query_complexity_threshold,
+    )
+    if settings.complexity_routing_enabled and not complexity.is_complex:
+        ranked = sorted(
+            fused,
+            key=lambda item: float(item.get("lambda_mart_fusion_score", 0.0)),
+            reverse=True,
+        )
+        selected = ranked[: min(top_k, settings.simple_query_top_k)]
+    else:
+        _apply_rerank_lexical_coverage_boost(
+            candidate_map,
+            question,
+            refined_question,
+            keywords,
+        )
+        ranked = sorted(candidate_map.values(), key=lambda item: item["score"], reverse=True)
+        selected = ranked[:top_k]
+    return [_strip_rerank_candidate_metadata(item) for item in selected]
 
 
 def _rrf_parent_context_results(
@@ -819,7 +856,7 @@ def _rrf_parent_context_results(
                 )
             )
 
-    merged = _rrf_merge_ranked_results(ranked_lists, top_k=candidate_k)
+    merged = _rrf_merge_ranked_results(ranked_lists, top_k=min(100, candidate_k))
     graph_results = retrieve_graph_context(
         question,
         chunks,
@@ -830,9 +867,26 @@ def _rrf_parent_context_results(
     if graph_results:
         merged = _merge_graph_and_vector_candidates(graph_results, merged, top_k=candidate_k)
     _apply_definition_route_boost(merged, definition_query)
-    _rerank_rrf_candidates(merged, question=question, rewritten_query=" ".join([query, definition_query]))
-    reranked = sorted(merged, key=lambda item: item["score"], reverse=True)[:top_k]
-    expanded = _expand_parent_chunks(reranked, chunks, max_contexts=final_context_k)
+    complexity = classify_query_complexity(question, threshold=RagConfig.from_env().query_complexity_threshold)
+    if complexity.is_complex:
+        cross_encoder = CrossEncoderReranker()
+        documents = [str(item.get("content") or "") for item in merged]
+        scores = cross_encoder.score(question, documents)
+        for item, score in zip(merged, scores):
+            item["score"] = float(score)
+            item["rerank_score"] = float(score)
+        reranked = sorted(
+            merged,
+            key=lambda item: (float(item.get("rerank_score", 0.0)), float(item.get("rrf_score", 0.0))),
+            reverse=True,
+        )[:5]
+    else:
+        _rerank_rrf_candidates(merged, question=question, rewritten_query=" ".join([query, definition_query]))
+        reranked = sorted(merged, key=lambda item: item["score"], reverse=True)[:5]
+    if any(str(chunk.get("chunk_level") or "").lower() == "child" for chunk in chunks):
+        expanded = expand_child_contexts(reranked, limit=min(5, final_context_k))
+    else:
+        expanded = _expand_parent_chunks(reranked, chunks, max_contexts=min(5, final_context_k))
     structured_results = find_result_constrained_chunks(question, chunks, max_results=final_context_k)
     if structured_results:
         expanded = merge_event_list_chunks(structured_results, expanded)[:final_context_k]
@@ -1352,7 +1406,9 @@ def _hybrid_rerank_results(
     top_k: int,
     candidate_k: int,
     vector_store=None,
+    settings: RagConfig | None = None,
 ):
+    settings = (settings or RagConfig.from_env()).normalized()
     candidates = {}
     candidate_k = max(top_k, int(candidate_k or top_k))
 
@@ -1397,9 +1453,36 @@ def _hybrid_rerank_results(
                 embedding_score=raw_embedding,
             )
 
-    _apply_rerank_lexical_coverage_boost(candidates, question, refined_question, keywords)
-    ranked = sorted(candidates.values(), key=lambda item: item["score"], reverse=True)
-    return [_strip_rerank_candidate_metadata(item) for item in ranked[:top_k]]
+    fused = fuse_candidates_with_lambdamart(
+        list(candidates.values()),
+        keyword_weight=settings.keyword_weight,
+        embedding_weight=settings.embedding_weight,
+    )
+    for item in fused:
+        item["score"] = float(item.get("lambda_mart_fusion_score", 0.0))
+    complexity = classify_query_complexity(
+        question,
+        query_variants=[variant.get("query", "") for variant in query_variants],
+        threshold=settings.query_complexity_threshold,
+    )
+    if settings.complexity_routing_enabled and not complexity.is_complex:
+        ranked = sorted(
+            fused,
+            key=lambda item: float(item.get("lambda_mart_fusion_score", 0.0)),
+            reverse=True,
+        )
+        selected = ranked[: min(top_k, settings.simple_query_top_k)]
+    else:
+        candidate_map = {str(item["id"]): item for item in fused}
+        _apply_rerank_lexical_coverage_boost(
+            candidate_map,
+            question,
+            refined_question,
+            keywords,
+        )
+        ranked = sorted(candidate_map.values(), key=lambda item: item["score"], reverse=True)
+        selected = ranked[:top_k]
+    return [_strip_rerank_candidate_metadata(item) for item in selected]
 
 
 def _dense_search_results(
@@ -1959,9 +2042,11 @@ Metadata Filter
 ↓
 BM25(original question) + Dense(original question via {vector_db_text}) + Graph
 ↓
-RRF Merge
+Child Chunk Candidate Merge + RRF Fusion (Top-100)
 ↓
-Reranker
+Query Complexity Gate
+↓
+Simple Top-5 / Complex Cross-Encoder Reranker
 ↓
 Parent Chunk Expansion
 ↓
@@ -2106,9 +2191,11 @@ Metadata Filter
 ↓
 BM25(original question) + Dense(original question via {vector_db_text})
 ↓
-RRF Merge
+Child Chunk Candidate Merge + RRF Fusion (Top-100)
 ↓
-Reranker
+Query Complexity Gate
+↓
+Simple Top-5 / Complex Cross-Encoder Reranker
 ↓
 Parent Chunk Expansion
 ↓

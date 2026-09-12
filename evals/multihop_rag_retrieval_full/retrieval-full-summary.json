@@ -1,0 +1,190 @@
+{
+  "schema_version": "multihop-rag-retrieval-only-v1",
+  "dataset": "yixuantt/MultiHopRAG",
+  "dataset_total": 2556,
+  "evaluated_count": 2556,
+  "corpus_documents": 609,
+  "question_type_counts": {
+    "comparison_query": 856,
+    "inference_query": 816,
+    "null_query": 301,
+    "temporal_query": 583
+  },
+  "run_at": "2026-09-13T06:34:09+08:00",
+  "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "cross_encoder_model": "jinaai/jina-reranker-v1-tiny-en",
+  "versions": [
+    {
+      "name": "無優化版",
+      "version": "unoptimized",
+      "configuration": {
+        "chunking": "hard 600-character chunks, no overlap",
+        "query_rewrite": "disabled",
+        "hybrid_fusion": "raw 50/50 BM25+dense weighted addition",
+        "candidate_pool": 100,
+        "routing": "always basic reranker top 5",
+        "evidence": "retrieval only; no answer model, prompt, memory or generation"
+      },
+      "summary": {
+        "question_count": 2556,
+        "answerable_count": 2255,
+        "null_query_count": 301,
+        "questions_with_gold_evidence": 2255,
+        "no_gold_evidence_query_count": 301,
+        "gold_fact_matched": 3504,
+        "gold_fact_total": 6084,
+        "weighted_gold_fact_recall": 0.575937,
+        "any_gold_fact_hit_rate": 0.928603,
+        "complete_gold_evidence_hit_rate": 0.286918,
+        "first_hit_rate": 0.796452,
+        "mean_first_hit_rank": 1.5763,
+        "mean_context_count": 5,
+        "mean_candidate_count": 100,
+        "complex_count": 0,
+        "simple_count": 0,
+        "rerank_count": 2556,
+        "rerank_rate": 1.0,
+        "average_retrieval_ms": 481.644,
+        "p50_retrieval_ms": 454.519,
+        "p95_retrieval_ms": 574.352,
+        "p99_retrieval_ms": 631.456
+      },
+      "breakdown": [
+        {
+          "question_type": "comparison_query",
+          "question_count": 856,
+          "answerable_count": 856,
+          "gold_evidence_questions": 856,
+          "weighted_gold_fact_recall": 0.660209,
+          "complete_gold_evidence_hit_rate": 0.39486,
+          "any_gold_fact_hit_rate": 0.949766,
+          "rerank_count": 856,
+          "average_retrieval_ms": 471.746,
+          "p95_retrieval_ms": 571.784
+        },
+        {
+          "question_type": "inference_query",
+          "question_count": 816,
+          "answerable_count": 816,
+          "gold_evidence_questions": 816,
+          "weighted_gold_fact_recall": 0.508567,
+          "complete_gold_evidence_hit_rate": 0.145833,
+          "any_gold_fact_hit_rate": 0.914216,
+          "rerank_count": 816,
+          "average_retrieval_ms": 495.753,
+          "p95_retrieval_ms": 573.453
+        },
+        {
+          "question_type": "null_query",
+          "question_count": 301,
+          "answerable_count": 0,
+          "gold_evidence_questions": 0,
+          "weighted_gold_fact_recall": null,
+          "complete_gold_evidence_hit_rate": null,
+          "any_gold_fact_hit_rate": null,
+          "rerank_count": 301,
+          "average_retrieval_ms": 473.677,
+          "p95_retrieval_ms": 571.573
+        },
+        {
+          "question_type": "temporal_query",
+          "question_count": 583,
+          "answerable_count": 583,
+          "gold_evidence_questions": 583,
+          "weighted_gold_fact_recall": 0.592593,
+          "complete_gold_evidence_hit_rate": 0.325901,
+          "any_gold_fact_hit_rate": 0.917667,
+          "rerank_count": 583,
+          "average_retrieval_ms": 480.542,
+          "p95_retrieval_ms": 580.814
+        }
+      ]
+    },
+    {
+      "name": "全優化版",
+      "version": "optimized",
+      "configuration": {
+        "chunking": "dynamic 1024-token parent / 256-token child, no overlap",
+        "query_rewrite": "identity for authored English benchmark (semantic guard retained in production)",
+        "hybrid_fusion": "RRF, k=60",
+        "candidate_pool": 100,
+        "routing": "simple direct top 5; complex Cross-Encoder top 5",
+        "evidence": "retrieval only; no answer model, prompt, memory or generation"
+      },
+      "summary": {
+        "question_count": 2556,
+        "answerable_count": 2255,
+        "null_query_count": 301,
+        "questions_with_gold_evidence": 2255,
+        "no_gold_evidence_query_count": 301,
+        "gold_fact_matched": 5743,
+        "gold_fact_total": 6084,
+        "weighted_gold_fact_recall": 0.943951,
+        "any_gold_fact_hit_rate": 0.999557,
+        "complete_gold_evidence_hit_rate": 0.864745,
+        "first_hit_rate": 0.990687,
+        "mean_first_hit_rank": 1.2023,
+        "mean_context_count": 4.2418,
+        "mean_candidate_count": 100,
+        "complex_count": 2556,
+        "simple_count": 0,
+        "rerank_count": 2556,
+        "rerank_rate": 1.0,
+        "average_retrieval_ms": 2969.942,
+        "p50_retrieval_ms": 2818.008,
+        "p95_retrieval_ms": 4263.983,
+        "p99_retrieval_ms": 4747.971
+      },
+      "breakdown": [
+        {
+          "question_type": "comparison_query",
+          "question_count": 856,
+          "answerable_count": 856,
+          "gold_evidence_questions": 856,
+          "weighted_gold_fact_recall": 0.918325,
+          "complete_gold_evidence_hit_rate": 0.830607,
+          "any_gold_fact_hit_rate": 1.0,
+          "rerank_count": 856,
+          "average_retrieval_ms": 2932.061,
+          "p95_retrieval_ms": 4200.298
+        },
+        {
+          "question_type": "inference_query",
+          "question_count": 816,
+          "answerable_count": 816,
+          "gold_evidence_questions": 816,
+          "weighted_gold_fact_recall": 0.959533,
+          "complete_gold_evidence_hit_rate": 0.889706,
+          "any_gold_fact_hit_rate": 1.0,
+          "rerank_count": 816,
+          "average_retrieval_ms": 2921.059,
+          "p95_retrieval_ms": 4106.392
+        },
+        {
+          "question_type": "null_query",
+          "question_count": 301,
+          "answerable_count": 0,
+          "gold_evidence_questions": 0,
+          "weighted_gold_fact_recall": null,
+          "complete_gold_evidence_hit_rate": null,
+          "any_gold_fact_hit_rate": null,
+          "rerank_count": 301,
+          "average_retrieval_ms": 3231.546,
+          "p95_retrieval_ms": 4579.489
+        },
+        {
+          "question_type": "temporal_query",
+          "question_count": 583,
+          "answerable_count": 583,
+          "gold_evidence_questions": 583,
+          "weighted_gold_fact_recall": 0.948288,
+          "complete_gold_evidence_hit_rate": 0.879931,
+          "any_gold_fact_hit_rate": 0.998285,
+          "rerank_count": 583,
+          "average_retrieval_ms": 2958.918,
+          "p95_retrieval_ms": 4188.617
+        }
+      ]
+    }
+  ]
+}

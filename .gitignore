@@ -27,3 +27,8 @@ evals/document_folders/runtime-state.json
 evals/document_folders/setup-results.json
 
 *.npy
+
+# Full MultiHop-RAG retrieval runs keep resumable checkpoints and smoke files
+# locally; only the completed compact report/results are versioned.
+evals/multihop_rag_retrieval_full/checkpoints/
+evals/multihop_rag_retrieval_full/smoke*/

@@ -80,6 +80,40 @@ class HybridRetrievalTest(unittest.TestCase):
         )
         self.assertTrue(result["evidenceEvaluation"]["sufficient"])
 
+    def test_simple_query_bypasses_rerank_and_caps_contexts_at_three(self):
+        chunks = self.chunks + [
+            {
+                "id": "orange-1",
+                "source_id": "fruit-guide",
+                "title": "Orange guide",
+                "content": "An orange is a citrus fruit.",
+            }
+        ]
+        retriever = HybridRetriever(
+            chunks=chunks,
+            aliases=[],
+            embeddings=[[1.0, 0.0], [0.9, 0.1], [0.8, 0.2], [0.7, 0.3]],
+            embed_query_fn=lambda _: [1.0, 0.0],
+            embedding_model="fake",
+        )
+
+        result = retriever.retrieve("apple", top_k=8, candidate_k=4)
+
+        self.assertEqual(len(result["contexts"]), 3)
+        self.assertFalse(result["diagnostics"]["rerankApplied"])
+        self.assertEqual(result["diagnostics"]["queryComplexity"]["label"], "simple")
+        self.assertEqual(result["diagnostics"]["fusionMethod"], "lambdamart_score_mapping_v1")
+
+    def test_complex_query_keeps_second_stage_rerank_enabled(self):
+        result = self.retriever.retrieve(
+            "比較 apple 與 banana 的差異，並說明各自用途？",
+            top_k=2,
+            candidate_k=3,
+        )
+
+        self.assertTrue(result["diagnostics"]["rerankApplied"])
+        self.assertEqual(result["diagnostics"]["queryComplexity"]["label"], "complex")
+
     def test_multi_query_runs_each_variant_and_exposes_diagnostics(self):
         seen_queries = []
         retriever = HybridRetriever(
@@ -99,9 +133,45 @@ class HybridRetrievalTest(unittest.TestCase):
             candidate_k=3,
         )
 
-        self.assertEqual(result["retrievalQueries"], ["red fruit", "apple crisp pies", "fruit color", "What fruit is red?"])
+        self.assertEqual(result["retrievalQueries"], ["red fruit", "apple crisp pies"])
         self.assertEqual(seen_queries, result["retrievalQueries"])
-        self.assertEqual(result["diagnostics"]["queryCount"], 4)
+        self.assertEqual(result["diagnostics"]["queryCount"], 2)
+
+    def test_batch_embedding_reuses_query_vectors(self):
+        batch_calls = []
+        retriever = HybridRetriever(
+            chunks=self.chunks,
+            aliases=[],
+            embeddings=[[1.0, 0.0], [0.0, 1.0], [0.7, 0.7]],
+            embed_query_fn=lambda query: self.fail(
+                f"single-query embedding should not run: {query}"
+            ),
+            embed_queries_fn=lambda queries: (
+                batch_calls.append(list(queries))
+                or [[1.0, 0.0] for _ in queries]
+            ),
+            embedding_model="fake-batch",
+        )
+
+        retriever.retrieve(
+            "What fruit is red?",
+            retrieval_query="red fruit",
+            query_variants=["apple crisp pies"],
+            top_k=2,
+            candidate_k=3,
+        )
+        retriever.retrieve(
+            "What fruit is red?",
+            retrieval_query="red fruit",
+            query_variants=["apple crisp pies"],
+            top_k=2,
+            candidate_k=3,
+        )
+
+        self.assertEqual(
+            batch_calls,
+            [["red fruit", "apple crisp pies"]],
+        )
 
     def test_evidence_gate_rejects_normalized_top_result_without_raw_relevance(self):
         evaluation = evaluate_retrieval_evidence(

@@ -52,6 +52,16 @@ class ConversationStoreTests(unittest.TestCase):
         self.assertIsNone(self.store.list_memories()[0]["source_conversation_id"])
         self.assertFalse(self.store.delete_conversation(conversation["id"]))
 
+    def test_clear_messages_keeps_conversation_and_memories(self):
+        conversation = self.store.create_conversation()
+        self.store.add_message(conversation["id"], "user", "第一則")
+        self.store.remember_explicit_statement("請記住代碼 9421", conversation["id"])
+
+        self.assertTrue(self.store.clear_messages(conversation["id"]))
+        self.assertEqual(self.store.get_messages(conversation["id"]), [])
+        self.assertIsNotNone(self.store.get_conversation(conversation["id"]))
+        self.assertEqual(self.store.list_memories()[0]["content"], "代碼 9421")
+
 
 if __name__ == "__main__":
     unittest.main()

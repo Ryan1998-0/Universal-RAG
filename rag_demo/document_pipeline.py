@@ -21,8 +21,10 @@ from typing import Callable, Dict, List, Optional, Sequence
 import numpy as np
 
 from rag_demo.config import RagConfig
+from rag_demo.chunk_strategies import CHUNK_STRATEGY_DYNAMIC, split_text
 from rag_demo.embeddings import DEFAULT_EMBEDDING_MODEL, embed_chunks
 from rag_demo.ollama_client import ask_ollama_vision
+from rag_demo.parent_child import build_parent_child_index
 from rag_demo.word_documents import extract_docx_blocks
 
 
@@ -191,6 +193,11 @@ class DocumentStore:
             "mime_type": extraction.mime_type or format_spec["mime_type"],
             "sha256": digest,
             "chunk_count": len(chunks),
+            "parent_chunk_count": len({
+                str(chunk.get("parent_id") or chunk.get("id"))
+                for chunk in chunks
+            }),
+            "child_chunk_count": len(chunks),
             "uploaded_at": self._now_fn().astimezone(timezone.utc).isoformat(),
             "embedding_model": self.embedding_model,
             "stored_filename": stored_filename,
@@ -207,7 +214,16 @@ class DocumentStore:
                 {"stage": "detect_format", "status": "completed"},
                 {"stage": "extract_text", "status": "completed"},
                 {"stage": "normalize", "status": "completed"},
-                {"stage": "chunk", "status": "completed", "count": len(chunks)},
+                {
+                    "stage": "chunk",
+                    "status": "completed",
+                    "count": len(chunks),
+                    "parent_count": len({
+                        str(chunk.get("parent_id") or chunk.get("id"))
+                        for chunk in chunks
+                    }),
+                    "child_count": len(chunks),
+                },
                 {"stage": "embed", "status": "completed", "model": self.embedding_model},
                 {"stage": "persist", "status": "completed"},
             ],
@@ -635,6 +651,36 @@ def build_document_chunks(
     chunk_size = max(200, int(chunk_size or config.chunk_size))
     chunk_stride = min(chunk_size, max(1, int(chunk_stride or config.chunk_stride)))
     parent_title = Path(filename).stem or filename
+
+    if config.parent_child_enabled:
+        normalized_units = []
+        extracted_character_count = 0
+        for unit in units:
+            content = normalize_extracted_text(unit.get("content"))
+            if not content:
+                continue
+            remaining_characters = MAX_EXTRACTED_CHARACTERS - extracted_character_count
+            if remaining_characters <= 0 or len(content) > remaining_characters:
+                raise DocumentPipelineError(
+                    f"文件可索引文字超過 {MAX_EXTRACTED_CHARACTERS:,} 字上限。"
+                )
+            extracted_character_count += len(content)
+            normalized_units.append({**dict(unit), "content": content})
+        return build_parent_child_index(
+            normalized_units,
+            source_id=source_id,
+            filename=filename,
+            source_type=source_type,
+            extraction_method=extraction_method,
+            parent_size_tokens=config.parent_chunk_size_tokens,
+            child_size_tokens=config.child_chunk_size_tokens,
+            parent_overlap_tokens=config.parent_chunk_overlap_tokens,
+            child_overlap_tokens=config.child_chunk_overlap_tokens,
+            # Parent and child budgets are token budgets; keep this path
+            # sentence-aware even when the legacy hard A/B mode is selected.
+            strategy=CHUNK_STRATEGY_DYNAMIC,
+        ).children
+
     chunks = []
     extracted_character_count = 0
     for unit_index, unit in enumerate(units, start=1):
@@ -653,7 +699,15 @@ def build_document_chunks(
         extracted_character_count += len(content)
         unit_title = str(unit.get("title") or f"Section {unit_index}").strip()
         page = str(unit.get("page") or f"區段 {unit_index}")
-        pieces = list(split_sized_text(content, chunk_size, chunk_stride))
+        pieces = list(
+            split_sized_text(
+                content,
+                chunk_size,
+                chunk_stride,
+                strategy=config.chunk_strategy,
+                overlap_tokens=config.chunk_overlap_tokens,
+            )
+        )
         for part_index, piece in enumerate(pieces, start=1):
             chunk_index = len(chunks)
             title = f"{filename} | {unit_title}"
@@ -800,29 +854,22 @@ def normalize_extracted_text(text: object) -> str:
     return "\n".join(lines)[:MAX_EXTRACTED_CHARACTERS]
 
 
-def split_sized_text(text: str, chunk_size: int, chunk_stride: int):
-    if len(text) <= chunk_size:
-        yield text
-        return
-    start = 0
-    while start < len(text):
-        target_end = min(len(text), start + chunk_size)
-        end = target_end
-        if target_end < len(text):
-            minimum_boundary = start + int(chunk_size * 0.65)
-            boundary = max(
-                text.rfind("\n", minimum_boundary, target_end),
-                text.rfind("。", minimum_boundary, target_end),
-                text.rfind(". ", minimum_boundary, target_end),
-            )
-            if boundary >= minimum_boundary:
-                end = boundary + 1
-        piece = text[start:end].strip()
-        if piece:
-            yield piece
-        if end >= len(text):
-            break
-        start = max(start + 1, min(start + chunk_stride, end))
+def split_sized_text(
+    text: str,
+    chunk_size: int,
+    chunk_stride: int,
+    strategy: str = "boundary",
+    overlap_tokens: int = 200,
+):
+    """Compatibility wrapper around the shared chunking strategies."""
+
+    yield from split_text(
+        text,
+        chunk_size=chunk_size,
+        chunk_stride=chunk_stride,
+        strategy=strategy,
+        overlap_tokens=overlap_tokens,
+    )
 
 
 def _extract_docx(

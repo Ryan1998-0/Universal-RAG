@@ -17,6 +17,7 @@ from xml.etree import ElementTree
 import numpy as np
 
 from rag_demo.config import RagConfig
+from rag_demo.chunk_strategies import split_text
 from rag_demo.embeddings import DEFAULT_EMBEDDING_MODEL, embed_chunks
 
 
@@ -338,7 +339,15 @@ def build_word_chunks(
 
     chunks = []
     for section_index, (section_title, content) in enumerate(sections, start=1):
-        pieces = list(_split_sized_text(content, chunk_size, chunk_stride))
+        pieces = list(
+            _split_sized_text(
+                content,
+                chunk_size,
+                chunk_stride,
+                strategy=config.chunk_strategy,
+                overlap_tokens=config.chunk_overlap_tokens,
+            )
+        )
         for part_index, piece in enumerate(pieces, start=1):
             chunk_index = len(chunks)
             title = f"{filename} | {section_title}"
@@ -507,29 +516,19 @@ def _normalize_block_text(text: object) -> str:
     return "\n".join(lines)
 
 
-def _split_sized_text(text: str, chunk_size: int, chunk_stride: int):
-    if len(text) <= chunk_size:
-        yield text
-        return
+def _split_sized_text(
+    text: str,
+    chunk_size: int,
+    chunk_stride: int,
+    strategy: str = "boundary",
+    overlap_tokens: int = 200,
+):
+    """Compatibility wrapper around the shared chunking strategies."""
 
-    start = 0
-    while start < len(text):
-        target_end = min(len(text), start + chunk_size)
-        end = target_end
-        if target_end < len(text):
-            minimum_boundary = start + int(chunk_size * 0.65)
-            candidates = [
-                text.rfind("\n", minimum_boundary, target_end),
-                text.rfind("。", minimum_boundary, target_end),
-                text.rfind(". ", minimum_boundary, target_end),
-            ]
-            boundary = max(candidates)
-            if boundary >= minimum_boundary:
-                end = boundary + 1
-
-        piece = text[start:end].strip()
-        if piece:
-            yield piece
-        if end >= len(text):
-            break
-        start = max(start + 1, min(start + chunk_stride, end))
+    yield from split_text(
+        text,
+        chunk_size=chunk_size,
+        chunk_stride=chunk_stride,
+        strategy=strategy,
+        overlap_tokens=overlap_tokens,
+    )

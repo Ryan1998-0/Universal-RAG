@@ -17,35 +17,7 @@
 
 ## RAG 架構圖
 
-```mermaid
-flowchart TD
-  subgraph INDEX["索引建置"]
-    DOC["文件 / PDF / 圖片 / DOCX"] --> PARSE["解析與 OCR"]
-    PARSE --> PARENT["父 Chunk<br/>1024 tokens"]
-    PARENT --> CHILD["子 Chunk<br/>256 tokens"]
-    CHILD --> BM25IDX["BM25 索引"]
-    CHILD --> VECIDX["Embedding 向量索引"]
-  end
-
-  subgraph QUERY["查詢與證據"]
-    Q["使用者問題"] --> REWRITE["問題改寫"]
-    REWRITE --> CHECK{"語意校驗<br/>cosine >= 0.60?"}
-    CHECK -->|通過| QUERYTEXT["採用改寫問題"]
-    CHECK -->|未通過| ORIGINAL["回退原始問題"]
-    QUERYTEXT --> SEARCH["BM25 + 向量檢索"]
-    ORIGINAL --> SEARCH
-    BM25IDX -.-> SEARCH
-    VECIDX -.-> SEARCH
-    SEARCH --> RRF["RRF 融合<br/>保留前 100 候選"]
-    RRF --> ROUTE{"問題複雜度"}
-    ROUTE -->|簡單| SIMPLE["直接取 Top 5"]
-    ROUTE -->|複雜| RERANK["Cross-Encoder 重排<br/>取 Top 5"]
-    SIMPLE --> EXPAND["子 Chunk -> 父 Chunk"]
-    RERANK --> EXPAND
-    EXPAND --> GATE["Evidence Gate<br/>證據與引用檢查"]
-    GATE --> ANSWER["根據證據生成回答"]
-  end
-```
+![RAG 架構圖](docs/rag-architecture-zh-TW.png)
 
 目前優化版的關鍵設定如下：
 

@@ -15,7 +15,7 @@
 - 企業功能：知識庫與資料夾管理、文件 ACL、SQLite 對話記憶與可替換模型後端。
 - 模型選擇：預設可使用 Ollama Qwen；也支援 LangChain、OpenAI、Anthropic 與 GPT-5.5 子代理。
 
-## 新版 RAG 架構
+## RAG 架構圖
 
 ```mermaid
 flowchart TD
@@ -57,8 +57,6 @@ flowchart TD
 | 重排 | 複雜問題使用 Cross-Encoder |
 | 改寫校驗 | 原始問題與改寫問題 cosine similarity 至少 `0.60` |
 
-完整節點說明見[核心架構流程](docs/hybrid_rag_architecture_flow.md)，專案管理入口為 `http://127.0.0.1:8765/architecture.html`。
-
 ## 測試報告
 
 ### MultiHop-RAG 全量檢索
@@ -78,19 +76,6 @@ flowchart TD
 
 完整結果：[逐題結果](evals/multihop_rag_retrieval_full/retrieval-full-results.json)｜[彙整報告](evals/multihop_rag_retrieval_full/retrieval-full-report.md)｜[摘要](evals/multihop_rag_retrieval_full/retrieval-full-summary.json)
 
-重跑指令：
-
-```powershell
-$env:RAG_CROSS_ENCODER_BATCH_SIZE="100"
-uv run --extra production python scripts/run_multihop_retrieval_full_eval.py --cross-encoder-model jinaai/jina-reranker-v1-tiny-en
-```
-
-### 其他驗證
-
-- Python 單元與整合測試：`229 passed`。
-- IFRS 17 100 題檢索基準：[結果摘要](docs/results_summary.md)。
-- 全部評測指標都以檢索召回與延遲為主；回答正確率與幻覺率需另跑回答模型評測。
-
 ## RAG 資料庫來源
 
 本專案的知識庫可替換；目前測試與示範資料來源如下：
@@ -98,32 +83,9 @@ uv run --extra production python scripts/run_multihop_retrieval_full_eval.py --c
 | 用途 | 公開來源 | 本機用途 |
 | --- | --- | --- |
 | MultiHop-RAG 全量題庫 | [yixuantt/MultiHop-RAG](https://github.com/yixuantt/MultiHop-RAG) | 2,556 題、609 份新聞文件，用於本次全量檢索評測 |
-| IFRS 17 範例知識庫 | [IFRS Foundation](https://www.ifrs.org/issued-standards/list-of-standards/ifrs-17-insurance-contracts/) | `profiles/ifrs17/`，來源清單與雜湊值見 `corpus_manifest.json` |
-| 勞動基準法範例 | [勞動部勞動法令查詢系統](https://laws.mol.gov.tw/FLAW/PrintFLAWDAT0201.aspx?id=FL014930&ldate=20240731) | 勞基法 50 題檢索與消融測試 |
 | LegalBench-RAG | [ZeroEntropy-AI/legalbenchrag](https://github.com/ZeroEntropy-AI/legalbenchrag) | 法律文件 RAG benchmark |
 | EnterpriseRAG-Bench | [onyx-dot-app/EnterpriseRAG-Bench](https://github.com/onyx-dot-app/EnterpriseRAG-Bench) | 企業文件 RAG benchmark |
 | Open RAG Benchmark | [vectara/open-rag-bench](https://github.com/vectara/open-rag-bench) | PDF 文件 RAG benchmark |
 | Fujitsu RAG Hard Benchmark | [FujitsuResearch/Fujitsu-RAG-Hard-Benchmark](https://github.com/FujitsuResearch/Fujitsu-RAG-Hard-Benchmark) | 多跳與困難題型 benchmark |
 
 MultiHop-RAG 的原始檔位於本機評測目錄 `RAG測試題庫/01_MultiHop-RAG/`；原始資料的授權條件依各公開來源為準。
-
-## 本機啟動
-
-需要 Python 3.12 與 [Ollama](https://ollama.com/)：
-
-```bash
-git clone https://github.com/Ryan1998-0/Universal-RAG.git
-cd Universal-RAG
-uv sync --extra production
-ollama pull qwen2.5:7b
-uv run --extra production python -m rag_demo.web_app
-```
-
-啟動後開啟 `http://127.0.0.1:8765/`。LangChain 是可選模型介面，安裝 `uv sync --extra langchain` 後設定 `RAG_MODEL_BACKEND=langchain` 即可。
-
-## 延伸文件
-
-- [專案總覽](docs/project_overview_zh.md)
-- [文件處理與 OCR](docs/multimodal-ingestion-pipeline.md)
-- [文件查詢 ACL](docs/query_access_control.md)
-- [正式部署目標](docs/production-ready-rag-target.md)

@@ -105,11 +105,11 @@ def _format_pct(value: Any) -> str:
         return "—"
 
 
-def _format_ms(value: Any) -> str:
+def _format_seconds_from_ms(value: Any) -> str:
     if value is None:
         return "—"
     try:
-        return f"{float(value):.1f}"
+        return f"{float(value) / 1000:.3f} 秒"
     except (TypeError, ValueError):
         return "—"
 
@@ -168,9 +168,9 @@ def _render_report(payload: dict[str, Any]) -> str:
         "",
         "## 結果",
         "",
-        "自有版本耗時各自移除最高 20 題與最低 20 題，使用剩餘 670 題重新計算；主表保留兩個命中欄位與去除極端值後平均延遲。公開版只引用官方聚合數據，沒有逐題耗時。",
+        "自有版本耗時各自移除最高 20 題與最低 20 題，使用剩餘 670 題重新計算；主表保留兩個命中欄位與去除極端值後平均耗時。公開版只引用官方聚合數據，沒有逐題耗時。",
         "",
-        "| 版本 | Character recall@5 | 任一證據命中／Hit@5 | 去除最高／最低20題後平均 ms/題 |",
+        "| 版本 | Character recall@5 | 任一證據命中／Hit@5 | 去除最高／最低20題後平均耗時（秒／題） |",
         "| --- | ---: | ---: | ---: |",
     ]
     for version in ordered_versions:
@@ -182,7 +182,7 @@ def _render_report(payload: dict[str, Any]) -> str:
                     str(version["name"]),
                     _format_pct(summary.get("micro_char_recall")),
                     _format_pct(summary.get("any_gold_span_hit_rate")),
-                    _format_ms(summary.get("trimmed_average_question_stage_ms")),
+                    _format_seconds_from_ms(summary.get("trimmed_average_question_stage_ms")),
                 ]
             )
             + " |"

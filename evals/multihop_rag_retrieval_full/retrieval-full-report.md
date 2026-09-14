@@ -12,10 +12,10 @@
 
 ## 主要結果
 
-| 版本 | Character recall@5（MultiHop：加權 Gold fact recall） | 任一證據命中 | P95 延遲 |
+| 版本 | Character recall@5（MultiHop：加權 Gold fact recall） | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
-| 無優化版 | 57.6% | 92.9% | 574.4 ms |
-| 全優化版 | 94.4% | 100.0% | 4,264.0 ms |
+| 無優化版 | 57.6% | 92.9% | 0.482 秒 |
+| 全優化版 | 94.4% | 100.0% | 2.970 秒 |
 
 指標分母中的證據題只包含有 gold fact 的題目；null_query 或沒有 gold evidence 的題目另行統計，不把不存在的證據誤算成召回失敗。
 
@@ -23,20 +23,20 @@
 
 - Character recall@5（加權 Gold fact recall）：`+36.8%`
 - 任一證據命中率：`+7.1%`
-- P95 檢索延遲：`+3689.6 ms`
+- 平均耗時差異：`+2.488 秒`
 
 ## 題型分組
 
-| 版本 | 題型 | 題數 | Character recall@5（加權 Gold fact recall） | 任一證據命中 | P95 延遲 |
+| 版本 | 題型 | 題數 | Character recall@5（加權 Gold fact recall） | 任一證據命中 | 平均耗時（秒／題） |
 | --- | --- | ---: | ---: | ---: | ---: |
-| 無優化版 | `comparison_query` | 856 | 66.0% | 95.0% | 571.8 ms |
-| 無優化版 | `inference_query` | 816 | 50.9% | 91.4% | 573.5 ms |
-| 無優化版 | `null_query` | 301 | — | — | 571.6 ms |
-| 無優化版 | `temporal_query` | 583 | 59.3% | 91.8% | 580.8 ms |
-| 全優化版 | `comparison_query` | 856 | 91.8% | 100.0% | 4,200.3 ms |
-| 全優化版 | `inference_query` | 816 | 96.0% | 100.0% | 4,106.4 ms |
-| 全優化版 | `null_query` | 301 | — | — | 4,579.5 ms |
-| 全優化版 | `temporal_query` | 583 | 94.8% | 99.8% | 4,188.6 ms |
+| 無優化版 | `comparison_query` | 856 | 66.0% | 95.0% | 0.472 秒 |
+| 無優化版 | `inference_query` | 816 | 50.9% | 91.4% | 0.496 秒 |
+| 無優化版 | `null_query` | 301 | — | — | 0.474 秒 |
+| 無優化版 | `temporal_query` | 583 | 59.3% | 91.8% | 0.481 秒 |
+| 全優化版 | `comparison_query` | 856 | 91.8% | 100.0% | 2.932 秒 |
+| 全優化版 | `inference_query` | 816 | 96.0% | 100.0% | 2.921 秒 |
+| 全優化版 | `null_query` | 301 | — | — | 3.232 秒 |
+| 全優化版 | `temporal_query` | 583 | 94.8% | 99.8% | 2.959 秒 |
 
 ## 實作設定
 

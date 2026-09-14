@@ -462,6 +462,12 @@ def _pct(value: float | None) -> str:
     return "—" if value is None else f"{float(value):.1%}"
 
 
+def _seconds(value: float | None, decimals: int = 3) -> str:
+    if value is None:
+        return "—"
+    return f"{float(value) / 1000:.{decimals}f} 秒"
+
+
 def _render_report(payload: dict[str, Any]) -> str:
     versions = {version["version"]: version for version in payload["versions"]}
     unoptimized = versions["unoptimized"]
@@ -483,32 +489,30 @@ def _render_report(payload: dict[str, Any]) -> str:
         "",
         "## 主要結果",
         "",
-        "| 版本 | 加權 Gold fact recall | 任一證據命中 | 完整證據命中 | 首個命中率 | 平均檢索 ms | P95 檢索 ms | 複雜題數 | 重排題數 |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-        f"| {unoptimized['name']} | {_pct(us['weighted_gold_fact_recall'])} | {_pct(us['any_gold_fact_hit_rate'])} | {_pct(us['complete_gold_evidence_hit_rate'])} | {_pct(us['first_hit_rate'])} | {us['average_retrieval_ms']:.1f} | {us['p95_retrieval_ms']:.1f} | {us['complex_count']} | {us['rerank_count']} |",
-        f"| {optimized['name']} | {_pct(osummary['weighted_gold_fact_recall'])} | {_pct(osummary['any_gold_fact_hit_rate'])} | {_pct(osummary['complete_gold_evidence_hit_rate'])} | {_pct(osummary['first_hit_rate'])} | {osummary['average_retrieval_ms']:.1f} | {osummary['p95_retrieval_ms']:.1f} | {osummary['complex_count']} | {osummary['rerank_count']} |",
+        "| 版本 | Character recall@5（MultiHop：加權 Gold fact recall） | 任一證據命中 | 平均耗時（秒／題） |",
+        "| --- | ---: | ---: | ---: |",
+        f"| {unoptimized['name']} | {_pct(us['weighted_gold_fact_recall'])} | {_pct(us['any_gold_fact_hit_rate'])} | {_seconds(us['average_retrieval_ms'])} |",
+        f"| {optimized['name']} | {_pct(osummary['weighted_gold_fact_recall'])} | {_pct(osummary['any_gold_fact_hit_rate'])} | {_seconds(osummary['average_retrieval_ms'])} |",
         "",
         "指標分母中的證據題只包含有 gold fact 的題目；null_query 或沒有 gold evidence 的題目另行統計，不把不存在的證據誤算成召回失敗。",
         "",
         "## 差異（全優化版 − 無優化版）",
         "",
-        f"- 加權 Gold fact recall：`{osummary['weighted_gold_fact_recall'] - us['weighted_gold_fact_recall']:+.1%}`",
+        f"- Character recall@5（加權 Gold fact recall）：`{osummary['weighted_gold_fact_recall'] - us['weighted_gold_fact_recall']:+.1%}`",
         f"- 任一證據命中率：`{osummary['any_gold_fact_hit_rate'] - us['any_gold_fact_hit_rate']:+.1%}`",
-        f"- 完整證據命中率：`{osummary['complete_gold_evidence_hit_rate'] - us['complete_gold_evidence_hit_rate']:+.1%}`",
-        f"- 平均檢索延遲：`{osummary['average_retrieval_ms'] - us['average_retrieval_ms']:+.1f} ms`",
-        f"- P95 檢索延遲：`{osummary['p95_retrieval_ms'] - us['p95_retrieval_ms']:+.1f} ms`",
+        f"- 平均耗時差異：`{(osummary['average_retrieval_ms'] - us['average_retrieval_ms']) / 1000:+.3f} 秒`",
         "",
         "## 題型分組",
         "",
-        "| 版本 | 題型 | 題數 | 有證據題數 | 加權 fact recall | 完整證據命中 | 任一證據命中 | 平均 ms | P95 ms |",
-        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| 版本 | 題型 | 題數 | Character recall@5（加權 Gold fact recall） | 任一證據命中 | 平均耗時 |",
+        "| --- | --- | ---: | ---: | ---: | ---: |",
     ]
     for version in (unoptimized, optimized):
         for row in _breakdown(version["cases"]):
             lines.append(
-                f"| {version['name']} | `{row['question_type']}` | {row['question_count']} | {row['gold_evidence_questions']} | "
-                f"{_pct(row['weighted_gold_fact_recall'])} | {_pct(row['complete_gold_evidence_hit_rate'])} | "
-                f"{_pct(row['any_gold_fact_hit_rate'])} | {row['average_retrieval_ms']:.1f} | {row['p95_retrieval_ms']:.1f} |"
+                f"| {version['name']} | `{row['question_type']}` | {row['question_count']} | "
+                f"{_pct(row['weighted_gold_fact_recall'])} | {_pct(row['any_gold_fact_hit_rate'])} | "
+                f"{_seconds(row['average_retrieval_ms'])} |"
             )
     lines.extend(
         [
@@ -520,6 +524,7 @@ def _render_report(payload: dict[str, Any]) -> str:
             "- 兩個版本都使用同一份 corpus、同一個 embedding 模型、同一個 top-5 證據預算與同一批 2,556 題。",
             "- 本次沒有回答模型、沒有對話記憶、沒有外部搜尋、沒有把 gold answer 或 gold evidence 注入檢索查詢。",
             "- Gold fact 命中採完整字串或 BM25 token 覆蓋率至少 45% 的 deterministic heuristic；它衡量檢索召回，不等同於回答正確率或幻覺率。",
+            "- MultiHop-RAG 題庫沒有 LegalBench 使用的字元 span 標註，因此本報告的 Character recall@5 欄位以加權 Gold fact recall 對應；LegalBench-RAG 的同名欄位則是字元覆蓋率。",
             "",
         ]
     )

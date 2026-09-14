@@ -168,10 +168,10 @@ def _render_report(payload: dict[str, Any]) -> str:
         "",
         "## 結果",
         "",
-        "自有版本耗時仍各自移除最高 20 題與最低 20 題，使用剩餘 670 題重新計算並寫入摘要；主表只保留兩個命中欄位。公開版只引用官方聚合數據，沒有逐題耗時。",
+        "自有版本耗時各自移除最高 20 題與最低 20 題，使用剩餘 670 題重新計算；主表保留兩個命中欄位與去除極端值後平均延遲。公開版只引用官方聚合數據，沒有逐題耗時。",
         "",
-        "| 版本 | Character recall@5 | 任一證據命中／Hit@5 |",
-        "| --- | ---: | ---: |",
+        "| 版本 | Character recall@5 | 任一證據命中／Hit@5 | 去除最高／最低20題後平均 ms/題 |",
+        "| --- | ---: | ---: | ---: |",
     ]
     for version in ordered_versions:
         summary = version["summary"]
@@ -182,6 +182,7 @@ def _render_report(payload: dict[str, Any]) -> str:
                     str(version["name"]),
                     _format_pct(summary.get("micro_char_recall")),
                     _format_pct(summary.get("any_gold_span_hit_rate")),
+                    _format_ms(summary.get("trimmed_average_question_stage_ms")),
                 ]
             )
             + " |"

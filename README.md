@@ -59,7 +59,7 @@ RAG_EMBEDDING_DIMENSIONS=768
 | 優化版 | 81.55% | 93.10% | 0.954 秒 |
 | 公開 Ettin 版 | 80.41% | 86.76% | — |
 
-平均耗時欄位為自有版本移除最高 20 題與最低 20 題後的 670 題平均；公開 Ettin 僅提供官方聚合指標，沒有逐題耗時。公開 Ettin 數據來源：[LegalBenchRAG-Ettin-150M-Reranker 模型卡](https://huggingface.co/lxyuan/LegalBenchRAG-Ettin-150M-Reranker)。完整結果：[逐題結果](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-report.md)｜[摘要](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-summary.json)
+公開 Ettin 數據來源：[LegalBenchRAG-Ettin-150M-Reranker 模型卡](https://huggingface.co/lxyuan/LegalBenchRAG-Ettin-150M-Reranker)。完整結果：[逐題結果](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-report.md)｜[摘要](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-summary.json)
 
 ## RAG 資料庫來源
 

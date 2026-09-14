@@ -347,7 +347,7 @@ class RagRequestHandler(BaseHTTPRequestHandler):
                 "model": DEFAULT_MODEL,
                 "profile": DEFAULT_PROFILE,
                 "static_root": str(STATIC_ROOT),
-                "retrieval": "parent-child(1024/256)+bm25+dense+rrf+complexity-gated-cross-encoder",
+                "retrieval": "parent-child(512/128)+bm25+dense+rrf+complexity-gated-cross-encoder",
                 "document_upload": sorted(SUPPORTED_FORMATS),
                 "document_folders": True,
             })

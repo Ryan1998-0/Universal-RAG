@@ -2142,7 +2142,7 @@ function architectureForVariant(variant) {
     },
     bm25_dense: {
       label: "BM25 + 語意檢索",
-      summary: "以 256 token 子 Chunk 結合字面與語意候選，使用 RRF 融合排序。",
+      summary: "以 128 token 子 Chunk 結合字面與語意候選，使用 RRF 融合排序。",
       steps: ["BM25", "語意檢索或別名擴展", "LambdaMART 融合", "前 K 筆證據"],
     },
     bm25_embedding_rerank: {

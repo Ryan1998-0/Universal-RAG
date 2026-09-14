@@ -18,7 +18,7 @@ export const architectureViews = {
       node("domain-query", "03 · QUERY", "問題理解與規劃", "判斷是否需要檢索，拆解問題並建立查詢。", "原始問題與對話指涉", "檢索決策與多查詢計畫", 390, 210,
         ["法規與公司資料問題強制檢索", "多查詢保留原始問題語意", "移除前後端重複路由"], { drilldown: "query" }),
       node("domain-retrieval", "04 · RETRIEVAL", "混合檢索", "融合關鍵字、語意與關係型召回結果。", "查詢計畫與文件範圍", "排序後的候選證據", 710, 370,
-        ["BM25 與 Dense 搜尋 256 token 子 Chunk", "RRF 融合並保留前 100 個候選", "簡單問題直接取 Top-5；複雜問題用 Cross-Encoder 重排"], { drilldown: "retrieval" }),
+        ["BM25 與 Dense 搜尋 128 token 子 Chunk", "RRF 融合並保留前 100 個候選", "簡單問題直接取 Top-5；複雜問題用 Cross-Encoder 重排"], { drilldown: "retrieval" }),
       node("domain-evidence", "05 · EVIDENCE", "證據驗證", "確認片段能否直接支撐數值、期間、程序或結論。", "候選證據與問題", "充分／不足判定", 1030, 370,
         ["精確值問題檢查主體與數值共現", "證據不足時阻止模型補答", "保留判定理由與 signals"], { drilldown: "evidence" }),
       node("domain-answer", "06 · ANSWER", "模型回答與引用", "只把通過驗證的證據交給模型並檢查引用。", "可信證據包", "附引用回答或安全拒答", 1350, 210,

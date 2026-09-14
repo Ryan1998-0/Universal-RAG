@@ -17,8 +17,8 @@ class RagConfig:
     # Parent-child indexing retrieves precise child windows and expands them
     # back to coherent parent evidence before generation.
     parent_child_enabled: bool = True
-    parent_chunk_size_tokens: int = 1024
-    child_chunk_size_tokens: int = 256
+    parent_chunk_size_tokens: int = 512
+    child_chunk_size_tokens: int = 128
     parent_chunk_overlap_tokens: int = 0
     child_chunk_overlap_tokens: int = 0
     # Guard model-generated retrieval rewrites by comparing them with the

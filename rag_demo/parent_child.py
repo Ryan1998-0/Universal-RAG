@@ -1,8 +1,8 @@
 """Parent-child chunking for high-recall retrieval and coherent evidence.
 
-The index stores 256-token child chunks because they are precise retrieval
+The index stores 128-token child chunks because they are precise retrieval
 units.  Each child keeps a small amount of parent metadata and the complete
-1024-token parent text so a retriever can expand a hit before it is sent to a
+512-token parent text so a retriever can expand a hit before it is sent to a
 generation model.  Embeddings should be built from the child ``content``;
 ``parent_content`` is deliberately only an evidence expansion field.
 """
@@ -39,13 +39,13 @@ def build_parent_child_index(
     filename: str,
     source_type: str,
     extraction_method: str,
-    parent_size_tokens: int = 1024,
-    child_size_tokens: int = 256,
+    parent_size_tokens: int = 512,
+    child_size_tokens: int = 128,
     parent_overlap_tokens: int = 0,
     child_overlap_tokens: int = 0,
     strategy: str = CHUNK_STRATEGY_DYNAMIC,
 ) -> ParentChildIndex:
-    """Build sentence-aware 1024-token parents and 256-token children.
+    """Build sentence-aware 512-token parents and 128-token children.
 
     Parent boundaries are created first.  Children are then split inside each
     parent, which makes every child point to exactly one parent and prevents a

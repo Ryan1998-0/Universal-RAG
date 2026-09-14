@@ -1,0 +1,76 @@
+{
+  "schema_version": "open-rag-bench-full-3045-retrieval-only-v1-parent200-child40-top30",
+  "dataset": "vectara/open_ragbench",
+  "dataset_url": "https://huggingface.co/datasets/vectara/open_ragbench",
+  "source_repository": "https://github.com/vectara/open-rag-bench",
+  "question_pool_count": 3045,
+  "sample_count": 3045,
+  "corpus_documents": 1000,
+  "corpus_sections": 18840,
+  "question_type_counts": {
+    "abstractive": 1793,
+    "extractive": 1252
+  },
+  "query_source_counts": {
+    "text": 1914,
+    "text-image": 763,
+    "text-table": 148,
+    "text-table-image": 220
+  },
+  "dataset_hashes": {
+    "queries_sha256": "13822fc7efd6889eaf20a6809adfff1cf040699ec2254131a897850b922cac6f",
+    "qrels_sha256": "c2ad02c5461402e643cb363e7ae562b7bba4a3f5a4e7a5149707365c82848580",
+    "corpus_manifest_sha256": "88591abe78f055a1ad3cf8cb74f2e34b0ac091e3c37a94d1984042849bc40e56"
+  },
+  "chunking": {
+    "parent_chunk_tokens": 200,
+    "child_chunk_tokens": 40,
+    "child_overlap_tokens": 10
+  },
+  "query_rewrite_enabled": false,
+  "embedding_enabled": false,
+  "reranking_enabled": false,
+  "published_metrics": [
+    "Document recall@30",
+    "任一證據命中",
+    "平均耗時（秒／題）"
+  ],
+  "public_reference": {
+    "name": "Linkence-Benchmarks 公開 full 結果",
+    "repository": "https://github.com/Linkence-AI/Linkence-Benchmarks",
+    "results": "https://github.com/Linkence-AI/Linkence-Benchmarks/blob/main/results/open_ragbench_full/metrics.json",
+    "queries": 3045,
+    "method": "hybrid hashed-TF-IDF sparse + text-embedding-3-small dense; section units; no reranker; top_k=20",
+    "relaxed_document_hit_at_20": 0.9977,
+    "strict_section_hit_at_20": 0.9691,
+    "latency_p50_seconds": 0.4185,
+    "comparison_note": "公開結果提供 @20 與 p50 latency，沒有本次 @30 平均耗時，因此只作外部參考，不併入本次主表。"
+  },
+  "retrieval_only": true,
+  "model_calls": 0,
+  "run_at": "2026-09-14T23:33:25+0800",
+  "versions": [
+    {
+      "name": "無優化版 BM25 Top 30",
+      "version": "unoptimized_bm25_parent200_top30",
+      "configuration": "Flat 200-token parent chunks with BM25 Top 30; no query rewrite, Embedding, reranking, or parent expansion",
+      "summary": {
+        "question_count": 3045,
+        "document_recall_at_30": 0.99146141,
+        "any_evidence_hit_rate": 0.96321839,
+        "average_question_seconds": 0.075271
+      }
+    },
+    {
+      "name": "優化版 BM25 Top 30",
+      "version": "optimized_bm25_child40_parent200_top30",
+      "configuration": "40-token child chunks (overlap 10), BM25 Top 30, expanded to 200-token parent evidence; no query rewrite, Embedding, or reranking",
+      "summary": {
+        "question_count": 3045,
+        "document_recall_at_30": 0.98325123,
+        "any_evidence_hit_rate": 0.93399015,
+        "average_question_seconds": 0.245796
+      }
+    }
+  ]
+}

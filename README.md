@@ -76,6 +76,19 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/enterpriserag_bench_full/retrieval-results.json)｜[彙整報告](evals/enterpriserag_bench_full/retrieval-report.md)｜[摘要](evals/enterpriserag_bench_full/retrieval-summary.json)
 
+### Open RAG Benchmark
+
+使用 Vectara `open_ragbench` 完整 3,045 題、1,000 份 PDF 文件與 18,840 個 section；兩個版本均只使用 BM25、Top 30 與原始問題。無優化版直接檢索 200-token Chunk；優化版使用 40-token 子 Chunk（overlap 10）檢索後展開至 200-token 父 Chunk，不使用 Embedding、問題改寫或重排。
+
+| 版本 | Document recall@30 | 任一證據命中 | 平均耗時（秒／題） |
+| --- | ---: | ---: | ---: |
+| 無優化版 BM25 Top 30 | 99.15% | 96.32% | 0.075 |
+| 優化版 BM25 Top 30 | 98.33% | 93.40% | 0.246 |
+
+公開參考：[Linkence-Benchmarks full 結果](https://github.com/Linkence-AI/Linkence-Benchmarks/blob/main/README.md) 使用 hybrid hashed-TF-IDF＋`text-embedding-3-small`、Top 20；公開 relaxed document hit@20 為 99.77%、strict section hit@20 為 96.91%、p50 latency 為 0.419 秒，與本次 Top 30 平均耗時不直接等同。
+
+完整結果：[逐題結果](evals/open_rag_bench_full/retrieval-results.json)｜[彙整報告](evals/open_rag_bench_full/retrieval-report.md)｜[摘要](evals/open_rag_bench_full/retrieval-summary.json)
+
 ## RAG 資料庫來源
 
 本專案的知識庫可替換；目前測試與示範資料來源如下：

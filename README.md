@@ -12,7 +12,7 @@
 - 問題理解：問題改寫、語意相似度校驗，以及簡單／複雜問題路由。
 - 智慧重排：簡單問題直接取 Top 5；複雜問題才使用 Cross-Encoder 重排。
 - 證據約束：Evidence Gate、來源引用、證據不足拒答，降低模型幻覺。
-- 法律領域 Embedding：預設使用 [bugBug04S/legal-embed-modernbert-v2](https://huggingface.co/bugBug04S/legal-embed-modernbert-v2)，並分別套用查詢與文件前綴。
+- 可替換 Embedding：透過 `RAG_EMBEDDING_MODEL` 與 `RAG_EMBEDDING_DIMENSIONS` 設定模型與向量維度；預設使用 [bugBug04S/legal-embed-modernbert-v2](https://huggingface.co/bugBug04S/legal-embed-modernbert-v2)，並分別套用查詢與文件前綴。
 - 企業功能：知識庫與資料夾管理、文件 ACL、SQLite 對話記憶與可替換模型後端。
 - 模型選擇：預設可使用 Ollama Qwen；也支援 OpenAI、Anthropic 與 GPT-5.5 子代理。
 
@@ -25,11 +25,18 @@
 | 項目 | 設定 |
 | --- | --- |
 | Chunk | 父 1024 tokens、子 256 tokens |
-| Embedding | `bugBug04S/legal-embed-modernbert-v2`（法律檢索微調、768 維） |
+| Embedding | 可替換；`RAG_EMBEDDING_MODEL` 設定模型、`RAG_EMBEDDING_DIMENSIONS` 設定維度，預設為 `bugBug04S/legal-embed-modernbert-v2`（768 維） |
 | 混合檢索 | BM25 + Embedding，RRF `k=60` |
 | 候選與證據 | 前 100 候選，最終 Top 5 |
 | 重排 | 複雜問題使用 Cross-Encoder |
 | 改寫校驗 | 原始問題與改寫問題 cosine similarity 至少 `0.60` |
+
+替換 Embedding 時，先在 `.env` 或部署環境設定模型與維度，再重新建立索引，避免不同模型或向量維度混用：
+
+```env
+RAG_EMBEDDING_MODEL=your-org/your-embedding-model
+RAG_EMBEDDING_DIMENSIONS=768
+```
 
 ## 測試報告
 

@@ -1,0 +1,153 @@
+{
+  "schema_version": "legalbench-rag-retrieval-only-v1",
+  "dataset": "ZeroEntropy-AI/legalbenchrag",
+  "published_question_count": 6858,
+  "archive_question_count": 6889,
+  "evaluated_count": 100,
+  "full_evaluated_count": 6858,
+  "sample_excluded_count": 6758,
+  "sample_limit": 100,
+  "excluded_count": 31,
+  "subset_counts": {
+    "contractnli": 100
+  },
+  "corpus_documents": 714,
+  "corpus_characters": 80026615,
+  "chunk_counts": {
+    "hard": 133738,
+    "parent": 16181,
+    "child": 66427
+  },
+  "mapping_failures": 9650,
+  "run_at": "2026-09-14T10:39:17+08:00",
+  "embedding_model": "bugBug04S/legal-embed-modernbert-v2",
+  "cross_encoder_model": "BAAI/bge-reranker-base",
+  "versions": [
+    {
+      "name": "無優化版",
+      "version": "unoptimized",
+      "configuration": {
+        "chunking": "hard 600-character chunks, no overlap",
+        "query_rewrite": "disabled",
+        "hybrid_fusion": "raw 50/50 BM25+dense weighted addition",
+        "candidate_pool": 100,
+        "routing": "always lexical/semantic reranker to Top 5",
+        "evidence": "retrieval only; no answer model, prompt, memory or generation"
+      },
+      "summary": {
+        "question_count": 100,
+        "macro_char_recall": 0.11950068,
+        "macro_char_precision": 0.01057667,
+        "micro_char_recall": 0.07743935,
+        "micro_char_precision": 0.01057667,
+        "any_gold_span_hit_rate": 0.16,
+        "complete_gold_span_hit_rate": 0.13,
+        "rank1_gold_span_hit_rate": 0.05,
+        "first_hit_rate": 0.16,
+        "mean_first_hit_rank": 2.6875,
+        "mean_context_count": 5,
+        "complex_count": 0,
+        "simple_count": 0,
+        "rerank_count": 100,
+        "rerank_rate": 1.0,
+        "average_question_stage_ms": 6.715,
+        "p50_question_stage_ms": 6.45,
+        "p95_question_stage_ms": 9.223,
+        "p99_question_stage_ms": 10.561,
+        "dense_search_ms": 346.415,
+        "dense_search_ms_per_question": 3.464,
+        "overall_retrieval_ms_per_question": 10.179
+      },
+      "breakdown": [
+        {
+          "subset": "contractnli",
+          "question_count": 100,
+          "macro_char_recall": 0.11950068,
+          "macro_char_precision": 0.01057667,
+          "micro_char_recall": 0.07743935,
+          "micro_char_precision": 0.01057667,
+          "any_gold_span_hit_rate": 0.16,
+          "complete_gold_span_hit_rate": 0.13,
+          "rank1_gold_span_hit_rate": 0.05,
+          "first_hit_rate": 0.16,
+          "mean_first_hit_rank": 2.6875,
+          "mean_context_count": 5,
+          "complex_count": 0,
+          "simple_count": 0,
+          "rerank_count": 100,
+          "rerank_rate": 1.0,
+          "average_question_stage_ms": 6.715,
+          "p50_question_stage_ms": 6.45,
+          "p95_question_stage_ms": 9.223,
+          "p99_question_stage_ms": 10.561,
+          "dense_search_ms": 0.0,
+          "dense_search_ms_per_question": 0.0,
+          "overall_retrieval_ms_per_question": 6.715
+        }
+      ]
+    },
+    {
+      "name": "優化版",
+      "version": "optimized",
+      "configuration": {
+        "chunking": "dynamic 1024-token parent / 256-token child, no overlap",
+        "query_rewrite": "identity for authored English benchmark; semantic guard retained in production",
+        "hybrid_fusion": "RRF, k=60",
+        "candidate_pool": 100,
+        "routing": "simple direct Top 5; complex Cross-Encoder Top 5",
+        "evidence": "retrieval only; no answer model, prompt, memory or generation"
+      },
+      "summary": {
+        "question_count": 100,
+        "macro_char_recall": 0.13998273,
+        "macro_char_precision": 0.00222856,
+        "micro_char_recall": 0.14885049,
+        "micro_char_precision": 0.00222552,
+        "any_gold_span_hit_rate": 0.14,
+        "complete_gold_span_hit_rate": 0.14,
+        "rank1_gold_span_hit_rate": 0.06,
+        "first_hit_rate": 0.14,
+        "mean_first_hit_rank": 2.3571,
+        "mean_context_count": 5,
+        "complex_count": 100,
+        "simple_count": 0,
+        "rerank_count": 100,
+        "rerank_rate": 1.0,
+        "average_question_stage_ms": 16394.925,
+        "p50_question_stage_ms": 16018.004,
+        "p95_question_stage_ms": 19326.554,
+        "p99_question_stage_ms": 20998.887,
+        "dense_search_ms": 125.355,
+        "dense_search_ms_per_question": 1.254,
+        "overall_retrieval_ms_per_question": 16396.178
+      },
+      "breakdown": [
+        {
+          "subset": "contractnli",
+          "question_count": 100,
+          "macro_char_recall": 0.13998273,
+          "macro_char_precision": 0.00222856,
+          "micro_char_recall": 0.14885049,
+          "micro_char_precision": 0.00222552,
+          "any_gold_span_hit_rate": 0.14,
+          "complete_gold_span_hit_rate": 0.14,
+          "rank1_gold_span_hit_rate": 0.06,
+          "first_hit_rate": 0.14,
+          "mean_first_hit_rank": 2.3571,
+          "mean_context_count": 5,
+          "complex_count": 100,
+          "simple_count": 0,
+          "rerank_count": 100,
+          "rerank_rate": 1.0,
+          "average_question_stage_ms": 16394.925,
+          "p50_question_stage_ms": 16018.004,
+          "p95_question_stage_ms": 19326.554,
+          "p99_question_stage_ms": 20998.887,
+          "dense_search_ms": 0.0,
+          "dense_search_ms_per_question": 0.0,
+          "overall_retrieval_ms_per_question": 16394.925
+        }
+      ]
+    }
+  ]
+}

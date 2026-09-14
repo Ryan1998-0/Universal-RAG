@@ -1,0 +1,123 @@
+{
+  "schema_version": "legalbench-rag-ettin-retrieval-only-v1",
+  "dataset": "ZeroEntropy-AI/legalbenchrag",
+  "published_question_count": 6858,
+  "archive_question_count": 6889,
+  "evaluated_count": 100,
+  "full_evaluated_count": 6858,
+  "sample_excluded_count": 6758,
+  "sample_limit": 100,
+  "excluded_count": 31,
+  "subset_counts": {
+    "contractnli": 100
+  },
+  "corpus_documents": 714,
+  "corpus_characters": 80026615,
+  "passage_count": 59297,
+  "mapping_failures": 0,
+  "passage_tokens": 384,
+  "passage_overlap_tokens": 96,
+  "bm25_candidate_k": 32,
+  "final_top_k": 5,
+  "run_at": "2026-09-14T11:23:55+08:00",
+  "reranker_model": "lxyuan/LegalBenchRAG-Ettin-150M-Reranker",
+  "reranker_device": "unknown",
+  "versions": [
+    {
+      "name": "無優化版（BM25）",
+      "version": "bm25_baseline",
+      "configuration": "384-token tokenizer-aligned passages with 96-token overlap; BM25 Top 32; direct Top 5",
+      "summary": {
+        "question_count": 100,
+        "macro_char_recall": 0.31570179,
+        "macro_char_precision": 0.01365403,
+        "micro_char_recall": 0.29955582,
+        "micro_char_precision": 0.0129429,
+        "any_gold_span_hit_rate": 0.39,
+        "complete_gold_span_hit_rate": 0.29,
+        "rank1_gold_span_hit_rate": 0.26,
+        "first_hit_rate": 0.39,
+        "mean_first_hit_rank": 1.8462,
+        "mean_context_count": 5,
+        "rerank_count": 0,
+        "rerank_rate": 0.0,
+        "average_question_stage_ms": 2.261,
+        "p50_question_stage_ms": 2.224,
+        "p95_question_stage_ms": 3.109,
+        "p99_question_stage_ms": 3.254,
+        "overall_retrieval_ms_per_question": 2.261
+      },
+      "breakdown": [
+        {
+          "subset": "contractnli",
+          "question_count": 100,
+          "macro_char_recall": 0.31570179,
+          "macro_char_precision": 0.01365403,
+          "micro_char_recall": 0.29955582,
+          "micro_char_precision": 0.0129429,
+          "any_gold_span_hit_rate": 0.39,
+          "complete_gold_span_hit_rate": 0.29,
+          "rank1_gold_span_hit_rate": 0.26,
+          "first_hit_rate": 0.39,
+          "mean_first_hit_rank": 1.8462,
+          "mean_context_count": 5,
+          "rerank_count": 0,
+          "rerank_rate": 0.0,
+          "average_question_stage_ms": 2.261,
+          "p50_question_stage_ms": 2.224,
+          "p95_question_stage_ms": 3.109,
+          "p99_question_stage_ms": 3.254,
+          "overall_retrieval_ms_per_question": 2.261
+        }
+      ]
+    },
+    {
+      "name": "LegalBench-RAG（Ettin）",
+      "version": "ettin_optimized",
+      "configuration": "384-token tokenizer-aligned passages with 96-token overlap; BM25 Top 32; LegalBench-RAG Ettin Cross-Encoder Top 5",
+      "summary": {
+        "question_count": 100,
+        "macro_char_recall": 0.08571106,
+        "macro_char_precision": 0.00357515,
+        "micro_char_recall": 0.0831991,
+        "micro_char_precision": 0.00351651,
+        "any_gold_span_hit_rate": 0.09,
+        "complete_gold_span_hit_rate": 0.09,
+        "rank1_gold_span_hit_rate": 0.03,
+        "first_hit_rate": 0.09,
+        "mean_first_hit_rank": 2.4444,
+        "mean_context_count": 5,
+        "rerank_count": 100,
+        "rerank_rate": 1.0,
+        "average_question_stage_ms": 600.931,
+        "p50_question_stage_ms": 530.933,
+        "p95_question_stage_ms": 552.775,
+        "p99_question_stage_ms": 633.027,
+        "overall_retrieval_ms_per_question": 600.931
+      },
+      "breakdown": [
+        {
+          "subset": "contractnli",
+          "question_count": 100,
+          "macro_char_recall": 0.08571106,
+          "macro_char_precision": 0.00357515,
+          "micro_char_recall": 0.0831991,
+          "micro_char_precision": 0.00351651,
+          "any_gold_span_hit_rate": 0.09,
+          "complete_gold_span_hit_rate": 0.09,
+          "rank1_gold_span_hit_rate": 0.03,
+          "first_hit_rate": 0.09,
+          "mean_first_hit_rank": 2.4444,
+          "mean_context_count": 5,
+          "rerank_count": 100,
+          "rerank_rate": 1.0,
+          "average_question_stage_ms": 600.931,
+          "p50_question_stage_ms": 530.933,
+          "p95_question_stage_ms": 552.775,
+          "p99_question_stage_ms": 633.027,
+          "overall_retrieval_ms_per_question": 600.931
+        }
+      ]
+    }
+  ]
+}

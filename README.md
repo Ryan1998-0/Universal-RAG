@@ -12,6 +12,7 @@
 - 問題理解：問題改寫、語意相似度校驗，以及簡單／複雜問題路由。
 - 智慧重排：簡單問題直接取 Top 5；複雜問題才使用 Cross-Encoder 重排。
 - 證據約束：Evidence Gate、來源引用、證據不足拒答，降低模型幻覺。
+- 法律領域 Embedding：預設使用 [bugBug04S/legal-embed-modernbert-v2](https://huggingface.co/bugBug04S/legal-embed-modernbert-v2)，並分別套用查詢與文件前綴。
 - 企業功能：知識庫與資料夾管理、文件 ACL、SQLite 對話記憶與可替換模型後端。
 - 模型選擇：預設可使用 Ollama Qwen；也支援 LangChain、OpenAI、Anthropic 與 GPT-5.5 子代理。
 
@@ -24,6 +25,7 @@
 | 項目 | 設定 |
 | --- | --- |
 | Chunk | 父 1024 tokens、子 256 tokens |
+| Embedding | `bugBug04S/legal-embed-modernbert-v2`（法律檢索微調、768 維） |
 | 混合檢索 | BM25 + Embedding，RRF `k=60` |
 | 候選與證據 | 前 100 候選，最終 Top 5 |
 | 重排 | 複雜問題使用 Cross-Encoder |
@@ -47,6 +49,42 @@
 - 首個證據命中：Top 5 中至少有一個單獨 Chunk 包含 Gold fact；不是只檢查 Rank 1。
 
 完整結果：[逐題結果](evals/multihop_rag_retrieval_full/retrieval-full-results.json)｜[彙整報告](evals/multihop_rag_retrieval_full/retrieval-full-report.md)｜[摘要](evals/multihop_rag_retrieval_full/retrieval-full-summary.json)
+
+### LegalBench-RAG 公開 710 題完整測試
+
+使用公開 held-out 710 題，依每題 `document_path` 限定文件範圍；只執行證據檢索，不呼叫回答模型。Character recall@5 與任一證據命中是本報告的主要比較欄位：
+
+| 版本 | Character recall@5 | 任一證據命中 |
+| --- | ---: | ---: |
+| 無優化版 | 15.16% | 37.46% |
+| 優化版 | 81.55% | 93.10% |
+| 公開 Ettin 版（官方 710 題數據） | 80.41% | 86.76% |
+
+公開 Ettin 數據來源：[LegalBenchRAG-Ettin-150M-Reranker 模型卡](https://huggingface.co/lxyuan/LegalBenchRAG-Ettin-150M-Reranker)。完整結果：[逐題結果](evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](evals/legalbench_public710_full/retrieval-report.md)｜[摘要](evals/legalbench_public710_full/retrieval-summary.json)
+
+### LegalBench-RAG 100 題（法律 Embedding）
+
+使用 `bugBug04S/legal-embed-modernbert-v2`，只執行證據檢索；兩個版本共用同一批題目與 Top 5 預算：
+
+| 版本 | Character recall@5 | 任一證據命中 |
+| --- | ---: | ---: |
+| 無優化版 | 7.74% | 16.00% |
+| 優化版 | 14.89% | 14.00% |
+
+本次取壓縮檔順序前 100 題，皆為 ContractNLI；此結果適合驗證流程，不代表四個子題型的完整分布。完整結果：[逐題結果](evals/legalbench_rag_retrieval_100_legal_embedding/retrieval-results.json)｜[彙整報告](evals/legalbench_rag_retrieval_100_legal_embedding/retrieval-report.md)｜[摘要](evals/legalbench_rag_retrieval_100_legal_embedding/retrieval-summary.json)
+
+本次文件與查詢 Embedding 使用 GPU；Cross-Encoder 因 ONNX Runtime CUDA 相依版本未載入而以 CPU 執行，優化版平均耗時因此較高。
+
+### LegalBench-RAG 發表方法 100 題（Ettin）
+
+依照公開方法重跑同一批題目：Ettin tokenizer 切 384 tokens、重疊 96 tokens，BM25 取 Top 32；優化版使用 `lxyuan/LegalBenchRAG-Ettin-150M-Reranker` 重排後取 Top 5。兩個版本都只跑檢索，不呼叫回答模型。
+
+| 版本 | Character recall@5 | 任一證據命中 |
+| --- | ---: | ---: |
+| 無優化版（BM25 直接 Top 5） | 29.96% | 39.00% |
+| 發表方法（BM25 Top 32 + Ettin Top 5） | 8.32% | 9.00% |
+
+本次取壓縮檔順序前 100 題，皆為 ContractNLI；不是完整四個子題型的統計。公開模型卡的 710 題 held-out 結果為 Hit@5 86.76%、Character recall@5 80.41%，與本機 100 題樣本不可直接互相比較。完整結果：[逐題結果](evals/legalbench_rag_retrieval_100_ettin/retrieval-results.json)｜[彙整報告](evals/legalbench_rag_retrieval_100_ettin/retrieval-report.md)｜[摘要](evals/legalbench_rag_retrieval_100_ettin/retrieval-summary.json)
 
 ## RAG 資料庫來源
 

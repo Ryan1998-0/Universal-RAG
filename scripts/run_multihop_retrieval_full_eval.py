@@ -489,7 +489,7 @@ def _render_report(payload: dict[str, Any]) -> str:
         "",
         "## 主要結果",
         "",
-        "| 版本 | Character recall@5（MultiHop：加權 Gold fact recall） | 任一證據命中 | 平均耗時（秒／題） |",
+        "| 版本 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |",
         "| --- | ---: | ---: | ---: |",
         f"| {unoptimized['name']} | {_pct(us['weighted_gold_fact_recall'])} | {_pct(us['any_gold_fact_hit_rate'])} | {_seconds(us['average_retrieval_ms'])} |",
         f"| {optimized['name']} | {_pct(osummary['weighted_gold_fact_recall'])} | {_pct(osummary['any_gold_fact_hit_rate'])} | {_seconds(osummary['average_retrieval_ms'])} |",
@@ -504,7 +504,7 @@ def _render_report(payload: dict[str, Any]) -> str:
         "",
         "## 題型分組",
         "",
-        "| 版本 | 題型 | 題數 | Character recall@5（加權 Gold fact recall） | 任一證據命中 | 平均耗時 |",
+        "| 版本 | 題型 | 題數 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |",
         "| --- | --- | ---: | ---: | ---: | ---: |",
     ]
     for version in (unoptimized, optimized):

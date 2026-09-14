@@ -42,17 +42,10 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 ### MultiHop-RAG
 
-使用 2,556 題與 609 份文件，只執行到證據檢索，不呼叫回答模型。結果分為無優化版與全優化版：
-
-| 版本 | Character recall@5（MultiHop：加權 Gold fact recall） | 任一證據命中 | 平均耗時（秒／題） |
+| 版本 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
 | 無優化版 | 57.59% | 92.86% | 0.482 秒 |
 | 全優化版 | 94.40% | 99.96% | 2.970 秒 |
-
-指標只計算 2,255 題有 Gold evidence 的題目，301 題 `null_query` 不列入分母。MultiHop-RAG 沒有 LegalBench 的字元 span 標註，因此 Character recall@5 欄位以加權 Gold fact recall 對應：
-
-- 任一證據命中：Top 5 合併後包含至少一個 Gold fact。
-- 平均耗時：每個版本所有題目的平均檢索時間，不包含回答模型呼叫。
 
 完整結果：[逐題結果](evals/multihop_rag_retrieval_full/retrieval-full-results.json)｜[彙整報告](evals/multihop_rag_retrieval_full/retrieval-full-report.md)｜[摘要](evals/multihop_rag_retrieval_full/retrieval-full-summary.json)
 

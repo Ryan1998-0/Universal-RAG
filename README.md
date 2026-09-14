@@ -60,11 +60,11 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 使用公開 held-out 710 題，依每題 `document_path` 限定文件範圍；只執行證據檢索，不呼叫回答模型。保留 Character recall@5、任一證據命中與去除極端值後平均耗時：
 
-| 版本 | Character recall@5 | 任一證據命中 | 去除最高／最低20題後平均耗時（秒／題） |
+| 版本 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
 | 無優化版 | 15.16% | 37.46% | 0.004 秒 |
 | 優化版 | 81.55% | 93.10% | 0.954 秒 |
-| 公開 Ettin 版（官方 710 題數據） | 80.41% | 86.76% | — |
+| 公開 Ettin 版 | 80.41% | 86.76% | — |
 
 平均耗時欄位為自有版本移除最高 20 題與最低 20 題後的 670 題平均；公開 Ettin 僅提供官方聚合指標，沒有逐題耗時。公開 Ettin 數據來源：[LegalBenchRAG-Ettin-150M-Reranker 模型卡](https://huggingface.co/lxyuan/LegalBenchRAG-Ettin-150M-Reranker)。完整結果：[逐題結果](evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](evals/legalbench_public710_full/retrieval-report.md)｜[摘要](evals/legalbench_public710_full/retrieval-summary.json)
 

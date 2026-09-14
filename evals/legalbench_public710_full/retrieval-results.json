@@ -215213,7 +215213,7 @@
       ]
     },
     {
-      "name": "公開 Ettin 版（官方數據）",
+      "name": "公開 Ettin 版",
       "version": "public_ettin",
       "configuration": "Ettin tokenizer 對齊 384-token 段落、96-token 重疊；BM25 Top 32；LegalBench-RAG Ettin Cross-Encoder Top 5",
       "summary": {

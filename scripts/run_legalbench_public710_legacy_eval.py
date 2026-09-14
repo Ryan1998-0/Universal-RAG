@@ -170,7 +170,7 @@ def _render_report(payload: dict[str, Any]) -> str:
         "",
         "自有版本耗時各自移除最高 20 題與最低 20 題，使用剩餘 670 題重新計算；主表保留兩個命中欄位與去除極端值後平均耗時。公開版只引用官方聚合數據，沒有逐題耗時。",
         "",
-        "| 版本 | Character recall@5 | 任一證據命中／Hit@5 | 去除最高／最低20題後平均耗時（秒／題） |",
+        "| 版本 | Character recall@5 | 任一證據命中／Hit@5 | 平均耗時（秒／題） |",
         "| --- | ---: | ---: | ---: |",
     ]
     for version in ordered_versions:
@@ -403,7 +403,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     # second local 710-question Ettin pass merely to manufacture incompatible
     # timing or metric values.
     public_ettin = {
-        "name": "公開 Ettin 版（官方數據）",
+        "name": "公開 Ettin 版",
         "version": "public_ettin",
         "configuration": (
             "Ettin tokenizer 對齊 384-token 段落、96-token 重疊；BM25 Top 32；"

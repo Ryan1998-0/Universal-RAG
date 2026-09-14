@@ -63,6 +63,17 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 公開 Ettin 數據來源：[LegalBenchRAG-Ettin-150M-Reranker 模型卡](https://huggingface.co/lxyuan/LegalBenchRAG-Ettin-150M-Reranker)。完整結果：[逐題結果](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-report.md)｜[摘要](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-summary.json)
 
+### EnterpriseRAG-Bench
+
+使用完整 500 題核心題庫與 511,962 份企業文件；無優化版與優化版採相同 BM25 Top 30、父／子 Chunk 200／40、overlap 10 設定，差異為優化版增加父子 Chunk 證據展開。兩個版本均不進行問題改寫、Embedding 或重排。
+
+| 版本 | Document recall@30 | 任一證據命中 | 平均耗時（秒／題） |
+| --- | ---: | ---: | ---: |
+| 無優化版 BM25 Top 30 | 78.01% | 81.06% | 2.492 |
+| 優化版 BM25 Top 30 | 78.01% | 81.06% | 3.025 |
+
+完整結果：[逐題結果](evals/enterpriserag_bench_full/retrieval-results.json)｜[彙整報告](evals/enterpriserag_bench_full/retrieval-report.md)｜[摘要](evals/enterpriserag_bench_full/retrieval-summary.json)
+
 ## RAG 資料庫來源
 
 本專案的知識庫可替換；目前測試與示範資料來源如下：

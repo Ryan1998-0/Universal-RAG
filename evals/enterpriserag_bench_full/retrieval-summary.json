@@ -1,0 +1,65 @@
+{
+  "schema_version": "enterpriserag-bench-full-500-retrieval-only-v14-200-40-top30-no-rewrite-public3",
+  "dataset": "onyx-dot-app/EnterpriseRAG-Bench",
+  "question_pool_count": 500,
+  "sample_count": 500,
+  "sample_seed": 42,
+  "sample_selection": "all_questions_in_question_file_order",
+  "question_type_counts": {
+    "basic": 175,
+    "completeness": 20,
+    "conflicting_info": 20,
+    "constrained": 30,
+    "high_level": 10,
+    "info_not_found": 20,
+    "intra_document_reasoning": 40,
+    "miscellaneous": 20,
+    "project_related": 40,
+    "semantic": 125
+  },
+  "archive_sha256": "9d1174928696ad08bc15f3f104739519de633c1605a4ec2034e0e3c0087bc5cd",
+  "corpus_documents": 511962,
+  "chunking": {
+    "parent_chunk_tokens": 200,
+    "child_chunk_tokens": 40,
+    "child_overlap_tokens": 10
+  },
+  "query_rewrite_enabled": false,
+  "reranking_enabled": false,
+  "embedding_enabled": false,
+  "evaluation_scope": "all_questions_two_architectures",
+  "published_metrics": [
+    "Document recall@30",
+    "任一證據命中",
+    "平均耗時（秒／題）"
+  ],
+  "run_at": "2026-09-14T20:40:07+08:00",
+  "retrieval_only": true,
+  "model_calls": 0,
+  "versions": [
+    {
+      "name": "無優化版 BM25 Top 30",
+      "version": "unoptimized_bm25_top30",
+      "configuration": "Document-level BM25 direct Top 30; no query rewrite, Embedding, reranking, or parent-child expansion (shared chunk settings 200/40)",
+      "summary": {
+        "question_count": 500,
+        "gold_document_questions": 470,
+        "document_recall_at_30": 0.7801182,
+        "any_evidence_hit_rate": 0.8106383,
+        "average_question_seconds": 2.492147
+      }
+    },
+    {
+      "name": "優化版 BM25 Top 30",
+      "version": "optimized_bm25_top30",
+      "configuration": "Document-level BM25 direct Top 30 → 40-token child / 200-token parent expansion (overlap 10); no query rewrite, Embedding, RRF, or reranking",
+      "summary": {
+        "question_count": 500,
+        "gold_document_questions": 470,
+        "document_recall_at_30": 0.7801182,
+        "any_evidence_hit_rate": 0.8106383,
+        "average_question_seconds": 3.025352
+      }
+    }
+  ]
+}

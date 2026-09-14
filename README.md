@@ -89,6 +89,19 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/open_rag_bench_full/retrieval-results.json)｜[彙整報告](evals/open_rag_bench_full/retrieval-report.md)｜[摘要](evals/open_rag_bench_full/retrieval-summary.json)
 
+### Fujitsu RAG Hard Benchmark
+
+使用 Fujitsu 公開 benchmark 的完整 100 題與 34 份參考 PDF（共 1,794 頁），只執行證據檢索，不呼叫回答模型。兩個版本均使用 BM25 Top 30、原始問題、無 Embedding、無問題改寫與無重排；無優化版直接使用 200-token page-local Chunk，優化版使用 40-token 子 Chunk（overlap 10）後展開至 200-token 父 Chunk。
+
+| 版本 | Document recall@30 | 任一證據命中 | 平均耗時（秒／題） |
+| --- | ---: | ---: | ---: |
+| 無優化版 BM25 Top 30 | 79.50% | 80.00% | 0.020 |
+| 優化版 BM25 Top 30 | 78.50% | 74.00% | 0.043 |
+
+本次評測的 Document recall@30 對多份 Gold 文件採每題命中比例後再平均；任一證據命中要求文件與 Gold 頁碼同時符合。結果顯示在此困難、多圖表文件集合中，短子 Chunk 目前沒有帶來召回提升，且去重後候選數減少使任一證據命中下降。圖片型頁面未加入 OCR，相關 Gold 若只存在於圖片可能無法由 BM25 文字索引命中。
+
+完整結果：[逐題結果](evals/fujitsu_rag_hard_full/retrieval-results.json)｜[彙整報告](evals/fujitsu_rag_hard_full/retrieval-report.md)｜[摘要](evals/fujitsu_rag_hard_full/retrieval-summary.json)｜[評測程式](scripts/run_fujitsu_rag_hard_full_eval.py)
+
 ## RAG 資料庫來源
 
 本專案的知識庫可替換；目前測試與示範資料來源如下：

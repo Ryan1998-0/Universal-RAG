@@ -33,7 +33,7 @@
 
 ## 測試報告
 
-### MultiHop-RAG 全量檢索
+### MultiHop-RAG
 
 使用 2,556 題與 609 份文件，只執行到證據檢索，不呼叫回答模型。結果分為無優化版與全優化版：
 
@@ -49,7 +49,7 @@
 
 完整結果：[逐題結果](evals/multihop_rag_retrieval_full/retrieval-full-results.json)｜[彙整報告](evals/multihop_rag_retrieval_full/retrieval-full-report.md)｜[摘要](evals/multihop_rag_retrieval_full/retrieval-full-summary.json)
 
-### LegalBench-RAG 公開 710 題完整測試
+### LegalBench-RAG
 
 使用公開 held-out 710 題，依每題 `document_path` 限定文件範圍；只執行證據檢索，不呼叫回答模型。保留 Character recall@5、任一證據命中與去除極端值後平均延遲：
 
@@ -60,30 +60,6 @@
 | 公開 Ettin 版（官方 710 題數據） | 80.41% | 86.76% | — |
 
 延遲欄位為自有版本移除最高 20 題與最低 20 題後的 670 題平均；公開 Ettin 僅提供官方聚合指標，沒有逐題耗時。公開 Ettin 數據來源：[LegalBenchRAG-Ettin-150M-Reranker 模型卡](https://huggingface.co/lxyuan/LegalBenchRAG-Ettin-150M-Reranker)。完整結果：[逐題結果](evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](evals/legalbench_public710_full/retrieval-report.md)｜[摘要](evals/legalbench_public710_full/retrieval-summary.json)
-
-### LegalBench-RAG 100 題（法律 Embedding）
-
-使用 `bugBug04S/legal-embed-modernbert-v2`，只執行證據檢索；兩個版本共用同一批題目與 Top 5 預算：
-
-| 版本 | Character recall@5 | 任一證據命中 |
-| --- | ---: | ---: |
-| 無優化版 | 7.74% | 16.00% |
-| 優化版 | 14.89% | 14.00% |
-
-本次取壓縮檔順序前 100 題，皆為 ContractNLI；此結果適合驗證流程，不代表四個子題型的完整分布。完整結果：[逐題結果](evals/legalbench_rag_retrieval_100_legal_embedding/retrieval-results.json)｜[彙整報告](evals/legalbench_rag_retrieval_100_legal_embedding/retrieval-report.md)｜[摘要](evals/legalbench_rag_retrieval_100_legal_embedding/retrieval-summary.json)
-
-本次文件與查詢 Embedding 使用 GPU；Cross-Encoder 因 ONNX Runtime CUDA 相依版本未載入而以 CPU 執行，優化版平均耗時因此較高。
-
-### LegalBench-RAG 發表方法 100 題（Ettin）
-
-依照公開方法重跑同一批題目：Ettin tokenizer 切 384 tokens、重疊 96 tokens，BM25 取 Top 32；優化版使用 `lxyuan/LegalBenchRAG-Ettin-150M-Reranker` 重排後取 Top 5。兩個版本都只跑檢索，不呼叫回答模型。
-
-| 版本 | Character recall@5 | 任一證據命中 |
-| --- | ---: | ---: |
-| 無優化版（BM25 直接 Top 5） | 29.96% | 39.00% |
-| 發表方法（BM25 Top 32 + Ettin Top 5） | 8.32% | 9.00% |
-
-本次取壓縮檔順序前 100 題，皆為 ContractNLI；不是完整四個子題型的統計。公開模型卡的 710 題 held-out 結果為 Hit@5 86.76%、Character recall@5 80.41%，與本機 100 題樣本不可直接互相比較。完整結果：[逐題結果](evals/legalbench_rag_retrieval_100_ettin/retrieval-results.json)｜[彙整報告](evals/legalbench_rag_retrieval_100_ettin/retrieval-report.md)｜[摘要](evals/legalbench_rag_retrieval_100_ettin/retrieval-summary.json)
 
 ## RAG 資料庫來源
 

@@ -91,7 +91,16 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 ### Fujitsu RAG Hard Benchmark
 
-下一輪測試將在 1024／256 父子 Chunk 上加入 Embedding、加權 RRF（BM25 0.6／Embedding 0.4）與 Cross-Encoder 重排；上一輪 512／128 設定保留於[歷史報告](evals/fujitsu_rag_hard_full_512_128/retrieval-report.md)，更早的 200／40 設定保留於[歷史報告](evals/fujitsu_rag_hard_full/retrieval-report.md)。
+使用公開 benchmark 的 100 題與 34 份參考 PDF（1,794 頁），只使用 BM25，不啟用 Embedding、RRF、重排或回答模型。父／子 Chunk 設定為 1024／256。
+
+| 版本 | Document recall@30 | 任一證據命中 | 平均耗時（秒／題） |
+| --- | ---: | ---: | ---: |
+| 無優化版 BM25 Top 30 | 79.50% | 79.00% | 0.020 |
+| 優化版 BM25 Top 30 | 79.50% | 78.00% | 0.024 |
+
+完整結果：[逐題結果](evals/fujitsu_rag_hard_full_1024_256/retrieval-results.json)｜[彙整報告](evals/fujitsu_rag_hard_full_1024_256/retrieval-report.md)｜[摘要](evals/fujitsu_rag_hard_full_1024_256/retrieval-summary.json)｜[評測程式](scripts/run_fujitsu_rag_hard_full_eval.py)
+
+上一輪 512／128 設定保留於[歷史報告](evals/fujitsu_rag_hard_full_512_128/retrieval-report.md)；更早的 200／40 設定保留於[歷史報告](evals/fujitsu_rag_hard_full/retrieval-report.md)。
 
 ## RAG 資料庫來源
 

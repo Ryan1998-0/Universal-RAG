@@ -75,7 +75,6 @@ RAG_EMBEDDING_DIMENSIONS=768
 | --- | ---: | ---: | ---: |
 | 無優化版 | 15.16% | 37.46% | 0.004 |
 | 優化版 | 81.55% | 93.10% | 0.954 |
-| 公開 Ettin 版 | 80.41% | 86.76% | — |
 
 完整結果：[逐題結果](evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](evals/legalbench_public710_full/retrieval-report.md)｜[摘要](evals/legalbench_public710_full/retrieval-summary.json)
 

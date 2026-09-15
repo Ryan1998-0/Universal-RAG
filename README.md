@@ -12,7 +12,7 @@
 - 證據約束：Evidence Gate、來源引用、證據不足拒答，降低模型幻覺。
 - 可替換 Embedding：透過 `RAG_EMBEDDING_MODEL` 與 `RAG_EMBEDDING_DIMENSIONS` 設定模型與向量維度；預設使用 [bugBug04S/legal-embed-modernbert-v2](https://huggingface.co/bugBug04S/legal-embed-modernbert-v2)，並分別套用查詢與文件前綴。
 - 企業功能：知識庫與資料夾管理、文件 ACL、SQLite 對話記憶與可替換模型後端。
-- 模型選擇：預設可使用 Ollama Qwen；也支援 OpenAI、Anthropic 與 GPT-5.5 子代理。
+- API 與觀測：資料輸入／輸出、模型節點替換、逐節點耗時與 JSONL 除錯記錄，詳見 [API 與可觀測性契約](docs/api-contract.md)。
 
 ## RAG 架構圖
 

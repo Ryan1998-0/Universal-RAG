@@ -59,7 +59,13 @@ from rag_demo.production.web_auth import (
     WebAuthenticationError,
     WebSessionUnavailable,
 )
+from rag_demo.model_gateway import (
+    ModelGateway,
+    normalize_model_node,
+    validate_model_spec,
+)
 from rag_demo.model_providers import model_request_timeout
+from rag_demo.observability import configure_logging, log_event
 from rag_demo.rag_pipeline import AGENT_RESPONSE_SCHEMA, RagPipeline, RagPipelineRequest
 from rag_demo.retrieval_scope import RetrievalScope
 
@@ -102,6 +108,35 @@ class AskRequest(BaseModel):
             if clean not in normalized:
                 normalized.append(clean)
         return normalized
+
+
+class ModelValidationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model: str = Field(min_length=1, max_length=255)
+    node: str = Field(default="generation", min_length=1, max_length=64)
+
+    @field_validator("model", "node")
+    @classmethod
+    def strip_model_fields(cls, value):
+        clean = str(value or "").strip()
+        if not clean:
+            raise ValueError("must not be blank")
+        return clean
+
+
+class ModelBindingRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model: str = Field(min_length=1, max_length=255)
+
+    @field_validator("model")
+    @classmethod
+    def strip_model(cls, value):
+        clean = str(value or "").strip()
+        if not clean:
+            raise ValueError("must not be blank")
+        return clean
 
 
 class CreateUploadRequest(BaseModel):
@@ -245,6 +280,11 @@ def create_app(
     web_auth: Optional[OidcWebAuth] = None,
 ) -> FastAPI:
     resolved_settings = settings or get_production_settings()
+    log_path = configure_logging()
+    model_gateway = ModelGateway(
+        default_model=resolved_settings.default_model,
+        allowed_models=resolved_settings.allowed_models,
+    )
     owned_engine = None
     if repository is None:
         owned_engine = create_database_engine(resolved_settings.database_url)
@@ -302,9 +342,22 @@ def create_app(
                 vector_repository=vector_repository,
                 embedding_runtime=embedding_runtime,
             )
-            pipeline = RagPipeline(retriever_factory=lambda _profile: production_retriever)
+            pipeline = RagPipeline(
+                retriever_factory=lambda _profile: production_retriever,
+                model_gateway=model_gateway,
+            )
         else:
-            pipeline = RagPipeline()
+            pipeline = RagPipeline(model_gateway=model_gateway)
+    elif getattr(pipeline, "_model_gateway", None) is None:
+        # Custom pipelines keep their injected callbacks while still exposing
+        # the same runtime model registry to the API contract.
+        try:
+            setattr(pipeline, "_model_gateway", model_gateway)
+        except (AttributeError, TypeError):
+            # Some tests/integrations pass opaque callable objects.  They can
+            # still use the API model endpoints; only pipeline injection is
+            # unavailable for immutable objects.
+            pass
     token_verifier = token_verifier or build_token_verifier(resolved_settings)
     rate_limiter = rate_limiter or build_rate_limiter(resolved_settings)
     metrics = ProductionMetrics()
@@ -356,6 +409,8 @@ def create_app(
     app.state.malware_scanner = malware_scanner
     app.state.background_health_probe = background_health_probe
     app.state.web_auth = web_auth
+    app.state.model_gateway = model_gateway
+    app.state.log_path = str(log_path)
 
     if resolved_settings.cors_origins:
         app.add_middleware(
@@ -694,7 +749,131 @@ def create_app(
                 "markdown",
                 "json",
             ],
+            "interfaces": {
+                "data_input": {
+                    "question": "POST /v1/ask",
+                    "document_upload": "POST /v1/knowledge-bases/{knowledge_base_id}/uploads",
+                    "document_content": "PUT /v1/uploads/{upload_id}/content",
+                    "document_complete": "POST /v1/uploads/{upload_id}/complete",
+                },
+                "data_output": {
+                    "answer": "POST /v1/ask",
+                    "run": "GET /v1/answer-runs/{run_id}",
+                    "timings": "POST /v1/ask -> timings.stages",
+                },
+                "model": {
+                    "list": "GET /v1/models",
+                    "validate": "POST /v1/models/validate",
+                    "override": "PUT /v1/models/{node}",
+                    "clear_override": "DELETE /v1/models/{node}",
+                },
+            },
         }
+
+    @app.get("/v1/models")
+    async def list_model_bindings(
+        principal: Principal = Depends(current_principal),
+    ):
+        del principal
+        description = model_gateway.describe()
+        description["components"] = {
+            "embedding": {
+                "model": resolved_settings.embedding_model,
+                "env_var": "RAG_EMBEDDING_MODEL",
+                "replaceable": True,
+                "runtime_override": False,
+            },
+            "sparse_embedding": {
+                "model": resolved_settings.sparse_embedding_model,
+                "env_var": "RAG_SPARSE_EMBEDDING_MODEL",
+                "replaceable": True,
+                "runtime_override": False,
+            },
+            "reranker": {
+                "model": resolved_settings.reranker_model,
+                "env_var": "RAG_RERANKER_MODEL",
+                "replaceable": True,
+                "runtime_override": False,
+            },
+        }
+        description["observability"] = {
+            "log_file": Path(str(log_path)).name,
+            "timing_field": "timings.stages",
+        }
+        return description
+
+    @app.post("/v1/models/validate")
+    async def validate_model_binding(
+        payload: ModelValidationRequest,
+        principal: Principal = Depends(current_principal),
+    ):
+        del principal
+        try:
+            node = normalize_model_node(payload.node)
+            validation = validate_model_spec(payload.model, resolved_settings.allowed_models)
+        except ValueError as exc:
+            raise ApiError(400, "INVALID_MODEL", str(exc))
+        validation["node"] = node
+        validation["binding"] = model_gateway.binding(
+            node,
+            requested_model=payload.model,
+        ).as_dict()
+        return validation
+
+    def require_model_admin(principal: Principal) -> None:
+        if not ({"owner", "admin"} & set(principal.roles)):
+            raise ApiError(403, "MODEL_MANAGEMENT_FORBIDDEN", "Model replacement requires owner or admin role.")
+
+    @app.put("/v1/models/{node}")
+    async def override_model_binding(
+        node: str,
+        payload: ModelBindingRequest,
+        request: Request,
+        principal: Principal = Depends(current_principal),
+    ):
+        require_model_admin(principal)
+        try:
+            binding = model_gateway.set_override(node, payload.model)
+        except ValueError as exc:
+            raise ApiError(400, "INVALID_MODEL", str(exc))
+        await _record_audit_safely(
+            repository,
+            principal,
+            "model.override",
+            "model_node",
+            binding.node,
+            request.state.request_id,
+            "success",
+        )
+        return {
+            "binding": binding.as_dict(),
+            "runtime_override": True,
+            "scope": "process",
+            "persistent": False,
+            "restart_required_for_env_change": True,
+        }
+
+    @app.delete("/v1/models/{node}")
+    async def clear_model_binding(
+        node: str,
+        request: Request,
+        principal: Principal = Depends(current_principal),
+    ):
+        require_model_admin(principal)
+        try:
+            binding = model_gateway.clear_override(node)
+        except ValueError as exc:
+            raise ApiError(400, "INVALID_MODEL", str(exc))
+        await _record_audit_safely(
+            repository,
+            principal,
+            "model.override.clear",
+            "model_node",
+            binding.node,
+            request.state.request_id,
+            "success",
+        )
+        return {"binding": binding.as_dict(), "runtime_override": False}
 
     @app.post("/v1/knowledge-bases", status_code=201)
     async def create_knowledge_base(
@@ -1172,6 +1351,7 @@ def create_app(
             persist_conversation=False,
             conversation_id=conversation_id,
             history=history,
+            request_id=request.state.request_id,
             retrieval_scope=RetrievalScope(
                 tenant_id=principal.tenant_id,
                 knowledge_base_id=authorized.id,
@@ -1744,6 +1924,11 @@ def _public_result(
     return {
         "schema_version": str(result.get("schema_version") or AGENT_RESPONSE_SCHEMA),
         "run_id": str(result.get("run_id") or ""),
+        "request_id": str(
+            result.get("request_id")
+            or (result.get("timing_trace") or {}).get("requestId")
+            or ""
+        ),
         "knowledge_base_id": knowledge_base_id,
         "conversation_id": conversation_id,
         "answer": str(result.get("answer") or ""),
@@ -1757,9 +1942,11 @@ def _public_result(
             "reason": str(retrieval.get("reason") or ""),
             "query": str(retrieval.get("query") or ""),
             "evidence_evaluation": public_evidence,
+            "timings": dict(retrieval.get("timings") or {}),
         },
         "model": dict(result.get("model") or {}),
         "timings": dict(result.get("timings") or {}),
+        "timing_trace": dict(result.get("timing_trace") or {}),
     }
 
 

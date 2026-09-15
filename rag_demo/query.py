@@ -22,6 +22,7 @@ from rag_demo.knowledge_base import active_knowledge_base
 from rag_demo.keyword_extraction import extract_keywords
 from rag_demo.lambdamart_fusion import fuse_candidates_with_lambdamart
 from rag_demo.model_providers import ask_model
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.prompting import build_answer_prompt
 from rag_demo.qa_agent import answer_with_qa_agent
 from rag_demo.question_extraction import extract_real_question
@@ -382,7 +383,11 @@ def answer_question_v2(question: str, model: str, top_k: int = 8) -> str:
         try:
             answer = ask_model(
                 build_no_retrieval_answer_prompt(question, rewrite_decision.reason),
-                model=model,
+                model=resolve_model_for_node(
+                    "generation",
+                    requested_model=model,
+                    prefer_requested=bool(model),
+                ),
                 system=build_qwen_rag_system_prompt(),
             )
         except Exception:
@@ -435,7 +440,11 @@ def answer_question_v2(question: str, model: str, top_k: int = 8) -> str:
         refined_question=question,
         keywords=[],
         chunks=results,
-        model=model,
+        model=resolve_model_for_node(
+            "generation",
+            requested_model=model,
+            prefer_requested=bool(model),
+        ),
     )
     timing["qa_agent"] = perf_counter() - started_at
     timing["total"] = perf_counter() - total_started_at
@@ -488,7 +497,11 @@ def answer_question_self_rag(question: str, model: str, top_k: int = 8, max_atte
         try:
             answer = ask_model(
                 build_no_retrieval_answer_prompt(question, rewrite_decision.reason),
-                model=model,
+                model=resolve_model_for_node(
+                    "generation",
+                    requested_model=model,
+                    prefer_requested=bool(model),
+                ),
                 system=build_qwen_rag_system_prompt(),
             )
         except Exception:

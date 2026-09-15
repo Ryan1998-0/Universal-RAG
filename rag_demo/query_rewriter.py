@@ -6,6 +6,7 @@ from typing import Callable, List, Optional, Sequence, Tuple
 from rag_demo.config import RagConfig
 from rag_demo.embeddings import DEFAULT_EMBEDDING_MODEL, embed_texts
 from rag_demo.general_answer import CURRENT_DATETIME_REASON, is_current_datetime_question
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.model_providers import ask_model
 
 
@@ -93,7 +94,7 @@ def build_rewrite_prompt(question: str, conversation_context: str = "") -> str:
 
 def rewrite_query_for_retrieval(
     question: str,
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
 ) -> str:
     return decide_and_rewrite_query_for_retrieval(
         question,
@@ -103,7 +104,7 @@ def rewrite_query_for_retrieval(
 
 def decide_and_rewrite_query_for_retrieval(
     question: str,
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     conversation_context: str = "",
 ) -> QueryRewriteDecision:
     decision_question = strip_greeting_prefix(question)
@@ -116,7 +117,11 @@ def decide_and_rewrite_query_for_retrieval(
             decision_question,
             conversation_context=conversation_context,
         ),
-        model=model,
+        model=resolve_model_for_node(
+            "query_rewrite",
+            requested_model=model,
+            prefer_requested=bool(model),
+        ),
         system=QUERY_REWRITER_SYSTEM_PROMPT,
     )
     retrieval_queries = extract_retrieval_queries(output)

@@ -1,7 +1,8 @@
 import json
 import re
-from typing import Callable
+from typing import Callable, Optional
 
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.model_providers import ask_model
 
 
@@ -34,12 +35,16 @@ JSON 格式：
 
 def extract_real_question(
     question: str,
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn: Callable[..., str] = ask_model,
 ) -> str:
     output = ask_model_fn(
         build_question_extraction_prompt(question),
-        model=model,
+        model=resolve_model_for_node(
+            "question_extraction",
+            requested_model=model,
+            prefer_requested=bool(model),
+        ),
         system=QUESTION_EXTRACTION_SYSTEM_PROMPT,
     )
     refined_question = parse_question_output(output)

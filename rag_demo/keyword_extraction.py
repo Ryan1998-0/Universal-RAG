@@ -1,7 +1,8 @@
 import json
 import re
-from typing import Callable, List
+from typing import Callable, List, Optional
 
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.model_providers import ask_model
 
 
@@ -34,13 +35,17 @@ JSON 格式：
 
 def extract_keywords(
     question: str,
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn: Callable[..., str] = ask_model,
     max_keywords: int = 12,
 ) -> List[str]:
     output = ask_model_fn(
         build_keyword_extraction_prompt(question, max_keywords=max_keywords),
-        model=model,
+        model=resolve_model_for_node(
+            "keyword_extraction",
+            requested_model=model,
+            prefer_requested=bool(model),
+        ),
         system=KEYWORD_EXTRACTION_SYSTEM_PROMPT,
     )
     keywords = parse_keywords_output(output)

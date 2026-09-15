@@ -4,6 +4,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import timedelta
+from time import perf_counter
 from typing import Optional
 
 from sqlalchemy import and_, or_, select
@@ -26,6 +27,7 @@ from rag_demo.production.file_security import (
     scan_prompt_injection,
 )
 from rag_demo.production.lease_heartbeat import LeaseHeartbeat
+from rag_demo.observability import TimingTrace, configure_logging, elapsed_ms
 
 
 @dataclass(frozen=True)
@@ -354,6 +356,9 @@ class IngestionService:
         self.prompt_injection_policy = policy
 
     def process(self, *, job_id: str, worker_id: str) -> dict:
+        configure_logging()
+        started_at = perf_counter()
+        trace = TimingTrace(run_id=str(job_id), component="ingestion_service")
         work = self.repository.claim(
             job_id=job_id,
             worker_id=worker_id,
@@ -373,18 +378,19 @@ class IngestionService:
         )
         heartbeat.start()
         try:
-            payload = self.object_storage.download_bytes(
-                work.object_key,
-                max_bytes=self.max_upload_bytes,
-            )
-            if hashlib.sha256(payload).hexdigest() != work.sha256:
-                raise FileSecurityError("uploaded object SHA-256 does not match")
-            self.malware_scanner.scan(payload)
-            inspection = inspect_file(
-                filename=work.filename,
-                payload=payload,
-                declared_mime_type=work.mime_type,
-            )
+            with trace.stage("ingestion.download_security"):
+                payload = self.object_storage.download_bytes(
+                    work.object_key,
+                    max_bytes=self.max_upload_bytes,
+                )
+                if hashlib.sha256(payload).hexdigest() != work.sha256:
+                    raise FileSecurityError("uploaded object SHA-256 does not match")
+                self.malware_scanner.scan(payload)
+                inspection = inspect_file(
+                    filename=work.filename,
+                    payload=payload,
+                    declared_mime_type=work.mime_type,
+                )
 
             heartbeat.set_stage("parsing")
             self.repository.heartbeat(
@@ -393,11 +399,12 @@ class IngestionService:
                 stage="parsing",
                 lease_seconds=self.lease_seconds,
             )
-            extraction = extract_document(
-                filename=work.filename,
-                payload=payload,
-                extension=inspection.extension,
-            )
+            with trace.stage("ingestion.extract"):
+                extraction = extract_document(
+                    filename=work.filename,
+                    payload=payload,
+                    extension=inspection.extension,
+                )
             heartbeat.raise_if_failed()
             heartbeat.set_stage("chunking")
             self.repository.heartbeat(
@@ -406,23 +413,24 @@ class IngestionService:
                 stage="chunking",
                 lease_seconds=self.lease_seconds,
             )
-            chunks = build_document_chunks(
-                extraction.units,
-                source_id=work.source_id,
-                filename=work.filename,
-                source_type=extraction.source_type,
-                extraction_method=extraction.method,
-            )
-            if not chunks:
-                raise DocumentPipelineError("no indexable text was extracted")
-            extracted_text = "\n".join(
-                str(unit.get("content") or "") for unit in extraction.units
-            )
-            injection_findings = sorted(set(
-                inspection.prompt_injection_findings
-            ).union(scan_prompt_injection(extracted_text)))
-            if injection_findings and self.prompt_injection_policy == "quarantine":
-                raise PromptInjectionDetectedError(injection_findings)
+            with trace.stage("ingestion.chunk_security"):
+                chunks = build_document_chunks(
+                    extraction.units,
+                    source_id=work.source_id,
+                    filename=work.filename,
+                    source_type=extraction.source_type,
+                    extraction_method=extraction.method,
+                )
+                if not chunks:
+                    raise DocumentPipelineError("no indexable text was extracted")
+                extracted_text = "\n".join(
+                    str(unit.get("content") or "") for unit in extraction.units
+                )
+                injection_findings = sorted(set(
+                    inspection.prompt_injection_findings
+                ).union(scan_prompt_injection(extracted_text)))
+                if injection_findings and self.prompt_injection_policy == "quarantine":
+                    raise PromptInjectionDetectedError(injection_findings)
             canonical = {
                 "schema_version": "canonical-document-v1",
                 "tenant_id": work.tenant_id,
@@ -442,37 +450,44 @@ class IngestionService:
                 "units": extraction.units,
                 "chunks": chunks,
             }
-            artifact = self.object_storage.put_extracted_artifact(
-                tenant_id=work.tenant_id,
-                knowledge_base_id=work.knowledge_base_id,
-                document_id=work.document_id,
-                version_id=work.document_version_id,
-                body=json.dumps(canonical, ensure_ascii=False).encode("utf-8"),
-            )
+            with trace.stage("ingestion.persist_artifact"):
+                artifact = self.object_storage.put_extracted_artifact(
+                    tenant_id=work.tenant_id,
+                    knowledge_base_id=work.knowledge_base_id,
+                    document_id=work.document_id,
+                    version_id=work.document_version_id,
+                    body=json.dumps(canonical, ensure_ascii=False).encode("utf-8"),
+                )
             heartbeat.stop()
             page_count = len({
                 str(unit.get("page"))
                 for unit in extraction.units
                 if str(unit.get("page") or "").strip()
             })
-            self.repository.complete(
-                job_id=work.job_id,
-                worker_id=worker_id,
-                extracted_object_key=artifact.key,
-                page_count=page_count,
-                metadata={
-                    "chunk_count": len(chunks),
-                    "source_type": extraction.source_type,
-                    "extraction_method": extraction.method,
-                    "ocr_used": extraction.ocr_used,
-                    "prompt_injection_findings": injection_findings,
-                    "canonical_sha256": artifact.sha256,
-                },
-            )
+            with trace.stage("ingestion.repository_complete"):
+                self.repository.complete(
+                    job_id=work.job_id,
+                    worker_id=worker_id,
+                    extracted_object_key=artifact.key,
+                    page_count=page_count,
+                    metadata={
+                        "chunk_count": len(chunks),
+                        "source_type": extraction.source_type,
+                        "extraction_method": extraction.method,
+                        "ocr_used": extraction.ocr_used,
+                        "prompt_injection_findings": injection_findings,
+                        "canonical_sha256": artifact.sha256,
+                    },
+                )
+            total_ms = elapsed_ms(started_at)
+            trace.record("ingestion.total", total_ms)
+            trace_payload = trace.as_dict()
             return {
                 "job_id": work.job_id,
                 "status": "succeeded",
                 "chunk_count": len(chunks),
+                "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
+                "timing_trace": trace_payload,
             }
         except PromptInjectionDetectedError as exc:
             heartbeat.cancel()
@@ -481,7 +496,15 @@ class IngestionService:
                 worker_id=worker_id,
                 findings=exc.findings,
             )
-            return {"job_id": work.job_id, "status": status}
+            total_ms = elapsed_ms(started_at)
+            trace.record("ingestion.total", total_ms, status="failed", error_class=exc.__class__.__name__)
+            trace_payload = trace.as_dict()
+            return {
+                "job_id": work.job_id,
+                "status": status,
+                "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
+                "timing_trace": trace_payload,
+            }
         except (FileSecurityError, DocumentPipelineError) as exc:
             heartbeat.cancel()
             status = self.repository.fail(
@@ -492,7 +515,15 @@ class IngestionService:
                 error_detail=str(exc),
                 permanent=True,
             )
-            return {"job_id": work.job_id, "status": status}
+            total_ms = elapsed_ms(started_at)
+            trace.record("ingestion.total", total_ms, status="failed", error_class=exc.__class__.__name__)
+            trace_payload = trace.as_dict()
+            return {
+                "job_id": work.job_id,
+                "status": status,
+                "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
+                "timing_trace": trace_payload,
+            }
         except Exception as exc:
             heartbeat.cancel()
             status = self.repository.fail(
@@ -503,7 +534,15 @@ class IngestionService:
                 error_detail=str(exc),
                 permanent=False,
             )
-            return {"job_id": work.job_id, "status": status}
+            total_ms = elapsed_ms(started_at)
+            trace.record("ingestion.total", total_ms, status="failed", error_class=exc.__class__.__name__)
+            trace_payload = trace.as_dict()
+            return {
+                "job_id": work.job_id,
+                "status": status,
+                "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
+                "timing_trace": trace_payload,
+            }
         finally:
             heartbeat.cancel()
 

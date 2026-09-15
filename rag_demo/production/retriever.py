@@ -11,6 +11,7 @@ from rag_demo.lambdamart_fusion import (
 )
 from rag_demo.hybrid_retrieval import RRF_FUSION_METHOD
 from rag_demo.parent_child import expand_child_contexts
+from rag_demo.observability import TimingTrace, elapsed_ms
 from rag_demo.query_complexity import classify_query_complexity
 from rag_demo.retrieval_scope import RetrievalScope
 
@@ -35,11 +36,14 @@ class ProductionHybridRetriever:
         evidence_query: str = "",
     ) -> dict:
         started_at = perf_counter()
+        trace = TimingTrace(component="production_retriever")
+        complexity_started = perf_counter()
         complexity_decision = classify_query_complexity(
             question,
             query_variants=query_variants or (),
             threshold=self.settings.query_complexity_threshold,
         )
+        trace.record("query.complexity", elapsed_ms(complexity_started))
         top_k = max(1, min(int(top_k or self.settings.hybrid_top_k), 50))
         candidate_k = max(top_k, min(int(candidate_k or self.settings.hybrid_candidate_k), 200))
         combined_query = " ".join(dict.fromkeys(
@@ -56,6 +60,7 @@ class ProductionHybridRetriever:
                 retrieval_query=combined_query,
                 reason="No active immutable index is available for this knowledge base.",
                 started_at=started_at,
+                trace=trace,
             )
 
         dense_started = perf_counter()
@@ -67,6 +72,7 @@ class ProductionHybridRetriever:
             source_ids=source_ids,
         )
         dense_ms = _elapsed_ms(dense_started)
+        trace.record("retrieval.embedding", dense_ms, candidates=len(dense_hits))
 
         sparse_started = perf_counter()
         sparse_vector = self.embedding_runtime.sparse_query(combined_query)
@@ -77,6 +83,7 @@ class ProductionHybridRetriever:
             source_ids=source_ids,
         )
         sparse_ms = _elapsed_ms(sparse_started)
+        trace.record("retrieval.bm25", sparse_ms, candidates=len(sparse_hits))
 
         fusion_started = perf_counter()
         candidates = _reciprocal_rank_fusion(
@@ -108,6 +115,7 @@ class ProductionHybridRetriever:
                 embedding_weight=self.settings.embedding_weight,
             )
         fusion_ms = _elapsed_ms(fusion_started)
+        trace.record("retrieval.fusion", fusion_ms, candidates=len(candidates))
 
         rerank_applied = bool(
             not self.settings.complexity_routing_enabled
@@ -136,8 +144,10 @@ class ProductionHybridRetriever:
                 reverse=True,
             )
             rerank_ms = _elapsed_ms(rerank_started)
+            trace.record("retrieval.rerank", rerank_ms, candidates=len(rerank_candidates))
         else:
             rerank_ms = 0.0
+            trace.record("retrieval.rerank", 0.0, status="skipped", reason="simple_query")
             reranked = []
             for candidate in candidates[: min(top_k, simple_query_top_k)]:
                 candidate["rerank_score"] = float(
@@ -218,6 +228,9 @@ class ProductionHybridRetriever:
                 "indexVersionId": str(evidence.get("index_version_id") or payload.get("index_version_id") or ""),
             })
 
+        total_ms = _elapsed_ms(started_at)
+        trace.record("retrieval.total", total_ms, contexts=len(contexts))
+        timing_trace = trace.as_dict()
         return {
             "variant": "qdrant_bm25_dense_rrf_cross_encoder",
             "query": question,
@@ -247,8 +260,10 @@ class ProductionHybridRetriever:
                 "embeddingMs": dense_ms,
                 "fusionMs": fusion_ms,
                 "rerankMs": rerank_ms,
-                "totalMs": _elapsed_ms(started_at),
+                "totalMs": total_ms,
+                "stages": timing_trace["stages"],
             },
+            "timing_trace": timing_trace,
             "diagnostics": {
                 "tenantScopeApplied": True,
                 "indexVersionId": retrieval_scope.index_version_id,
@@ -303,14 +318,29 @@ def _normalize_fusion_weights(bm25_weight: float, embedding_weight: float) -> tu
     return bm25 / total, embedding / total
 
 
-def _empty_result(question: str, retrieval_query: str, reason: str, started_at: float) -> dict:
+def _empty_result(
+    question: str,
+    retrieval_query: str,
+    reason: str,
+    started_at: float,
+    trace: Optional[TimingTrace] = None,
+) -> dict:
+    timing_trace = trace.as_dict() if trace is not None else None
+    total_ms = _elapsed_ms(started_at)
+    if trace is not None:
+        trace.record("retrieval.total", total_ms, status="skipped", reason=reason)
+        timing_trace = trace.as_dict()
     return {
         "variant": "qdrant_bm25_dense_rrf_cross_encoder",
         "query": question,
         "retrievalQuery": retrieval_query,
         "contexts": [],
         "pipeline": [{"name": "Index gate", "detail": reason}],
-        "timings": {"totalMs": _elapsed_ms(started_at)},
+        "timings": {
+            "totalMs": total_ms,
+            "stages": timing_trace["stages"] if timing_trace else [],
+        },
+        "timing_trace": timing_trace or {},
         "diagnostics": {"tenantScopeApplied": True, "reason": reason},
     }
 

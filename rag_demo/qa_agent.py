@@ -1,6 +1,7 @@
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from rag_demo.chunking import Chunk
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.model_providers import ask_model
 from rag_demo.general_answer import build_qwen_rag_system_prompt
 from rag_demo.prompting import render_retrieved_context
@@ -27,7 +28,7 @@ def answer_with_qa_agent(
     keywords: List[str],
     chunks: List[Chunk],
     extracted_evidence: str = "",
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn: Callable[..., str] = ask_model,
 ) -> str:
     return ask_model_fn(
@@ -38,6 +39,10 @@ def answer_with_qa_agent(
             chunks=chunks,
             extracted_evidence=extracted_evidence,
         ),
-        model=model,
+        model=resolve_model_for_node(
+            "generation",
+            requested_model=model,
+            prefer_requested=bool(model),
+        ),
         system=build_qwen_rag_system_prompt(),
     ).strip()

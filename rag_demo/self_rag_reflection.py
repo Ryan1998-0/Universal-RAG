@@ -1,8 +1,9 @@
 import re
 from dataclasses import dataclass
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from rag_demo.chunking import Chunk
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.model_providers import ask_model
 from rag_demo.prompting import render_retrieved_context
 
@@ -148,7 +149,7 @@ Answer Support Critic：
 def critique_passages(
     question: str,
     chunks: List[Chunk],
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn: Callable[..., str] = ask_model,
 ) -> List[PassageReflection]:
     if not chunks:
@@ -156,7 +157,11 @@ def critique_passages(
     try:
         output = ask_model_fn(
             build_passage_critique_prompt(question, chunks),
-            model=model,
+            model=resolve_model_for_node(
+                "evaluation",
+                requested_model=model,
+                prefer_requested=bool(model),
+            ),
             system=PASSAGE_CRITIC_SYSTEM_PROMPT,
         )
         return parse_passage_reflections(output, chunk_count=len(chunks))
@@ -169,13 +174,17 @@ def critique_answer_support(
     answer: str,
     chunks: List[Chunk],
     passage_reflections: List[PassageReflection],
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn: Callable[..., str] = ask_model,
 ) -> AnswerSupportCritique:
     try:
         output = ask_model_fn(
             build_answer_support_critique_prompt(question, answer, chunks, passage_reflections),
-            model=model,
+            model=resolve_model_for_node(
+                "evaluation",
+                requested_model=model,
+                prefer_requested=bool(model),
+            ),
             system=ANSWER_SUPPORT_CRITIC_SYSTEM_PROMPT,
         )
         return parse_answer_support_critique(output)
@@ -196,13 +205,17 @@ def score_answer_utility(
     question: str,
     answer: str,
     answer_critique: AnswerSupportCritique,
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn: Callable[..., str] = ask_model,
 ) -> UtilityCritique:
     try:
         output = ask_model_fn(
             build_utility_critique_prompt(question, answer, answer_critique),
-            model=model,
+            model=resolve_model_for_node(
+                "evaluation",
+                requested_model=model,
+                prefer_requested=bool(model),
+            ),
             system=UTILITY_CRITIC_SYSTEM_PROMPT,
         )
         return parse_utility_critique(output)

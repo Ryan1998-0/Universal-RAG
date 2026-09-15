@@ -1,7 +1,8 @@
 import re
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from rag_demo.chunking import Chunk
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.model_providers import ask_model
 
 
@@ -102,7 +103,7 @@ def extract_evidence(
     refined_question: str,
     keywords: List[str],
     chunks: List[Chunk],
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn: Callable[..., str] = ask_model,
 ) -> str:
     return ask_model_fn(
@@ -112,7 +113,11 @@ def extract_evidence(
             keywords=keywords,
             chunks=chunks,
         ),
-        model=model,
+        model=resolve_model_for_node(
+            "evidence_extraction",
+            requested_model=model,
+            prefer_requested=bool(model),
+        ),
         system=EVIDENCE_EXTRACTION_SYSTEM_PROMPT,
     ).strip()
 

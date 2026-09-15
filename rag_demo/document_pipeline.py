@@ -24,6 +24,8 @@ from rag_demo.config import RagConfig
 from rag_demo.chunk_strategies import CHUNK_STRATEGY_DYNAMIC, split_text
 from rag_demo.embeddings import DEFAULT_EMBEDDING_MODEL, embed_chunks
 from rag_demo.ollama_client import ask_ollama_vision
+from rag_demo.observability import TimingTrace, elapsed_ms
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.parent_child import build_parent_child_index
 from rag_demo.word_documents import extract_docx_blocks
 
@@ -131,8 +133,11 @@ class DocumentStore:
         folder_id: Optional[str] = None,
     ) -> IndexedDocument:
         started_at = perf_counter()
+        trace = TimingTrace(component="document_ingest")
+        detect_started = perf_counter()
         clean_filename, extension, format_spec = normalize_document_filename(filename)
         _validate_payload(payload, extension)
+        trace.record("document.detect_format", elapsed_ms(detect_started))
 
         digest = hashlib.sha256(payload).hexdigest()
         identity_digest = (
@@ -153,6 +158,7 @@ class DocumentStore:
                     metadata = self.move_document(source_id, clean_folder_id)
                 else:
                     metadata = self._decorate_folder(existing.metadata)
+                trace.record("document.total", elapsed_ms(started_at), status="completed", duplicate=True)
                 return IndexedDocument(
                     metadata=metadata,
                     chunks=existing.chunks,
@@ -160,6 +166,7 @@ class DocumentStore:
                     duplicate=True,
                 )
 
+        extract_started = perf_counter()
         extraction = extract_document(
             filename=clean_filename,
             payload=payload,
@@ -169,6 +176,13 @@ class DocumentStore:
             pdf_reader_factory=self._pdf_reader_factory,
             pdf_page_renderer=self._pdf_page_renderer,
         )
+        trace.record(
+            "document.extract",
+            elapsed_ms(extract_started),
+            method=extraction.method,
+            ocr_used=bool(extraction.ocr_used),
+        )
+        chunk_started = perf_counter()
         chunks = build_document_chunks(
             extraction.units,
             source_id=source_id,
@@ -178,10 +192,18 @@ class DocumentStore:
         )
         if not chunks:
             raise DocumentPipelineError("找不到可建立索引的文字內容。")
+        trace.record("document.chunk", elapsed_ms(chunk_started), count=len(chunks))
 
+        embedding_started = perf_counter()
         embeddings = np.asarray(self._embed_chunks_fn(chunks), dtype=np.float32)
         if embeddings.ndim != 2 or embeddings.shape[0] != len(chunks) or embeddings.shape[1] <= 0:
             raise DocumentPipelineError("Embedding 建立失敗，回傳維度與文件 chunks 不一致。")
+        trace.record(
+            "document.embedding",
+            elapsed_ms(embedding_started),
+            count=len(chunks),
+            dimensions=int(embeddings.shape[1]),
+        )
 
         stored_filename = f"original{extension}"
         extraction_details = dict(extraction.details or {})
@@ -234,6 +256,7 @@ class DocumentStore:
         self.root.mkdir(parents=True, exist_ok=True)
         temporary_dir = self.root / f".tmp-{uuid.uuid4().hex}"
         destination = self.root / source_id
+        persist_started = perf_counter()
         try:
             temporary_dir.mkdir(parents=False, exist_ok=False)
             (temporary_dir / stored_filename).write_bytes(payload)
@@ -260,6 +283,20 @@ class DocumentStore:
         finally:
             if temporary_dir.exists():
                 shutil.rmtree(temporary_dir, ignore_errors=True)
+
+        trace.record("document.persist", elapsed_ms(persist_started))
+        total_ms = elapsed_ms(started_at)
+        trace.record("document.total", total_ms)
+        timing_trace = trace.as_dict()
+        metadata["processing_ms"] = round(total_ms, 2)
+        metadata["timings"] = {
+            "totalMs": total_ms,
+            "stages": timing_trace["stages"],
+        }
+        metadata["timing_trace"] = timing_trace
+        # Persist the trace alongside the document so an indexing issue can be
+        # diagnosed after the worker process has exited.
+        self._write_document_metadata(source_id, metadata)
 
         return IndexedDocument(
             metadata=self._decorate_folder(metadata),
@@ -801,7 +838,7 @@ def perform_ocr(image_path: Path) -> dict:
 
 
 def perform_image_understanding(image_path: Path) -> dict:
-    model = os.getenv("RAG_VLM_MODEL", "").strip()
+    model = resolve_model_for_node("vision")
     if not model:
         return {"text": "", "engine": "disabled", "model": ""}
     timeout_seconds = float(os.getenv("RAG_VLM_TIMEOUT_SECONDS", "300"))

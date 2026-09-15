@@ -433,6 +433,29 @@ class ProductionApiTests(unittest.TestCase):
         self.assertEqual(response.json()["error"]["code"], "AUTH_REQUIRED")
         self.assertEqual(response.headers["www-authenticate"], "Bearer")
 
+    def test_model_registry_and_validation_contract(self):
+        response = self.client.get("/v1/models", headers=self._headers())
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertIn("generation", {item["node"] for item in payload["nodes"]})
+        self.assertEqual(payload["components"]["embedding"]["env_var"], "RAG_EMBEDDING_MODEL")
+
+        validation = self.client.post(
+            "/v1/models/validate",
+            headers=self._headers(),
+            json={"node": "generation", "model": "ollama:qwen2.5:7b"},
+        )
+        self.assertEqual(validation.status_code, 200, validation.text)
+        self.assertTrue(validation.json()["allowed"])
+
+        forbidden = self.client.put(
+            "/v1/models/generation",
+            headers=self._headers(),
+            json={"model": "ollama:qwen2.5:7b"},
+        )
+        self.assertEqual(forbidden.status_code, 403)
+        self.assertEqual(forbidden.json()["error"]["code"], "MODEL_MANAGEMENT_FORBIDDEN")
+
     def test_expired_token_is_rejected(self):
         now = datetime.now(timezone.utc)
         expired = jwt.encode(

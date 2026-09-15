@@ -27,6 +27,7 @@ from rag_demo.lambdamart_fusion import (
 )
 from rag_demo.parent_child import expand_child_contexts
 from rag_demo.cross_encoder import CrossEncoderReranker
+from rag_demo.observability import TimingTrace, elapsed_ms
 from rag_demo.query_complexity import classify_query_complexity
 from rag_demo.retrieval_planner import extract_focus_terms
 from rag_demo.retrieval_scope import RetrievalScope
@@ -329,11 +330,14 @@ class HybridRetriever:
         retrieval_scope: Optional[RetrievalScope] = None,
     ) -> dict:
         started_at = perf_counter()
+        trace = TimingTrace(component="hybrid_retriever")
+        complexity_started = perf_counter()
         complexity_decision = classify_query_complexity(
             question,
             query_variants=query_variants or (),
             threshold=self.settings.query_complexity_threshold,
         )
+        trace.record("query.complexity", elapsed_ms(complexity_started))
         top_k = max(
             1,
             min(
@@ -394,6 +398,7 @@ class HybridRetriever:
             for query in combined_queries
         ]
         bm25_ms = _elapsed_ms(bm25_started)
+        trace.record("retrieval.bm25", bm25_ms, queries=len(combined_queries))
 
         embedding_started = perf_counter()
         dense_result_sets = self._embedding_search_many(
@@ -403,6 +408,7 @@ class HybridRetriever:
             allowed_indices=allowed_indices,
         )
         embedding_ms = _elapsed_ms(embedding_started)
+        trace.record("retrieval.embedding", embedding_ms, queries=len(combined_queries))
 
         fusion_started = perf_counter()
         candidates = reciprocal_rank_fusion_many(
@@ -426,6 +432,7 @@ class HybridRetriever:
                 embedding_weight=self.settings.embedding_weight,
             )
         fusion_ms = _elapsed_ms(fusion_started)
+        trace.record("retrieval.fusion", fusion_ms, candidates=len(candidates))
 
         answerability_query = str(evidence_query or "").strip() or " ".join(combined_queries)
         rerank_applied = bool(
@@ -470,6 +477,7 @@ class HybridRetriever:
                     chunk_token_sets=self._chunk_token_sets,
                 )
             rerank_ms = _elapsed_ms(rerank_started)
+            trace.record("retrieval.rerank", rerank_ms, candidates=len(rerank_pool))
         else:
             # A simple factual query does not need an expensive second-stage
             # reranker. RRF already provides a stable rank signal, so keep
@@ -488,6 +496,7 @@ class HybridRetriever:
                 direct["rerank_applied"] = False
                 reranked.append(direct)
             rerank_ms = 0.0
+            trace.record("retrieval.rerank", 0.0, status="skipped", reason="simple_query")
 
         selected_candidates = reranked[:top_k]
         parent_by_id = {
@@ -560,11 +569,22 @@ class HybridRetriever:
                 }
             )
 
+        evidence_started = perf_counter()
         evidence_evaluation = evaluate_retrieval_evidence(
             contexts,
             settings=self.settings,
             question=answerability_query,
         )
+
+        total_ms = _elapsed_ms(started_at)
+        trace.record(
+            "evidence.gate",
+            elapsed_ms(evidence_started),
+            status="completed",
+            sufficient=bool(evidence_evaluation.get("sufficient")),
+        )
+        trace.record("retrieval.total", total_ms, contexts=len(contexts))
+        timing_trace = trace.as_dict()
 
         return {
             "variant": "bm25_embedding_rerank",
@@ -619,8 +639,10 @@ class HybridRetriever:
                 "embeddingMs": embedding_ms,
                 "fusionMs": fusion_ms,
                 "rerankMs": rerank_ms,
-                "totalMs": _elapsed_ms(started_at),
+                "totalMs": total_ms,
+                "stages": timing_trace["stages"],
             },
+            "timing_trace": timing_trace,
             "diagnostics": {
                 "matchedEntities": [],
                 "hubWarning": False,

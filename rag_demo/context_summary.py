@@ -1,9 +1,10 @@
 import re
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from rag_demo.chunking import Chunk
 from rag_demo.evidence_policy import build_evidence_policy, evidence_category, sequence_number, should_include_evidence_line
 from rag_demo.model_providers import ask_model
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.prompting import render_retrieved_context
 from rag_demo.retrieval_planner import extract_focus_terms
 from rag_demo.retrieval_verifier import extract_evidence_candidates
@@ -257,7 +258,7 @@ def _source_label(index: int, chunk: Chunk) -> str:
 def summarize_retrieved_context(
     question: str,
     chunks: List[Chunk],
-    model: str = "ollama:qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn: Callable = ask_model,
 ) -> str:
     if not chunks:
@@ -266,7 +267,11 @@ def summarize_retrieved_context(
     deterministic_evidence = extract_deterministic_evidence(chunks, question=question)
     output = ask_model_fn(
         build_context_summary_prompt(question, chunks),
-        model=model,
+        model=resolve_model_for_node(
+            "context_summary",
+            requested_model=model,
+            prefer_requested=bool(model),
+        ),
         system=CONTEXT_SUMMARY_SYSTEM_PROMPT,
     )
     summary = _demote_summary_headings(_strip_summary_overflow(output.strip()))

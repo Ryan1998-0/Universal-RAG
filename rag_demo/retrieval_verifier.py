@@ -1,10 +1,11 @@
 import json
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from rag_demo.chunking import Chunk
 from rag_demo.config import RagConfig
 from rag_demo.evidence_policy import answerable_event_spans, has_answerable_event_evidence
+from rag_demo.model_gateway import resolve_model_for_node
 from rag_demo.model_providers import ask_model
 from rag_demo.retrieval_planner import extract_focus_terms
 
@@ -66,7 +67,7 @@ retrieval chunks：
 def verify_retrieval(
     question: str,
     chunks: List[Chunk],
-    model: str = "qwen2.5:7b",
+    model: Optional[str] = None,
     ask_model_fn=ask_model,
     config: RagConfig = None,
     evidence_summary: str = "",
@@ -97,7 +98,11 @@ def verify_retrieval(
             context_chars=config.verifier_context_chars,
             evidence_summary=evidence_summary,
         ),
-        model=model,
+        model=resolve_model_for_node(
+            "evidence_extraction",
+            requested_model=model,
+            prefer_requested=bool(model),
+        ),
         system=VERIFIER_SYSTEM_PROMPT,
     )
     return parse_verifier_output(output)

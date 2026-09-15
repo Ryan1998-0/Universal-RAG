@@ -19,7 +19,9 @@ from rag_demo.general_answer import (
     build_qwen_rag_system_prompt,
 )
 from rag_demo.hybrid_retrieval import evaluate_retrieval_evidence, get_hybrid_retriever
+from rag_demo.model_gateway import ModelGateway, resolve_model_for_node
 from rag_demo.model_providers import ask_model, parse_model_spec
+from rag_demo.observability import TimingTrace, elapsed_ms
 from rag_demo.query_rewriter import QueryRewriteDecision, decide_and_rewrite_query_for_retrieval
 from rag_demo.reference_evaluation import (
     claude_reference_evaluation_enabled,
@@ -52,6 +54,7 @@ class RagPipelineRequest:
     persist_conversation: bool = True
     retrieval_scope: Optional[RetrievalScope] = None
     history: Optional[Sequence[dict]] = None
+    request_id: str = ""
 
     @classmethod
     def from_payload(
@@ -115,6 +118,7 @@ class RagPipeline:
         quality_evaluation_enabled_fn: Callable[[], bool] = claude_reference_evaluation_enabled,
         datetime_answer_fn: Callable[[str], Optional[str]] = answer_current_datetime_question,
         run_id_fn: Optional[Callable[[], str]] = None,
+        model_gateway: Optional[ModelGateway] = None,
     ):
         self._conversation_store = conversation_store
         self._settings_factory = settings_factory
@@ -126,10 +130,50 @@ class RagPipeline:
         self._quality_evaluation_enabled_fn = quality_evaluation_enabled_fn
         self._datetime_answer_fn = datetime_answer_fn
         self._run_id_fn = run_id_fn or (lambda: uuid4().hex)
+        self._model_gateway = model_gateway
+
+    def _resolve_model(self, node: str, requested_model: Optional[str] = None) -> str:
+        if self._model_gateway is not None:
+            return self._model_gateway.resolve(node, requested_model=requested_model)
+        return resolve_model_for_node(node, requested_model=requested_model)
+
+    def _invoke_model(
+        self,
+        prompt: str,
+        *,
+        node: str,
+        model: Optional[str] = None,
+        system: Optional[str] = None,
+        trace: Optional[TimingTrace] = None,
+    ) -> str:
+        if self._model_gateway is not None:
+            return self._model_gateway.invoke(
+                prompt,
+                node=node,
+                model=model,
+                system=system,
+                trace=trace,
+            )
+        resolved_model = self._resolve_model(node, requested_model=model)
+        started_at = perf_counter()
+        try:
+            return self._ask_model_fn(prompt, model=resolved_model, system=system)
+        finally:
+            if trace is not None:
+                trace.record(
+                    "model." + str(node).replace("_", "."),
+                    elapsed_ms(started_at),
+                    model=resolved_model,
+                )
 
     def run(self, request: RagPipelineRequest) -> dict:
         started_at = perf_counter()
         run_id = self._run_id_fn()
+        trace = TimingTrace(
+            run_id=run_id,
+            request_id=str(request.request_id or ""),
+            component="rag_pipeline",
+        )
         stage_timings: Dict[str, float] = {}
         settings = self._settings_factory().normalized()
         top_k = max(
@@ -147,10 +191,12 @@ class RagPipeline:
             and str(message.get("role") or "") in {"user", "assistant"}
         ]
         memories: List[str] = []
-        isolated_subagent = parse_model_spec(request.model).provider == "codex"
+        generation_model = self._resolve_model("generation", request.model)
+        isolated_subagent = parse_model_spec(generation_model).provider == "codex"
         remembered = None
         conversation_id = ""
         store = None
+        conversation_started = perf_counter()
         if request.persist_conversation:
             store = self._store()
             conversation = store.ensure_conversation(
@@ -165,6 +211,12 @@ class RagPipeline:
             )
             memories = [item["content"] for item in store.list_memories(limit=12)]
             store.add_message(conversation_id, "user", request.question)
+        trace.record(
+            "conversation.load",
+            elapsed_ms(conversation_started),
+            status="completed" if request.persist_conversation else "skipped",
+            persisted=bool(request.persist_conversation),
+        )
 
         # A Codex subagent is intentionally stateless per question.  The
         # application may still persist the conversation for the UI, but no
@@ -186,6 +238,7 @@ class RagPipeline:
         evidence_validation = None
         retrieval_decision = None
         retrieval_plan = None
+        retrieval_timings: Dict[str, float] = {}
         answer = ""
 
         direct_system_answer = self._datetime_answer_fn(request.question)
@@ -199,14 +252,30 @@ class RagPipeline:
             stage_timings["routeMs"] = 0.0
             stage_timings["retrieveMs"] = 0.0
             stage_timings["generateMs"] = 0.0
+            trace.record("query.route", 0.0, status="skipped", reason="direct_answer")
+            trace.record("retrieval", 0.0, status="skipped", reason="direct_answer")
+            trace.record("generation", 0.0, status="completed", reason="direct_answer")
         else:
             route_started = perf_counter()
+            route_model = self._resolve_model("query_rewrite", request.model)
+            route_model_started = perf_counter()
             retrieval_decision = self._route(
                 request.question,
-                request.model,
+                route_model,
                 model_history,
             )
+            trace.record(
+                "model.query_rewrite",
+                elapsed_ms(route_model_started),
+                model=route_model,
+            )
             stage_timings["routeMs"] = _elapsed_ms(route_started)
+            trace.record(
+                "query.route",
+                stage_timings["routeMs"],
+                model=route_model,
+                needs_retrieval=bool(retrieval_decision["needs_retrieval"]),
+            )
 
             if retrieval_decision["needs_retrieval"]:
                 retrieval_plan = build_retrieval_plan(
@@ -232,6 +301,18 @@ class RagPipeline:
                     candidate_k=settings.hybrid_candidate_k,
                     retrieval_scope=request.retrieval_scope,
                 )
+                retrieval_node_timings = dict(retrieval_result.get("timings") or {})
+                retrieval_timings = retrieval_node_timings
+                for timing_key, node_name in (
+                    ("bm25Ms", "retrieval.bm25"),
+                    ("embeddingMs", "retrieval.embedding"),
+                    ("fusionMs", "retrieval.fusion"),
+                    ("rerankMs", "retrieval.rerank"),
+                    ("totalMs", "retrieval.total"),
+                ):
+                    value = retrieval_node_timings.get(timing_key)
+                    if isinstance(value, (int, float)):
+                        trace.record(node_name, float(value))
                 contexts = normalize_contexts(
                     retrieval_result.get("contexts"),
                     max_contexts=settings.hybrid_max_top_k,
@@ -250,6 +331,7 @@ class RagPipeline:
                         chunk_fraction=settings.fine_evidence_chunk_fraction,
                     )
                     stage_timings["focusMs"] = _elapsed_ms(focus_started)
+                    trace.record("evidence.focus", stage_timings["focusMs"])
                 elif contexts and settings.evidence_focus_enabled:
                     raw_contexts = [dict(context) for context in contexts]
                     focus_started = perf_counter()
@@ -263,13 +345,23 @@ class RagPipeline:
                         settings=settings,
                     )
                     stage_timings["focusMs"] = _elapsed_ms(focus_started)
+                    trace.record("evidence.focus", stage_timings["focusMs"])
                 else:
                     stage_timings["focusMs"] = 0.0
+                    trace.record("evidence.focus", 0.0, status="skipped")
                 stage_timings["retrieveMs"] = _elapsed_ms(retrieval_started)
+                trace.record(
+                    "retrieval",
+                    stage_timings["retrieveMs"],
+                    context_count=len(contexts),
+                )
             else:
                 stage_timings["retrieveMs"] = 0.0
                 stage_timings["focusMs"] = 0.0
+                trace.record("retrieval", 0.0, status="skipped", reason="route_no_retrieval")
+                trace.record("evidence.focus", 0.0, status="skipped")
 
+            evidence_started = perf_counter()
             if contexts:
                 evidence_query = (
                     retrieval_plan.evidence_query
@@ -294,6 +386,16 @@ class RagPipeline:
                         contexts = raw_contexts
                         evidence_evaluation = raw_evaluation
                         evidence_focus["fallback"] = "quality_guard"
+            trace.record(
+                "evidence.gate",
+                elapsed_ms(evidence_started),
+                status="completed" if contexts else "skipped",
+                sufficient=(
+                    bool(evidence_evaluation.get("sufficient"))
+                    if isinstance(evidence_evaluation, dict)
+                    else None
+                ),
+            )
 
             generation_started = perf_counter()
             if retrieval_decision["needs_retrieval"] and (
@@ -314,15 +416,23 @@ class RagPipeline:
                 answer = answer_from_contexts(
                     question=request.question,
                     contexts=contexts,
-                    model=request.model,
+                    model=generation_model,
                     history=model_history,
                     memories=model_memories,
-                    ask_model_fn=self._ask_model_fn,
+                    ask_model_fn=(
+                        lambda prompt, model, system=None: self._invoke_model(
+                            prompt,
+                            node="generation",
+                            model=model,
+                            system=system,
+                            trace=trace,
+                        )
+                    ),
                     capture_request=grounded_request,
                     capture_validation=evidence_validation,
                 )
             else:
-                answer = self._ask_model_fn(
+                answer = self._invoke_model(
                     prompt_with_history(
                         build_no_retrieval_answer_prompt(
                             request.question,
@@ -330,12 +440,28 @@ class RagPipeline:
                         ),
                         model_history,
                     ),
-                    model=request.model,
+                    model=generation_model,
                     system=build_qwen_direct_system_prompt(memories=model_memories),
+                    node="generation",
+                    trace=trace,
                 )
             stage_timings["generateMs"] = _elapsed_ms(generation_started)
+            generation_refused = bool(
+                retrieval_decision["needs_retrieval"]
+                and (
+                    not contexts
+                    or (evidence_evaluation and not evidence_evaluation["sufficient"])
+                )
+            )
+            trace.record(
+                "generation",
+                stage_timings["generateMs"],
+                status="completed",
+                model=generation_model,
+                model_called=not generation_refused,
+            )
 
-        requested_model = parse_model_spec(request.model)
+        requested_model = parse_model_spec(generation_model)
         if (
             grounded_request
             and requested_model.provider == "ollama"
@@ -355,9 +481,12 @@ class RagPipeline:
                     f"{type(exc).__name__}: {str(exc)[:300]}"
                 )
             stage_timings["evaluateMs"] = _elapsed_ms(evaluation_started)
+            trace.record("evaluation", stage_timings["evaluateMs"], status="completed")
         else:
             stage_timings["evaluateMs"] = 0.0
+            trace.record("evaluation", 0.0, status="skipped")
 
+        persist_started = perf_counter()
         if store is not None:
             store.add_message(
                 conversation_id,
@@ -375,12 +504,21 @@ class RagPipeline:
                     "evidence_validation": dict(evidence_validation or {}),
                 },
             )
+        trace.record(
+            "conversation.persist",
+            elapsed_ms(persist_started),
+            status="completed" if store is not None else "skipped",
+            persisted=bool(store is not None),
+        )
 
         spec = requested_model
         evidence_is_sufficient = (
             not evidence_evaluation or evidence_evaluation["sufficient"]
         )
         stage_timings["totalMs"] = _elapsed_ms(started_at)
+        trace.record("total", stage_timings["totalMs"])
+        trace_payload = trace.as_dict()
+        stage_timings["stages"] = trace_payload["stages"]
         grounding_warnings = (
             []
             if evidence_is_sufficient
@@ -398,6 +536,7 @@ class RagPipeline:
         return {
             "schema_version": AGENT_RESPONSE_SCHEMA,
             "run_id": run_id,
+            "request_id": str(request.request_id or ""),
             "profile": request.profile,
             "conversation_id": conversation_id,
             "answer": answer,
@@ -431,10 +570,12 @@ class RagPipeline:
                 "raw_contexts": raw_contexts,
                 "evidence_focus": evidence_focus,
                 "evidence_evaluation": evidence_evaluation,
+                "timings": retrieval_timings,
             },
             "model": {"provider": spec.provider, "name": spec.model},
             "quality_evaluation": quality_evaluation,
             "timings": stage_timings,
+            "timing_trace": trace_payload,
         }
 
     def _store(self):
@@ -522,6 +663,11 @@ def answer_from_contexts(
     capture_request: Optional[dict] = None,
     capture_validation: Optional[dict] = None,
 ) -> str:
+    model = resolve_model_for_node(
+        "generation",
+        requested_model=model,
+        prefer_requested=bool(model),
+    )
     threshold_evidence = resolve_threshold_evidence(
         question,
         contexts,

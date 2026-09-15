@@ -5,6 +5,7 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import timedelta
+from time import perf_counter
 from typing import Optional, Sequence
 from uuid import NAMESPACE_URL, uuid5
 
@@ -30,6 +31,7 @@ from rag_demo.production.repository import (
     ResourceNotFoundError,
 )
 from rag_demo.retrieval_scope import RetrievalScope
+from rag_demo.observability import TimingTrace, configure_logging, elapsed_ms
 
 
 _IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,128}$")
@@ -622,6 +624,9 @@ class IndexingService:
         self.max_canonical_bytes = int(max_canonical_bytes)
 
     def process(self, *, job_id: str, worker_id: str) -> dict:
+        configure_logging()
+        started_at = perf_counter()
+        trace = TimingTrace(run_id=str(job_id), component="indexing_service")
         work = self.repository.claim(job_id=job_id, worker_id=worker_id)
         if work is None:
             return {"job_id": job_id, "status": "not_claimed"}
@@ -632,46 +637,47 @@ class IndexingService:
                 knowledge_base_id=work.knowledge_base_id,
                 index_version_id=work.index_version_id,
             )
-            self.repository.reset_candidate(work=work, worker_id=worker_id)
-            self.vector_repository.delete_index(scope)
-            prepared = []
-            document_counts = {}
-            for document in work.documents:
-                canonical = self._load_canonical(work, document)
-                raw_chunks = canonical.get("chunks")
-                if not isinstance(raw_chunks, list) or not raw_chunks:
-                    raise IndexBuildValidationError(
-                        "canonical document contains no indexable chunks"
-                    )
-                document_counts[document.document_id] = len(raw_chunks)
-                for ordinal, raw in enumerate(raw_chunks):
-                    if not isinstance(raw, dict) or not str(raw.get("content") or "").strip():
-                        raise IndexBuildValidationError("canonical chunk is invalid")
-                    chunk_key = f"{document.document_version_id}::{ordinal}"
-                    chunk_record_id = str(uuid5(
-                        NAMESPACE_URL,
-                        "/".join((
-                            work.tenant_id,
-                            work.knowledge_base_id,
-                            work.index_version_id,
-                            chunk_key,
-                        )),
-                    ))
-                    prepared.append({
-                        **raw,
-                        "id": chunk_key,
-                        "chunk_id": chunk_key,
-                        "chunk_record_id": chunk_record_id,
-                        "ordinal": ordinal,
-                        "tenant_id": work.tenant_id,
-                        "knowledge_base_id": work.knowledge_base_id,
-                        "index_version_id": work.index_version_id,
-                        "document_id": document.document_id,
-                        "document_version_id": document.document_version_id,
-                        "source_id": document.source_id,
-                        "source": document.source_id,
-                        "filename": document.filename,
-                    })
+            with trace.stage("index.prepare"):
+                self.repository.reset_candidate(work=work, worker_id=worker_id)
+                self.vector_repository.delete_index(scope)
+                prepared = []
+                document_counts = {}
+                for document in work.documents:
+                    canonical = self._load_canonical(work, document)
+                    raw_chunks = canonical.get("chunks")
+                    if not isinstance(raw_chunks, list) or not raw_chunks:
+                        raise IndexBuildValidationError(
+                            "canonical document contains no indexable chunks"
+                        )
+                    document_counts[document.document_id] = len(raw_chunks)
+                    for ordinal, raw in enumerate(raw_chunks):
+                        if not isinstance(raw, dict) or not str(raw.get("content") or "").strip():
+                            raise IndexBuildValidationError("canonical chunk is invalid")
+                        chunk_key = f"{document.document_version_id}::{ordinal}"
+                        chunk_record_id = str(uuid5(
+                            NAMESPACE_URL,
+                            "/".join((
+                                work.tenant_id,
+                                work.knowledge_base_id,
+                                work.index_version_id,
+                                chunk_key,
+                            )),
+                        ))
+                        prepared.append({
+                            **raw,
+                            "id": chunk_key,
+                            "chunk_id": chunk_key,
+                            "chunk_record_id": chunk_record_id,
+                            "ordinal": ordinal,
+                            "tenant_id": work.tenant_id,
+                            "knowledge_base_id": work.knowledge_base_id,
+                            "index_version_id": work.index_version_id,
+                            "document_id": document.document_id,
+                            "document_version_id": document.document_version_id,
+                            "source_id": document.source_id,
+                            "source": document.source_id,
+                            "filename": document.filename,
+                        })
 
             if not prepared:
                 raise IndexBuildValidationError("index contains no chunks")
@@ -680,42 +686,44 @@ class IndexingService:
                 worker_id=worker_id,
                 stage="embedding",
             )
-            manifest_chunks = []
-            for start in range(0, len(prepared), self.batch_size):
-                batch = prepared[start : start + self.batch_size]
-                texts = [str(chunk["content"]) for chunk in batch]
-                dense = self.embedding_runtime.embed_documents(texts)
-                sparse = self.embedding_runtime.sparse_documents(texts)
-                point_ids = self.vector_repository.upsert_chunks(
-                    scope=scope,
-                    chunks=batch,
-                    vectors=dense,
-                    sparse_vectors=sparse,
-                )
-                self.repository.persist_chunk_batch(
-                    work=work,
-                    worker_id=worker_id,
-                    chunks=batch,
-                    point_ids=point_ids,
-                )
-                for chunk, point_id in zip(batch, point_ids):
-                    manifest_chunks.append({
-                        "chunk_id": chunk["id"],
-                        "chunk_record_id": chunk["chunk_record_id"],
-                        "document_id": chunk["document_id"],
-                        "document_version_id": chunk["document_version_id"],
-                        "content_sha256": hashlib.sha256(
-                            str(chunk["content"]).encode("utf-8")
-                        ).hexdigest(),
-                        "qdrant_point_id": point_id,
-                    })
-                self.repository.heartbeat(
-                    job_id=work.job_id,
-                    worker_id=worker_id,
-                    stage="embedding",
-                )
+            with trace.stage("index.embedding_upsert"):
+                manifest_chunks = []
+                for start in range(0, len(prepared), self.batch_size):
+                    batch = prepared[start : start + self.batch_size]
+                    texts = [str(chunk["content"]) for chunk in batch]
+                    dense = self.embedding_runtime.embed_documents(texts)
+                    sparse = self.embedding_runtime.sparse_documents(texts)
+                    point_ids = self.vector_repository.upsert_chunks(
+                        scope=scope,
+                        chunks=batch,
+                        vectors=dense,
+                        sparse_vectors=sparse,
+                    )
+                    self.repository.persist_chunk_batch(
+                        work=work,
+                        worker_id=worker_id,
+                        chunks=batch,
+                        point_ids=point_ids,
+                    )
+                    for chunk, point_id in zip(batch, point_ids):
+                        manifest_chunks.append({
+                            "chunk_id": chunk["id"],
+                            "chunk_record_id": chunk["chunk_record_id"],
+                            "document_id": chunk["document_id"],
+                            "document_version_id": chunk["document_version_id"],
+                            "content_sha256": hashlib.sha256(
+                                str(chunk["content"]).encode("utf-8")
+                            ).hexdigest(),
+                            "qdrant_point_id": point_id,
+                        })
+                    self.repository.heartbeat(
+                        job_id=work.job_id,
+                        worker_id=worker_id,
+                        stage="embedding",
+                    )
 
-            manifest = {
+            with trace.stage("index.validate_publish"):
+                manifest = {
                 "schema_version": "immutable-index-manifest-v1",
                 "tenant_id": work.tenant_id,
                 "knowledge_base_id": work.knowledge_base_id,
@@ -731,54 +739,59 @@ class IndexingService:
                 ],
                 "chunks": manifest_chunks,
             }
-            manifest_body = json.dumps(
-                manifest,
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
-            ).encode("utf-8")
-            manifest_entries_digest = index_entries_sha256(manifest_chunks)
-            stored_manifest = self.object_storage.put_index_manifest(
-                tenant_id=work.tenant_id,
-                knowledge_base_id=work.knowledge_base_id,
-                index_version_id=work.index_version_id,
-                body=manifest_body,
-            )
-            self.repository.finalize_candidate(
-                work=work,
-                worker_id=worker_id,
-                document_chunk_counts=document_counts,
-                chunk_count=len(prepared),
-                manifest_sha256=stored_manifest.sha256,
-                manifest_object_key=stored_manifest.key,
-            )
-            point_count = self.vector_repository.count_index(scope)
-            qdrant_entries_digest = self.vector_repository.index_entries_sha256(scope)
-            self.tenant_repository.validate_index_version(
-                tenant_id=work.tenant_id,
-                knowledge_base_id=work.knowledge_base_id,
-                index_version_id=work.index_version_id,
-                manifest_sha256=stored_manifest.sha256,
-                manifest_object_key=stored_manifest.key,
-                manifest_entries_sha256=manifest_entries_digest,
-                qdrant_point_count=point_count,
-                qdrant_entries_sha256=qdrant_entries_digest,
-            )
-            self.tenant_repository.publish_index_version(
-                tenant_id=work.tenant_id,
-                knowledge_base_id=work.knowledge_base_id,
-                index_version_id=work.index_version_id,
-                expected_active_index_id=work.expected_active_index_id,
-                expected_generation=work.expected_generation,
-            )
+                manifest_body = json.dumps(
+                    manifest,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+                manifest_entries_digest = index_entries_sha256(manifest_chunks)
+                stored_manifest = self.object_storage.put_index_manifest(
+                    tenant_id=work.tenant_id,
+                    knowledge_base_id=work.knowledge_base_id,
+                    index_version_id=work.index_version_id,
+                    body=manifest_body,
+                )
+                self.repository.finalize_candidate(
+                    work=work,
+                    worker_id=worker_id,
+                    document_chunk_counts=document_counts,
+                    chunk_count=len(prepared),
+                    manifest_sha256=stored_manifest.sha256,
+                    manifest_object_key=stored_manifest.key,
+                )
+                point_count = self.vector_repository.count_index(scope)
+                qdrant_entries_digest = self.vector_repository.index_entries_sha256(scope)
+                self.tenant_repository.validate_index_version(
+                    tenant_id=work.tenant_id,
+                    knowledge_base_id=work.knowledge_base_id,
+                    index_version_id=work.index_version_id,
+                    manifest_sha256=stored_manifest.sha256,
+                    manifest_object_key=stored_manifest.key,
+                    manifest_entries_sha256=manifest_entries_digest,
+                    qdrant_point_count=point_count,
+                    qdrant_entries_sha256=qdrant_entries_digest,
+                )
+                self.tenant_repository.publish_index_version(
+                    tenant_id=work.tenant_id,
+                    knowledge_base_id=work.knowledge_base_id,
+                    index_version_id=work.index_version_id,
+                    expected_active_index_id=work.expected_active_index_id,
+                    expected_generation=work.expected_generation,
+                )
             published = True
             self.repository.complete(job_id=work.job_id, worker_id=worker_id)
+            total_ms = elapsed_ms(started_at)
+            trace.record("index.total", total_ms)
+            trace_payload = trace.as_dict()
             return {
                 "job_id": work.job_id,
                 "status": "succeeded",
                 "index_version_id": work.index_version_id,
                 "document_count": len(work.documents),
                 "chunk_count": len(prepared),
+                "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
+                "timing_trace": trace_payload,
             }
         except (IndexBuildValidationError, InvalidServiceStateError, ConcurrentPublishError) as exc:
             status = self.repository.fail(
@@ -789,12 +802,25 @@ class IndexingService:
                 error_detail=str(exc),
                 permanent=True,
             )
-            return {"job_id": work.job_id, "status": status}
+            total_ms = elapsed_ms(started_at)
+            trace.record("index.total", total_ms, status="failed", error_class=exc.__class__.__name__)
+            trace_payload = trace.as_dict()
+            return {
+                "job_id": work.job_id,
+                "status": status,
+                "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
+                "timing_trace": trace_payload,
+            }
         except Exception as exc:
             if published:
+                total_ms = elapsed_ms(started_at)
+                trace.record("index.total", total_ms, status="failed", error_class=exc.__class__.__name__)
+                trace_payload = trace.as_dict()
                 return {
                     "job_id": work.job_id,
                     "status": "published_pending_reconciliation",
+                    "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
+                    "timing_trace": trace_payload,
                 }
             status = self.repository.fail(
                 job_id=work.job_id,
@@ -804,7 +830,15 @@ class IndexingService:
                 error_detail=str(exc),
                 permanent=False,
             )
-            return {"job_id": work.job_id, "status": status}
+            total_ms = elapsed_ms(started_at)
+            trace.record("index.total", total_ms, status="failed", error_class=exc.__class__.__name__)
+            trace_payload = trace.as_dict()
+            return {
+                "job_id": work.job_id,
+                "status": status,
+                "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
+                "timing_trace": trace_payload,
+            }
 
     def _load_canonical(
         self,

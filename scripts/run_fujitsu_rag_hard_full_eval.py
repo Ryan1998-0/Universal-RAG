@@ -7,9 +7,9 @@ published result files.
 
 The two configurations follow the current Universal-RAG evaluation settings:
 
-* 無優化版: flat 200-token page-local parent chunks, BM25 Top 30.
-* 優化版: 40-token child chunks (overlap 10), BM25 Top 30, then expand each
-  child hit to its 200-token parent evidence window.
+* 無優化版: flat 512-token page-local parent chunks, BM25 Top 30.
+* 優化版: 128-token child chunks (overlap 10), BM25 Top 30, then expand each
+  child hit to its 512-token parent evidence window.
 
 Both versions are retrieval-only: no query rewrite, embedding, RRF,
 cross-encoder reranking, or answer-model calls.  "Token" here means the
@@ -42,7 +42,7 @@ DEFAULT_PDF_DIR = Path(
     os.environ.get("FUJITSU_RAG_HARD_PDF_DIR", "")
     or (Path(os.environ.get("TEMP", ".")) / "Fujitsu-RAG-Hard-Benchmark" / "dataset" / "PDFs")
 )
-DEFAULT_RUN_ROOT = Path(os.environ.get("TEMP", ".")) / "Universal-RAG-Fujitsu-RAG-Hard-full"
+DEFAULT_RUN_ROOT = Path(os.environ.get("TEMP", ".")) / "Universal-RAG-Fujitsu-RAG-Hard-full-512-128"
 DEFAULT_DB = DEFAULT_RUN_ROOT / "fujitsu-rag-hard.sqlite"
 DEFAULT_OUTPUT = DEFAULT_RUN_ROOT / "retrieval-results.json"
 DEFAULT_REPORT = DEFAULT_RUN_ROOT / "retrieval-report.md"
@@ -53,8 +53,8 @@ DATASET_NAME = "Fujitsu RAG Hard Benchmark"
 DATASET_URL = "https://github.com/FujitsuResearch/Fujitsu-RAG-Hard-Benchmark"
 BLOG_URL = "https://blog-en.fltech.dev/entry/2026/03/11/RAG-Hard-Benchmark-en"
 
-PARENT_TOKENS = 200
-CHILD_TOKENS = 40
+PARENT_TOKENS = 512
+CHILD_TOKENS = 128
 CHILD_OVERLAP = 10
 FINAL_TOP_K = 30
 
@@ -542,7 +542,7 @@ def _run_version(
             started = time.perf_counter()
             raw_hits = _search(connection, table, question["question"], FINAL_TOP_K)
             if optimized:
-                # Several child hits can point to one 200-token parent.  Keep
+                # Several child hits can point to one 512-token parent.  Keep
                 # the best child score and its first child rank per parent.
                 best_by_parent: dict[tuple[str, int, int], dict[str, Any]] = {}
                 for child_rank, child in enumerate(raw_hits, start=1):
@@ -597,11 +597,11 @@ def _run_version(
         "name": version_name,
         "version": version_id,
         "configuration": (
-            "Flat 200-token page-local parent chunks with BM25 Top 30; no query rewrite, "
+            "Flat 512-token page-local parent chunks with BM25 Top 30; no query rewrite, "
             "Embedding, RRF, reranking, or parent expansion"
             if not optimized
-            else "40-token page-local child chunks (overlap 10), BM25 Top 30, expanded to "
-            "200-token parent evidence; no query rewrite, Embedding, RRF, or reranking"
+            else "128-token page-local child chunks (overlap 10), BM25 Top 30, expanded to "
+            "512-token parent evidence; no query rewrite, Embedding, RRF, or reranking"
         ),
         "summary": _summarize(ordered_cases),
         "cases": ordered_cases,
@@ -658,7 +658,7 @@ def _render_report(payload: dict[str, Any]) -> str:
             "",
             "指標定義：Document recall@30 是每題 Gold 文件出現在 Top 30 證據的比例；若一題有多份 Gold 文件，先計算該題命中的 Gold 文件比例，再對 100 題取平均。任一證據命中代表至少一個 Top 30 證據同時符合 Gold 文件與 Gold 頁碼。",
             "",
-            "測試設定：無優化版直接以 page-local 200-token parent chunk 做 BM25 Top 30；優化版以 page-local 40-token child chunk（overlap 10）檢索，再將命中的 child 展開至 200-token parent evidence。兩者均不使用問題改寫、Embedding、RRF、重排或回答模型。",
+            "測試設定：無優化版直接以 page-local 512-token parent chunk 做 BM25 Top 30；優化版以 page-local 128-token child chunk（overlap 10）檢索，再將命中的 child 展開至 512-token parent evidence。兩者均不使用問題改寫、Embedding、RRF、重排或回答模型。",
             "",
             f"文件處理：本次本機索引 {payload['indexed_pages']:,}/{payload['corpus_pages']:,} 頁有可抽取文字；圖片型頁面未加入 OCR，因此若 Gold 只存在於圖片，BM25 文字檢索可能無法命中。PDF 依 benchmark 與各原始發布者條款留在本機暫存，未放入本專案結果。",
             "",
@@ -722,7 +722,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             questions,
             checkpoint_path=args.checkpoint_root.resolve() / "unoptimized.jsonl",
             version_name="無優化版 BM25 Top 30",
-            version_id="unoptimized_bm25_parent200_top30",
+            version_id="unoptimized_bm25_parent512_top30",
             table="parent_chunks",
             optimized=False,
         )
@@ -731,13 +731,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             questions,
             checkpoint_path=args.checkpoint_root.resolve() / "optimized.jsonl",
             version_name="優化版 BM25 Top 30",
-            version_id="optimized_bm25_child40_parent200_top30",
+            version_id="optimized_bm25_child128_parent512_top30",
             table="child_chunks",
             optimized=True,
         )
 
     payload = {
-        "schema_version": "fujitsu-rag-hard-100-retrieval-only-v1-parent200-child40-top30",
+        "schema_version": "fujitsu-rag-hard-100-retrieval-only-v2-parent512-child128-top30",
         "dataset": DATASET_NAME,
         "dataset_url": DATASET_URL,
         "source_blog_url": BLOG_URL,

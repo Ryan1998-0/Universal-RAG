@@ -1,0 +1,111 @@
+{
+  "schema_version": "fujitsu-rag-hard-100-retrieval-only-v2-parent512-child128-top30",
+  "dataset": "Fujitsu RAG Hard Benchmark",
+  "dataset_url": "https://github.com/FujitsuResearch/Fujitsu-RAG-Hard-Benchmark",
+  "source_blog_url": "https://blog-en.fltech.dev/entry/2026/03/11/RAG-Hard-Benchmark-en",
+  "question_pool_count": 100,
+  "sample_count": 100,
+  "corpus_documents": 34,
+  "corpus_pages": 1794,
+  "indexed_pages": 1775,
+  "referenced_pdf_names": [
+    "000040369.pdf",
+    "000096537.pdf",
+    "000843318.pdf",
+    "1_report.pdf",
+    "2024年度第2四半期決算概要.pdf",
+    "B5FL0331.pdf",
+    "B5FL1891.pdf",
+    "B5FL1971.pdf",
+    "Fujitsu-Databook-FY2020-Organization.pdf",
+    "Fujitsu-IFRS-FY2024-3Q.pdf",
+    "Fujitsu-ShareholdersMTG-FY2023.pdf",
+    "HACCPに沿った衛生管理の制度化.pdf",
+    "HACCPモデル例.pdf",
+    "HACCP入門のための手引書.pdf",
+    "bib2504_3.pdf",
+    "ctlg_lifebook_202504_3.pdf",
+    "heatillness_leaflet_senior_2022.pdf",
+    "heatstroke_geppou_202505.pdf",
+    "heatstroke_geppou_202506.pdf",
+    "heatstroke_sokuhouti_20250714.pdf",
+    "heatstroke_sokuhouti_20250811.pdf",
+    "n1230000.pdf",
+    "n2140000.pdf",
+    "n21b000c.pdf",
+    "n21c0000.pdf",
+    "n2220000.pdf",
+    "n2240000.pdf",
+    "news240340_1.pdf",
+    "target_image_ja.pdf",
+    "ユーザのための要件定義ガイド第２版２刷.pdf",
+    "学校基本統計.pdf",
+    "富士通統合レポート2024.pdf",
+    "指定暑熱避難施設の運営に関する事例.pdf",
+    "職場における熱中症対策の強化について.pdf"
+  ],
+  "question_level_counts": {
+    "retrieval_level": {
+      "Easy": 39,
+      "Hard": 23,
+      "Medium": 38
+    },
+    "answer_level": {
+      "Easy": 19,
+      "Hard": 17,
+      "Medium": 64
+    }
+  },
+  "dataset_hashes": {
+    "yaml_sha256": "374fa020ff8904dbdde7411265112c983cd68f7cade245070e32ff8cc1c2fb87",
+    "download_manifest_sha256": "f18c3b8ae263ee1acfb737e0cae01484cf581eecbc953eb5fd45025462ab149a",
+    "pdf_manifest_sha256": "6c2152283b93378de31584c9286c4463842593d0d1ea23f618da42d1abfb96de"
+  },
+  "chunking": {
+    "parent_chunk_tokens": 512,
+    "child_chunk_tokens": 128,
+    "child_overlap_tokens": 10
+  },
+  "query_rewrite_enabled": false,
+  "embedding_enabled": false,
+  "rrf_enabled": false,
+  "reranking_enabled": false,
+  "published_metrics": [
+    "Document recall@30",
+    "任一證據命中",
+    "平均耗時（秒／題）"
+  ],
+  "public_reference": {
+    "available": false,
+    "note": "Official repository and technical article provide the dataset and evaluation scripts, but no directly comparable aggregate metrics for the three columns in this report.",
+    "repository": "https://github.com/FujitsuResearch/Fujitsu-RAG-Hard-Benchmark",
+    "article": "https://blog-en.fltech.dev/entry/2026/03/11/RAG-Hard-Benchmark-en"
+  },
+  "retrieval_only": true,
+  "model_calls": 0,
+  "run_at": "2026-09-15T08:56:44+0800",
+  "versions": [
+    {
+      "name": "無優化版 BM25 Top 30",
+      "version": "unoptimized_bm25_parent512_top30",
+      "configuration": "Flat 512-token page-local parent chunks with BM25 Top 30; no query rewrite, Embedding, RRF, reranking, or parent expansion",
+      "summary": {
+        "question_count": 100,
+        "document_recall_at_30": 0.795,
+        "any_evidence_hit_rate": 0.8,
+        "average_question_seconds": 0.022946
+      }
+    },
+    {
+      "name": "優化版 BM25 Top 30",
+      "version": "optimized_bm25_child128_parent512_top30",
+      "configuration": "128-token page-local child chunks (overlap 10), BM25 Top 30, expanded to 512-token parent evidence; no query rewrite, Embedding, RRF, or reranking",
+      "summary": {
+        "question_count": 100,
+        "document_recall_at_30": 0.795,
+        "any_evidence_hit_rate": 0.77,
+        "average_question_seconds": 0.031746
+      }
+    }
+  ]
+}

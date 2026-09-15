@@ -57,6 +57,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/multihop_rag_retrieval_full/retrieval-full-results.json)｜[彙整報告](evals/multihop_rag_retrieval_full/retrieval-full-report.md)｜[摘要](evals/multihop_rag_retrieval_full/retrieval-full-summary.json)
 
+------------------------------------------------------------
+
 ### LegalBench-RAG 法律資料
 
 無優化版  chunk: 600/0<br>
@@ -78,6 +80,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](evals/legalbench_public710_full/retrieval-report.md)｜[摘要](evals/legalbench_public710_full/retrieval-summary.json)
 
+------------------------------------------------------------
+
 ### EnterpriseRAG-Bench 企業資料
 
 無優化版  chunk: 文件級<br>
@@ -95,6 +99,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/enterpriserag_bench_full/retrieval-results.json)｜[彙整報告](evals/enterpriserag_bench_full/retrieval-report.md)｜[摘要](evals/enterpriserag_bench_full/retrieval-summary.json)
 
+------------------------------------------------------------
+
 ### Open RAG Benchmark PDF資料
 
 無優化版  chunk: 200/0<br>
@@ -111,6 +117,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 | 優化版 BM25 Top 30 | 98.33% | 93.40% | 0.246 |
 
 完整結果：[逐題結果](evals/open_rag_bench_full/retrieval-results.json)｜[彙整報告](evals/open_rag_bench_full/retrieval-report.md)｜[摘要](evals/open_rag_bench_full/retrieval-summary.json)
+
+------------------------------------------------------------
 
 ### Fujitsu RAG Hard Benchmark 困難題型資料
 

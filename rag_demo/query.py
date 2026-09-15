@@ -810,6 +810,7 @@ def _rrf_parent_context_results(
     graph=None,
     vector_store=None,
 ):
+    settings = RagConfig.from_env().normalized()
     final_context_k = max(1, min(8, int(final_context_k or 8)))
     query = _bm25_dense_retrieval_query(question, rewritten_query)
     metadata_query = _effective_rrf_retrieval_query(question, rewritten_query)
@@ -856,7 +857,12 @@ def _rrf_parent_context_results(
                 )
             )
 
-    merged = _rrf_merge_ranked_results(ranked_lists, top_k=min(100, candidate_k))
+    merged = _rrf_merge_ranked_results(
+        ranked_lists,
+        top_k=min(100, candidate_k),
+        keyword_weight=settings.keyword_weight,
+        embedding_weight=settings.embedding_weight,
+    )
     graph_results = retrieve_graph_context(
         question,
         chunks,
@@ -867,7 +873,7 @@ def _rrf_parent_context_results(
     if graph_results:
         merged = _merge_graph_and_vector_candidates(graph_results, merged, top_k=candidate_k)
     _apply_definition_route_boost(merged, definition_query)
-    complexity = classify_query_complexity(question, threshold=RagConfig.from_env().query_complexity_threshold)
+    complexity = classify_query_complexity(question, threshold=settings.query_complexity_threshold)
     if complexity.is_complex:
         cross_encoder = CrossEncoderReranker()
         documents = [str(item.get("content") or "") for item in merged]
@@ -1271,9 +1277,26 @@ def _chunk_matches_sequence_filter(chunk, allowed_values) -> bool:
     return False
 
 
-def _rrf_merge_ranked_results(ranked_lists, top_k: int, rrf_k: int = 60):
+def _rrf_merge_ranked_results(
+    ranked_lists,
+    top_k: int,
+    rrf_k: int = 60,
+    keyword_weight: float = 0.6,
+    embedding_weight: float = 0.4,
+):
+    keyword_weight, embedding_weight = _normalize_rrf_weights(
+        keyword_weight,
+        embedding_weight,
+    )
     candidates = {}
     for source_name, results in ranked_lists:
+        source_name_lower = str(source_name).lower()
+        if "bm25" in source_name_lower or source_name_lower.startswith("sparse"):
+            source_weight = keyword_weight
+        elif "dense" in source_name_lower or "embedding" in source_name_lower:
+            source_weight = embedding_weight
+        else:
+            source_weight = 1.0
         for rank, chunk in enumerate(results, start=1):
             chunk_id = chunk["id"]
             if chunk_id not in candidates:
@@ -1282,7 +1305,7 @@ def _rrf_merge_ranked_results(ranked_lists, top_k: int, rrf_k: int = 60):
                 candidate["rrf_score"] = 0.0
                 candidate["retrieval_methods"] = []
                 candidates[chunk_id] = candidate
-            score = 1.0 / (rrf_k + rank)
+            score = source_weight / (rrf_k + rank)
             candidates[chunk_id]["score"] += score
             candidates[chunk_id]["rrf_score"] += score
             candidates[chunk_id]["retrieval_methods"].append(f"{source_name}:{rank}")
@@ -1296,6 +1319,15 @@ def _rrf_merge_ranked_results(ranked_lists, top_k: int, rrf_k: int = 60):
         result["retrieval_method"] = "rrf"
         results.append(result)
     return results
+
+
+def _normalize_rrf_weights(keyword_weight: float, embedding_weight: float) -> tuple[float, float]:
+    keyword = max(0.0, float(keyword_weight))
+    embedding = max(0.0, float(embedding_weight))
+    total = keyword + embedding
+    if total <= 0.0:
+        return 0.5, 0.5
+    return keyword / total, embedding / total
 
 
 def _rerank_rrf_candidates(candidates, question: str, rewritten_query: str) -> None:

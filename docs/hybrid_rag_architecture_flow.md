@@ -36,8 +36,7 @@ flowchart TD
     BM25["BM25 Retrieval<br/>keyword / exact term"]:::fixed
     DENSE["Dense Retrieval<br/>semantic similarity<br/>[可抽換]"]:::swappable
     GRAPH["Graph Retrieval<br/>entity / relation / multi-hop<br/>[可抽換]"]:::swappable
-    RRF["Candidate Merge<br/>merge + deduplicate ranked lists"]:::fixed
-    LAMBDA["LambdaMART Score Mapping<br/>map sparse / dense to [0, 1], then fuse"]:::fixed
+    RRF["Weighted RRF Fusion<br/>BM25 0.6 / Dense 0.4<br/>merge + deduplicate ranked lists"]:::fixed
     COMPLEX{"Query Complexity Gate"}:::gate
     RERANK["Reranker<br/>cross-encoder / LLM rerank / heuristic<br/>[可抽換]"]:::swappable
     SIMPLE["Simple Query<br/>direct Top-5"]:::output
@@ -57,7 +56,7 @@ flowchart TD
     BM25 --> RRF
     DENSE --> RRF
     GRAPH --> RRF
-    RRF --> LAMBDA --> COMPLEX
+    RRF --> COMPLEX
     COMPLEX -->|simple| SIMPLE --> EXPAND
     COMPLEX -->|complex| RERANK --> EXPAND
     EXPAND --> GUARD --> GATE --> TOP
@@ -99,8 +98,7 @@ flowchart TD
 | BM25 Retrieval | 保留關鍵字、條文號、專有名詞等 lexical signal。 |
 | Dense Retrieval `[可抽換]` | 補強語意相似、改寫題、同義詞與非原文措辭問題。 |
 | Graph Retrieval `[可抽換]` | 用 entity / relation 補強關係型、多跳型問題。 |
-| Candidate Merge | 把 BM25、Dense、Graph 的候選結果合併與去重，保留排名作為診斷與 tie-break。 |
-| LambdaMART Score Mapping | 將 BM25 與 Dense 分數分開映射到 `[0, 1]`，再依設定權重融合；未提供標註模型時使用單調 rank mapping。 |
+| Weighted RRF Fusion | 以 reciprocal rank fusion 合併 BM25、Dense、Graph 的候選結果；目前 BM25 權重 0.6、Dense 權重 0.4，並保留排名作為診斷與 tie-break。 |
 | Query Complexity Gate | 只用目前問題與檢索規劃做低延遲判斷；簡單問題直接取 Top-5，複雜問題才執行 Cross-Encoder。 |
 | Reranker `[可抽換]` | 在 merge 後重新排序 evidence，可換成 cross-encoder、LLM rerank 或 heuristic rerank。 |
 | Parent Chunk Expansion `[可抽換]` | 補上命中 chunk 的前後文，避免 evidence 被切太碎。 |
@@ -115,6 +113,6 @@ flowchart TD
 ## 架構 Variant
 
 - BM25-only：只走 BM25 Retrieval。
-- BM25 + Dense：走 BM25 Retrieval、Dense Retrieval、Candidate Merge，再做 LambdaMART Score Mapping。
-- BM25 + Dense + Graph：走三條 retrieval branch，合併後再做 LambdaMART Score Mapping。
-- Full stack lab：Query Rewrite、Metadata Filter、BM25、Dense、Graph、Candidate Merge、LambdaMART Score Mapping、Query Complexity Gate、Reranker、Parent Chunk Expansion、Graph Hub Guard、Evidence Quality Gate、QA Agent 全部啟用。
+- BM25 + Dense：走 BM25 Retrieval、Dense Retrieval、Weighted RRF Fusion。
+- BM25 + Dense + Graph：走三條 retrieval branch，合併後再做 Weighted RRF Fusion。
+- Full stack lab：Query Rewrite、Metadata Filter、BM25、Dense、Graph、Weighted RRF Fusion、Query Complexity Gate、Reranker、Parent Chunk Expansion、Graph Hub Guard、Evidence Quality Gate、QA Agent 全部啟用。

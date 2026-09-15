@@ -63,7 +63,7 @@ V2_RAG_ARCHITECTURE = RagArchitecture(
         ),
         ArchitectureStep(
             name="RRF Fusion Top-100",
-            purpose="以 reciprocal rank fusion 合併 BM25 與 Dense 排名，保留前 100 個子 Chunk 候選。",
+            purpose="以加權 reciprocal rank fusion（BM25 0.6、Dense 0.4）合併排名，保留前 100 個子 Chunk 候選。",
             input="BM25 child candidates, Dense child candidates",
             output="RRF ranked child candidates",
         ),

@@ -26,7 +26,7 @@
 | --- | --- |
 | Chunk | 父 1024 tokens、子 256 tokens |
 | Embedding | 可替換；`RAG_EMBEDDING_MODEL` 設定模型、`RAG_EMBEDDING_DIMENSIONS` 設定維度，預設為 `bugBug04S/legal-embed-modernbert-v2`（768 維） |
-| 混合檢索 | BM25 + Embedding，RRF `k=60` |
+| 混合檢索 | BM25 0.6 + Embedding 0.4，RRF `k=60` |
 | 候選與證據 | 前 100 候選，最終 Top 5 |
 | 重排 | 複雜問題使用 Cross-Encoder |
 | 改寫校驗 | 原始問題與改寫問題 cosine similarity 至少 `0.60` |
@@ -89,20 +89,9 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/open_rag_bench_full/retrieval-results.json)｜[彙整報告](evals/open_rag_bench_full/retrieval-report.md)｜[摘要](evals/open_rag_bench_full/retrieval-summary.json)
 
-### Fujitsu RAG Hard Benchmark（1024／256）
+### Fujitsu RAG Hard Benchmark
 
-使用 Fujitsu 公開 benchmark 的完整 100 題與 34 份參考 PDF（共 1,794 頁），只執行證據檢索，不呼叫回答模型。兩個版本均使用 BM25 Top 30、原始問題、無 Embedding、無問題改寫與無重排；無優化版直接使用 1024-token page-local Chunk，優化版使用 256-token 子 Chunk（overlap 10）後展開至 1024-token 父 Chunk。
-
-| 版本 | Document recall@30 | 任一證據命中 | 平均耗時（秒／題） |
-| --- | ---: | ---: | ---: |
-| 無優化版 BM25 Top 30 | 79.50% | 79.00% | 0.020 |
-| 優化版 BM25 Top 30 | 79.50% | 78.00% | 0.024 |
-
-本次評測的 Document recall@30 對多份 Gold 文件採每題命中比例後再平均；任一證據命中要求文件與 Gold 頁碼同時符合。結果顯示在此困難、多圖表文件集合中，短子 Chunk 目前沒有帶來召回提升，且去重後候選數減少使任一證據命中下降。圖片型頁面未加入 OCR，相關 Gold 若只存在於圖片可能無法由 BM25 文字索引命中。
-
-完整結果：[逐題結果](evals/fujitsu_rag_hard_full_1024_256/retrieval-results.json)｜[彙整報告](evals/fujitsu_rag_hard_full_1024_256/retrieval-report.md)｜[摘要](evals/fujitsu_rag_hard_full_1024_256/retrieval-summary.json)｜[評測程式](scripts/run_fujitsu_rag_hard_full_eval.py)
-
-上一輪 512／128 設定保留於[歷史報告](evals/fujitsu_rag_hard_full_512_128/retrieval-report.md)；更早的 200／40 設定保留於[歷史報告](evals/fujitsu_rag_hard_full/retrieval-report.md)。
+下一輪測試將在 1024／256 父子 Chunk 上加入 Embedding、加權 RRF（BM25 0.6／Embedding 0.4）與 Cross-Encoder 重排；上一輪 512／128 設定保留於[歷史報告](evals/fujitsu_rag_hard_full_512_128/retrieval-report.md)，更早的 200／40 設定保留於[歷史報告](evals/fujitsu_rag_hard_full/retrieval-report.md)。
 
 ## RAG 資料庫來源
 

@@ -26,8 +26,8 @@ class RagConfig:
     query_rewrite_semantic_enabled: bool = True
     query_rewrite_min_similarity: float = 0.60
     retrieval_candidate_k: int = 100
-    keyword_weight: float = 0.5
-    embedding_weight: float = 0.5
+    keyword_weight: float = 0.6
+    embedding_weight: float = 0.4
     metadata_boost_max: float = 0.18
     verifier_auto_accept_enabled: bool = False
     verifier_auto_accept_score: float = 0.52

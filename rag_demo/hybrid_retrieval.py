@@ -409,6 +409,8 @@ class HybridRetriever:
             bm25_result_sets=bm25_result_sets,
             embedding_result_sets=dense_result_sets,
             rrf_k=self.settings.hybrid_rrf_k,
+            bm25_weight=self.settings.keyword_weight,
+            embedding_weight=self.settings.embedding_weight,
         )
         candidates = candidates[: min(100, max(top_k, candidate_k))]
         if self.settings.hybrid_fusion_method == "rrf":
@@ -595,7 +597,8 @@ class HybridRetriever:
                 {
                     "name": "RRF Merge",
                     "detail": (
-                        f"RRF fused {len(candidates)} unique retrieval units with k={self.settings.hybrid_rrf_k}; "
+                        f"Weighted RRF fused {len(candidates)} unique retrieval units with k={self.settings.hybrid_rrf_k} "
+                        f"(BM25 {self.settings.keyword_weight:.2f}, Embedding {self.settings.embedding_weight:.2f}); "
                         f"fusion method={self.settings.hybrid_fusion_method}."
                     ),
                 },
@@ -970,15 +973,28 @@ def expand_retrieval_query(
     return combined_query, unique_additions, list(dict.fromkeys(matched_aliases))
 
 
+def _normalize_fusion_weights(bm25_weight: float, embedding_weight: float) -> tuple[float, float]:
+    bm25 = max(0.0, float(bm25_weight))
+    embedding = max(0.0, float(embedding_weight))
+    total = bm25 + embedding
+    if total <= 0.0:
+        return 0.5, 0.5
+    return bm25 / total, embedding / total
+
+
 def reciprocal_rank_fusion(
     bm25_results: Sequence[dict],
     embedding_results: Sequence[dict],
     rrf_k: Optional[int] = None,
+    bm25_weight: Optional[float] = None,
+    embedding_weight: Optional[float] = None,
 ) -> List[dict]:
     return reciprocal_rank_fusion_many(
         bm25_result_sets=[bm25_results],
         embedding_result_sets=[embedding_results],
         rrf_k=rrf_k,
+        bm25_weight=bm25_weight,
+        embedding_weight=embedding_weight,
     )
 
 
@@ -986,10 +1002,17 @@ def reciprocal_rank_fusion_many(
     bm25_result_sets: Sequence[Sequence[dict]],
     embedding_result_sets: Sequence[Sequence[dict]],
     rrf_k: Optional[int] = None,
+    bm25_weight: Optional[float] = None,
+    embedding_weight: Optional[float] = None,
 ) -> List[dict]:
     """Fuse sparse and dense rankings from complementary query variants."""
 
-    rrf_k = max(1, int(rrf_k or RagConfig.from_env().hybrid_rrf_k))
+    settings = RagConfig.from_env()
+    rrf_k = max(1, int(rrf_k or settings.hybrid_rrf_k))
+    bm25_weight, embedding_weight = _normalize_fusion_weights(
+        settings.keyword_weight if bm25_weight is None else bm25_weight,
+        settings.embedding_weight if embedding_weight is None else embedding_weight,
+    )
     candidates: Dict[int, dict] = {}
     result_sets = [
         ("bm25", results) for results in bm25_result_sets
@@ -1009,7 +1032,8 @@ def reciprocal_rank_fusion_many(
                     "matched_terms": [],
                 },
             )
-            candidate["fusion_score"] += 1.0 / (rrf_k + rank)
+            branch_weight = bm25_weight if branch == "bm25" else embedding_weight
+            candidate["fusion_score"] += branch_weight / (rrf_k + rank)
             if branch == "bm25":
                 candidate["bm25_score"] = max(
                     candidate["bm25_score"],

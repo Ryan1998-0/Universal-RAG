@@ -83,6 +83,8 @@ class ProductionHybridRetriever:
             dense_hits,
             sparse_hits,
             rrf_k=self.settings.hybrid_rrf_k,
+            bm25_weight=self.settings.keyword_weight,
+            embedding_weight=self.settings.embedding_weight,
         )
         candidates = candidates[: min(100, max(top_k, candidate_k))]
         legacy_single_level = not any(
@@ -230,7 +232,7 @@ class ProductionHybridRetriever:
                 },
                 {
                     "name": "RRF Fusion",
-                    "detail": f"Fuse sparse and dense ranks with reciprocal-rank k={self.settings.hybrid_rrf_k}; keep the first {min(100, len(candidates))} candidates.",
+                    "detail": f"Fuse sparse and dense ranks with weighted reciprocal-rank k={self.settings.hybrid_rrf_k} (BM25 {self.settings.keyword_weight:.2f}, Embedding {self.settings.embedding_weight:.2f}); keep the first {min(100, len(candidates))} candidates.",
                 },
                 {
                     "name": "Cross encoder",
@@ -265,7 +267,17 @@ class ProductionHybridRetriever:
         }
 
 
-def _reciprocal_rank_fusion(dense_hits, sparse_hits, rrf_k: int = 60) -> list[dict]:
+def _reciprocal_rank_fusion(
+    dense_hits,
+    sparse_hits,
+    rrf_k: int = 60,
+    bm25_weight: float = 0.6,
+    embedding_weight: float = 0.4,
+) -> list[dict]:
+    bm25_weight, embedding_weight = _normalize_fusion_weights(
+        bm25_weight,
+        embedding_weight,
+    )
     candidates = {}
     for branch, hits in (("dense", dense_hits), ("sparse", sparse_hits)):
         for rank, hit in enumerate(hits, start=1):
@@ -277,8 +289,18 @@ def _reciprocal_rank_fusion(dense_hits, sparse_hits, rrf_k: int = 60) -> list[di
                 "rrf_score": 0.0,
             })
             item[f"{branch}_score"] = float(hit.score)
-            item["rrf_score"] += 1.0 / (rrf_k + rank)
+            branch_weight = embedding_weight if branch == "dense" else bm25_weight
+            item["rrf_score"] += branch_weight / (rrf_k + rank)
     return sorted(candidates.values(), key=lambda item: item["rrf_score"], reverse=True)
+
+
+def _normalize_fusion_weights(bm25_weight: float, embedding_weight: float) -> tuple[float, float]:
+    bm25 = max(0.0, float(bm25_weight))
+    embedding = max(0.0, float(embedding_weight))
+    total = bm25 + embedding
+    if total <= 0.0:
+        return 0.5, 0.5
+    return bm25 / total, embedding / total
 
 
 def _empty_result(question: str, retrieval_query: str, reason: str, started_at: float) -> dict:

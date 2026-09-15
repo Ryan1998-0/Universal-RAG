@@ -14,7 +14,7 @@
 
 ## 已完成
 
-- 混合檢索：以 256 token 子 Chunk 執行 BM25 + Embedding，透過 RRF 融合並保留前 100 個候選；簡單問題直接取 Top-5，複雜問題使用 Cross-Encoder 重排後取 Top-5，再展開對應的 1024 token 父 Chunk。
+- 混合檢索：以 256 token 子 Chunk 執行 BM25 + Embedding，透過加權 RRF（BM25 0.6、Embedding 0.4）融合並保留前 100 個候選；簡單問題直接取 Top-5，複雜問題使用 Cross-Encoder 重排後取 Top-5，再展開對應的 1024 token 父 Chunk。
 - 證據約束：Evidence Gate；證據不足時拒答，不以模型猜測補全。
 - 文件處理：PDF、DOCX、TXT、Markdown、JSON、圖片的匯入與索引；目前產品驗收以文字內容為主。
 - 權限查詢：角色 → 文件 ACL → 後端檢索過濾；未授權片段不會送入模型。

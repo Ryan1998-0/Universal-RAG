@@ -2097,7 +2097,7 @@ function buildTraceMarkdown(result, expanded, selectedSources) {
       context.embeddingScore != null
         ? `- Embedding 餘弦相似度：${context.embeddingScore}`
         : "- Embedding 餘弦相似度：無資料",
-      context.fusionScore != null ? `- LambdaMART 融合分數：${context.fusionScore}` : "- LambdaMART 融合分數：無資料",
+      context.fusionScore != null ? `- RRF 融合分數：${context.fusionScore}` : "- RRF 融合分數：無資料",
       source?.url ? `- 網址：${source.url}` : "- 網址：無資料",
       "",
       context.content,
@@ -2143,17 +2143,17 @@ function architectureForVariant(variant) {
     bm25_dense: {
       label: "BM25 + 語意檢索",
       summary: "以 256 token 子 Chunk 結合字面與語意候選，使用 RRF 融合排序。",
-      steps: ["BM25", "語意檢索或別名擴展", "LambdaMART 融合", "前 K 筆證據"],
+      steps: ["BM25", "語意檢索或別名擴展", "加權 RRF 融合", "前 K 筆證據"],
     },
     bm25_embedding_rerank: {
       label: "BM25 + Embedding + Rerank",
       summary: "BM25 與多語 Embedding 產生子 Chunk 候選，經 RRF 排序後，複雜問題才用 Cross-Encoder 重排證據。",
-      steps: ["BM25", "多語 Embedding", "LambdaMART 融合", "複雜問題重排", "前 K 筆證據"],
+      steps: ["BM25", "多語 Embedding", "加權 RRF 融合", "複雜問題重排", "前 K 筆證據"],
     },
     bm25_dense_graph: {
       label: "BM25 + 語意檢索 + 圖譜",
       summary: "在字面與語意候選之外加入圖譜關係，再融合三條檢索分支。",
-      steps: ["BM25", "語意檢索或別名擴展", "圖譜檢索", "LambdaMART 融合", "前 K 筆證據"],
+      steps: ["BM25", "語意檢索或別名擴展", "圖譜檢索", "加權 RRF 融合", "前 K 筆證據"],
     },
     full: {
       label: "完整檢索流程",
@@ -2164,7 +2164,7 @@ function architectureForVariant(variant) {
         "BM25",
         "語意檢索或別名擴展",
         "圖譜檢索",
-        "LambdaMART 融合",
+        "加權 RRF 融合",
         "重排",
         "中心實體防護",
         "證據品質檢查",

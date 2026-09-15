@@ -7,14 +7,15 @@ published result files.
 
 The two configurations follow the current Universal-RAG evaluation settings:
 
-* 無優化版: flat 1024-token page-local parent chunks, BM25 Top 30.
-* 優化版: 256-token child chunks (overlap 10), BM25 Top 30, then expand each
-  child hit to its 1024-token parent evidence window.
+* 無優化版: flat 1024-token page-local parent chunks.
+* 優化版: 256-token child chunks (overlap 10), then expand each reranked child
+  hit to its 1024-token parent evidence window.
 
-Both versions are retrieval-only: no query rewrite, embedding, RRF,
-cross-encoder reranking, or answer-model calls.  "Token" here means the
-project's deterministic lexical token used for chunking, rather than a model
-BPE token.
+Both versions use BM25 and dense Embedding retrieval, weighted RRF
+(BM25=0.6, Embedding=0.4), and Cross-Encoder reranking.  They remain
+retrieval-only: no query rewrite or answer-model calls.  "Token" here means
+the project's deterministic lexical token used for chunking, rather than a
+model BPE token.
 """
 
 from __future__ import annotations
@@ -29,11 +30,19 @@ import re
 import sqlite3
 import statistics
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
+import numpy as np
 import yaml
 from pypdf import PdfReader
+
+from rag_demo.cross_encoder import (
+    DEFAULT_CROSS_ENCODER_MODEL,
+    CrossEncoderReranker,
+)
+from rag_demo.embeddings import DEFAULT_EMBEDDING_MODEL, embed_query, embed_texts
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,7 +51,7 @@ DEFAULT_PDF_DIR = Path(
     os.environ.get("FUJITSU_RAG_HARD_PDF_DIR", "")
     or (Path(os.environ.get("TEMP", ".")) / "Fujitsu-RAG-Hard-Benchmark" / "dataset" / "PDFs")
 )
-DEFAULT_RUN_ROOT = Path(os.environ.get("TEMP", ".")) / "Universal-RAG-Fujitsu-RAG-Hard-full-1024-256"
+DEFAULT_RUN_ROOT = Path(os.environ.get("TEMP", ".")) / "Universal-RAG-Fujitsu-RAG-Hard-full-hybrid-1024-256"
 DEFAULT_DB = DEFAULT_RUN_ROOT / "fujitsu-rag-hard.sqlite"
 DEFAULT_OUTPUT = DEFAULT_RUN_ROOT / "retrieval-results.json"
 DEFAULT_REPORT = DEFAULT_RUN_ROOT / "retrieval-report.md"
@@ -56,7 +65,17 @@ BLOG_URL = "https://blog-en.fltech.dev/entry/2026/03/11/RAG-Hard-Benchmark-en"
 PARENT_TOKENS = 1024
 CHILD_TOKENS = 256
 CHILD_OVERLAP = 10
+BM25_CANDIDATE_K = 100
+DENSE_CANDIDATE_K = 100
+RRF_CANDIDATE_K = 100
+RRF_K = 60
+BM25_WEIGHT = 0.60
+EMBEDDING_WEIGHT = 0.40
+RERANK_POOL_K = 100
 FINAL_TOP_K = 30
+
+EMBEDDING_MODEL = os.environ.get("RAG_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
+RERANKER_MODEL = os.environ.get("RAG_RERANKER_MODEL", DEFAULT_CROSS_ENCODER_MODEL)
 
 PUBLISHED_METRICS = (
     "Document recall@30",
@@ -455,12 +474,286 @@ def _search(
     return results
 
 
+def _load_table_rows(connection: sqlite3.Connection, table: str) -> list[dict[str, Any]]:
+    """Load every indexed chunk record in stable rowid order for dense search."""
+
+    if table == "parent_chunks":
+        select = "rowid, file_name, page_number, chunk_index, start_token, text"
+    elif table == "child_chunks":
+        select = (
+            "rowid, file_name, page_number, parent_chunk_index, parent_start_token, "
+            "child_index, child_start_token, text"
+        )
+    else:
+        raise ValueError(f"unexpected FTS table: {table}")
+
+    rows = connection.execute(f"SELECT {select} FROM {table} ORDER BY rowid").fetchall()
+    records: list[dict[str, Any]] = []
+    for row in rows:
+        if table == "parent_chunks":
+            rowid, filename, page_number, chunk_index, start_token, text = row
+            records.append(
+                {
+                    "rowid": int(rowid),
+                    "file_name": str(filename),
+                    "page_number": int(page_number),
+                    "chunk_index": int(chunk_index),
+                    "start_token": int(start_token),
+                    "text": str(text),
+                }
+            )
+        else:
+            (
+                rowid,
+                filename,
+                page_number,
+                parent_chunk_index,
+                parent_start_token,
+                child_index,
+                child_start_token,
+                text,
+            ) = row
+            records.append(
+                {
+                    "rowid": int(rowid),
+                    "file_name": str(filename),
+                    "page_number": int(page_number),
+                    "parent_chunk_index": int(parent_chunk_index),
+                    "parent_start_token": int(parent_start_token),
+                    "child_index": int(child_index),
+                    "child_start_token": int(child_start_token),
+                    "text": str(text),
+                }
+            )
+    return records
+
+
+@dataclass
+class _DenseIndex:
+    rows: list[dict[str, Any]]
+    vectors: np.ndarray
+    model_name: str
+
+    def search(self, query: str, top_k: int) -> list[dict[str, Any]]:
+        if not self.rows:
+            return []
+        query_vector = np.asarray(
+            embed_query(query, model_name=self.model_name),
+            dtype=np.float32,
+        ).reshape(-1)
+        query_norm = float(np.linalg.norm(query_vector))
+        if query_norm > 0.0:
+            query_vector = query_vector / query_norm
+        scores = self.vectors @ query_vector
+        limit = min(max(1, int(top_k)), len(self.rows))
+        order = np.argsort(-scores, kind="stable")[:limit]
+        results: list[dict[str, Any]] = []
+        for position in order.tolist():
+            result = dict(self.rows[int(position)])
+            value = float(scores[int(position)])
+            result["embedding_score"] = value
+            result["score"] = value
+            results.append(result)
+        return results
+
+
+def _dense_cache_signature(rows: Sequence[dict[str, Any]]) -> str:
+    digest = hashlib.sha256()
+    for row in rows:
+        digest.update(str(row["rowid"]).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(str(row["text"]).encode("utf-8"))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def _normalise_embedding_matrix(values: Any) -> np.ndarray:
+    matrix = np.asarray(values, dtype=np.float32)
+    if matrix.size == 0:
+        return np.empty((0, 0), dtype=np.float32)
+    if matrix.ndim == 1:
+        matrix = matrix.reshape(1, -1)
+    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+    return matrix / np.maximum(norms, 1e-12)
+
+
+def _load_or_build_dense_index(
+    connection: sqlite3.Connection,
+    table: str,
+    model_name: str,
+    cache_root: Path,
+) -> _DenseIndex:
+    rows = _load_table_rows(connection, table)
+    cache_root.mkdir(parents=True, exist_ok=True)
+    model_key = hashlib.sha256(str(model_name).encode("utf-8")).hexdigest()[:16]
+    matrix_path = cache_root / f"{table}-{model_key}.npy"
+    metadata_path = cache_root / f"{table}-{model_key}.json"
+    signature = _dense_cache_signature(rows)
+
+    if matrix_path.exists() and metadata_path.exists():
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            matrix = _normalise_embedding_matrix(np.load(matrix_path))
+            if (
+                metadata.get("table") == table
+                and metadata.get("model") == model_name
+                and metadata.get("row_count") == len(rows)
+                and metadata.get("row_signature") == signature
+                and matrix.shape[0] == len(rows)
+            ):
+                return _DenseIndex(rows=rows, vectors=matrix, model_name=model_name)
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            pass
+
+    texts = [str(row["text"]) for row in rows]
+    vectors = _normalise_embedding_matrix(
+        embed_texts(texts, model_name=model_name)
+    )
+    if vectors.shape[0] != len(rows):
+        raise RuntimeError(
+            f"Embedding model returned {vectors.shape[0]} vectors for {len(rows)} {table} rows"
+        )
+    np.save(matrix_path, vectors)
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "table": table,
+                "model": model_name,
+                "row_count": len(rows),
+                "dimensions": int(vectors.shape[1]) if vectors.ndim == 2 else 0,
+                "row_signature": signature,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return _DenseIndex(rows=rows, vectors=vectors, model_name=model_name)
+
+
+def _weighted_rrf_fusion(
+    bm25_results: Sequence[dict[str, Any]],
+    dense_results: Sequence[dict[str, Any]],
+    top_k: int,
+) -> list[dict[str, Any]]:
+    """Fuse sparse and dense ranks with explicit BM25/Embedding weights."""
+
+    candidates: dict[int, dict[str, Any]] = {}
+    for source, weight, results in (
+        ("bm25", BM25_WEIGHT, bm25_results),
+        ("embedding", EMBEDDING_WEIGHT, dense_results),
+    ):
+        for rank, item in enumerate(results, start=1):
+            rowid = int(item["rowid"])
+            candidate = candidates.setdefault(rowid, dict(item))
+            for key, value in item.items():
+                candidate.setdefault(key, value)
+            candidate["rrf_score"] = float(candidate.get("rrf_score", 0.0)) + (
+                float(weight) / (RRF_K + rank)
+            )
+            candidate["fusion_score"] = candidate["rrf_score"]
+            candidate[f"{source}_rank"] = rank
+            candidate[f"{source}_score"] = float(item.get("score", 0.0))
+            candidate.setdefault("retrieval_methods", []).append(f"{source}:{rank}")
+
+    ranked = sorted(
+        candidates.values(),
+        key=lambda item: (
+            -float(item.get("rrf_score", 0.0)),
+            int(item.get("bm25_rank", 10**9)),
+            int(item.get("embedding_rank", 10**9)),
+            int(item["rowid"]),
+        ),
+    )
+    return ranked[: min(max(1, int(top_k)), len(ranked))]
+
+
+def _cross_encoder_rerank(
+    reranker: CrossEncoderReranker,
+    query: str,
+    candidates: Sequence[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    pool = [dict(item) for item in candidates[:RERANK_POOL_K]]
+    if not pool:
+        return []
+    scores = reranker.score(query, [str(item.get("text") or "") for item in pool])
+    if len(scores) != len(pool):
+        raise RuntimeError(
+            f"Cross-Encoder returned {len(scores)} scores for {len(pool)} candidates"
+        )
+    for candidate, score in zip(pool, scores):
+        candidate["rerank_score"] = float(score)
+        candidate["rerank_applied"] = True
+    return sorted(
+        pool,
+        key=lambda item: (
+            -float(item.get("rerank_score", 0.0)),
+            -float(item.get("rrf_score", 0.0)),
+            int(item["rowid"]),
+        ),
+    )
+
+
+def _parent_lookup(
+    connection: sqlite3.Connection,
+) -> dict[tuple[str, int, int], dict[str, Any]]:
+    return {
+        (str(row["file_name"]), int(row["page_number"]), int(row["chunk_index"])): row
+        for row in _load_table_rows(connection, "parent_chunks")
+    }
+
+
+def _expand_child_hits(
+    reranked: Sequence[dict[str, Any]],
+    parents: dict[tuple[str, int, int], dict[str, Any]],
+    top_k: int,
+) -> list[dict[str, Any]]:
+    expanded: list[dict[str, Any]] = []
+    seen_parents: set[tuple[str, int, int]] = set()
+    for child_rank, child in enumerate(reranked, start=1):
+        key = (
+            str(child["file_name"]),
+            int(child["page_number"]),
+            int(child["parent_chunk_index"]),
+        )
+        if key in seen_parents:
+            continue
+        seen_parents.add(key)
+        parent = dict(parents.get(key) or child)
+        parent["retrieval_child_rowid"] = int(child["rowid"])
+        parent["retrieval_child_index"] = int(child.get("child_index", 0))
+        parent["retrieval_child_rank"] = child_rank
+        parent["expanded_parent"] = key in parents
+        for field in (
+            "bm25_score",
+            "embedding_score",
+            "rrf_score",
+            "fusion_score",
+            "rerank_score",
+            "rerank_applied",
+            "bm25_rank",
+            "embedding_rank",
+        ):
+            if field in child:
+                parent[field] = child[field]
+        expanded.append(parent)
+        if len(expanded) >= max(1, int(top_k)):
+            break
+    return expanded
+
+
 def _public_context(item: dict[str, Any], rank: int) -> dict[str, Any]:
     fields: dict[str, Any] = {
         "rank": rank,
         "file_name": item["file_name"],
         "page_number": item["page_number"],
-        "score": item["score"],
+        "score": float(
+            item.get(
+                "rerank_score",
+                item.get("rrf_score", item.get("score", 0.0)),
+            )
+        ),
     }
     for key in (
         "chunk_index",
@@ -470,6 +763,15 @@ def _public_context(item: dict[str, Any], rank: int) -> dict[str, Any]:
         "child_index",
         "child_start_token",
         "child_rank",
+        "retrieval_child_rowid",
+        "retrieval_child_index",
+        "retrieval_child_rank",
+        "bm25_score",
+        "embedding_score",
+        "rrf_score",
+        "rerank_score",
+        "rerank_applied",
+        "expanded_parent",
     ):
         if key in item:
             fields[key] = item[key]
@@ -524,6 +826,11 @@ def _run_version(
     version_id: str,
     table: str,
     optimized: bool,
+    dense_index: _DenseIndex,
+    parent_by_key: dict[tuple[str, int, int], dict[str, Any]],
+    reranker: CrossEncoderReranker,
+    embedding_model: str,
+    reranker_model: str,
 ) -> dict[str, Any]:
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     completed = _load_checkpoint(checkpoint_path)
@@ -540,49 +847,81 @@ def _run_version(
                 ordered_cases.append(completed[question_id])
                 continue
             started = time.perf_counter()
-            raw_hits = _search(connection, table, question["question"], FINAL_TOP_K)
+            bm25_started = time.perf_counter()
+            bm25_hits = _search(
+                connection,
+                table,
+                question["question"],
+                BM25_CANDIDATE_K,
+            )
+            bm25_ms = (time.perf_counter() - bm25_started) * 1000.0
+
+            embedding_started = time.perf_counter()
+            dense_hits = dense_index.search(question["question"], DENSE_CANDIDATE_K)
+            embedding_ms = (time.perf_counter() - embedding_started) * 1000.0
+
+            rrf_started = time.perf_counter()
+            fused_hits = _weighted_rrf_fusion(
+                bm25_hits,
+                dense_hits,
+                RRF_CANDIDATE_K,
+            )
+            rrf_ms = (time.perf_counter() - rrf_started) * 1000.0
+
+            rerank_started = time.perf_counter()
+            reranked_hits = _cross_encoder_rerank(
+                reranker,
+                question["question"],
+                fused_hits,
+            )
+            rerank_ms = (time.perf_counter() - rerank_started) * 1000.0
+
             if optimized:
-                # Several child hits can point to one 1024-token parent.  Keep
-                # the best child score and its first child rank per parent.
-                best_by_parent: dict[tuple[str, int, int], dict[str, Any]] = {}
-                for child_rank, child in enumerate(raw_hits, start=1):
-                    key = (
-                        child["file_name"],
-                        child["page_number"],
-                        child["parent_chunk_index"],
-                    )
-                    candidate = dict(child)
-                    candidate["child_rank"] = child_rank
-                    previous = best_by_parent.get(key)
-                    if previous is None or candidate["score"] > previous["score"]:
-                        best_by_parent[key] = candidate
-                raw_hits = sorted(
-                    best_by_parent.values(),
-                    key=lambda item: (-item["score"], item["child_rank"]),
-                )[:FINAL_TOP_K]
+                selected_hits = _expand_child_hits(
+                    reranked_hits,
+                    parent_by_key,
+                    FINAL_TOP_K,
+                )
+            else:
+                selected_hits = list(reranked_hits[:FINAL_TOP_K])
             contexts = [
                 _public_context(item, rank)
-                for rank, item in enumerate(raw_hits, start=1)
+                for rank, item in enumerate(selected_hits, start=1)
             ]
             elapsed_ms = (time.perf_counter() - started) * 1000.0
             case = {
                 "question_id": question_id,
                 "retrieval": {
-                    "method": "BM25",
+                    "method": "BM25+Embedding+weighted-RRF+Cross-Encoder",
                     "candidate_table": table,
-                    "candidate_k": FINAL_TOP_K,
+                    "candidate_k": RRF_CANDIDATE_K,
+                    "bm25_candidate_k": BM25_CANDIDATE_K,
+                    "embedding_candidate_k": DENSE_CANDIDATE_K,
+                    "rrf_candidate_k": RRF_CANDIDATE_K,
+                    "rerank_pool_k": min(RERANK_POOL_K, len(fused_hits)),
                     "final_top_k": FINAL_TOP_K,
+                    "bm25_weight": BM25_WEIGHT,
+                    "embedding_weight": EMBEDDING_WEIGHT,
+                    "rrf_k": RRF_K,
+                    "embedding_model": embedding_model,
+                    "reranker_model": reranker_model,
                     "query_rewrite": False,
-                    "embedding": False,
-                    "rrf": False,
-                    "reranking": False,
+                    "embedding": True,
+                    "rrf": True,
+                    "reranking": True,
                     "parent_expansion": optimized,
                     "parent_chunk_tokens": PARENT_TOKENS,
                     "child_chunk_tokens": CHILD_TOKENS if optimized else None,
                     "child_overlap_tokens": CHILD_OVERLAP if optimized else None,
                 },
                 "metrics": _retrieval_metrics(contexts, question),
-                "timings_ms": {"question_stage": round(elapsed_ms, 3)},
+                "timings_ms": {
+                    "question_stage": round(elapsed_ms, 3),
+                    "bm25": round(bm25_ms, 3),
+                    "embedding": round(embedding_ms, 3),
+                    "rrf": round(rrf_ms, 3),
+                    "rerank": round(rerank_ms, 3),
+                },
                 "contexts": contexts,
             }
             checkpoint.write(json.dumps(case, ensure_ascii=False) + "\n")
@@ -597,11 +936,13 @@ def _run_version(
         "name": version_name,
         "version": version_id,
         "configuration": (
-            "Flat 1024-token page-local parent chunks with BM25 Top 30; no query rewrite, "
-            "Embedding, RRF, reranking, or parent expansion"
+            "Flat 1024-token page-local parent chunks; BM25 and dense Embedding Top 100, "
+            "weighted RRF (0.6/0.4), Cross-Encoder rerank Top 100 to Top 30; "
+            "no query rewrite or parent-child expansion"
             if not optimized
-            else "256-token page-local child chunks (overlap 10), BM25 Top 30, expanded to "
-            "1024-token parent evidence; no query rewrite, Embedding, RRF, or reranking"
+            else "256-token page-local child chunks (overlap 10); BM25 and dense Embedding "
+            "Top 100, weighted RRF (0.6/0.4), Cross-Encoder rerank Top 100 to Top 30, "
+            "then expand to 1024-token parent evidence; no query rewrite"
         ),
         "summary": _summarize(ordered_cases),
         "cases": ordered_cases,
@@ -658,7 +999,8 @@ def _render_report(payload: dict[str, Any]) -> str:
             "",
             "指標定義：Document recall@30 是每題 Gold 文件出現在 Top 30 證據的比例；若一題有多份 Gold 文件，先計算該題命中的 Gold 文件比例，再對 100 題取平均。任一證據命中代表至少一個 Top 30 證據同時符合 Gold 文件與 Gold 頁碼。",
             "",
-            "測試設定：無優化版直接以 page-local 1024-token parent chunk 做 BM25 Top 30；優化版以 page-local 256-token child chunk（overlap 10）檢索，再將命中的 child 展開至 1024-token parent evidence。兩者均不使用問題改寫、Embedding、RRF、重排或回答模型。",
+            f"測試設定：兩個版本都以 BM25 與 dense Embedding 各取 Top {BM25_CANDIDATE_K}，使用加權 RRF（BM25 {BM25_WEIGHT:.1f}／Embedding {EMBEDDING_WEIGHT:.1f}，k={RRF_K}）融合，再以 Cross-Encoder 對前 {RERANK_POOL_K} 個候選重排，最後取 Top {FINAL_TOP_K}。無優化版使用 1024-token page-local parent chunk；優化版使用 256-token child chunk（overlap {CHILD_OVERLAP}）後展開至 1024-token parent evidence。兩者均不使用問題改寫或回答模型。",
+            f"模型設定：Embedding={payload['embedding_model']}；Cross-Encoder={payload['reranker_model']}。",
             "",
             f"文件處理：本次本機索引 {payload['indexed_pages']:,}/{payload['corpus_pages']:,} 頁有可抽取文字；圖片型頁面未加入 OCR，因此若 Gold 只存在於圖片，BM25 文字檢索可能無法命中。PDF 依 benchmark 與各原始發布者條款留在本機暫存，未放入本專案結果。",
             "",
@@ -688,6 +1030,9 @@ def _summary_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "question_level_counts",
         "dataset_hashes",
         "chunking",
+        "embedding_model",
+        "reranker_model",
+        "rrf",
         "query_rewrite_enabled",
         "embedding_enabled",
         "rrf_enabled",
@@ -717,27 +1062,52 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     questions, question_meta = _load_tasks(data_root)
     index_meta = _ensure_index(pdf_dir, args.db.resolve(), question_meta["referenced_pdf_names"])
     with sqlite3.connect(args.db.resolve()) as connection:
+        cache_root = args.db.resolve().parent / "dense-cache"
+        parent_dense_index = _load_or_build_dense_index(
+            connection,
+            "parent_chunks",
+            args.embedding_model,
+            cache_root,
+        )
+        child_dense_index = _load_or_build_dense_index(
+            connection,
+            "child_chunks",
+            args.embedding_model,
+            cache_root,
+        )
+        parent_by_key = _parent_lookup(connection)
+        reranker = CrossEncoderReranker(model_name=args.reranker_model)
         unoptimized = _run_version(
             connection,
             questions,
             checkpoint_path=args.checkpoint_root.resolve() / "unoptimized.jsonl",
-            version_name="無優化版 BM25 Top 30",
-            version_id="unoptimized_bm25_parent1024_top30",
+            version_name="無優化版 BM25+Embedding+RRF+Rerank Top 30",
+            version_id="unoptimized_hybrid_rrf_rerank_parent1024_top30",
             table="parent_chunks",
             optimized=False,
+            dense_index=parent_dense_index,
+            parent_by_key=parent_by_key,
+            reranker=reranker,
+            embedding_model=args.embedding_model,
+            reranker_model=args.reranker_model,
         )
         optimized = _run_version(
             connection,
             questions,
             checkpoint_path=args.checkpoint_root.resolve() / "optimized.jsonl",
-            version_name="優化版 BM25 Top 30",
-            version_id="optimized_bm25_child256_parent1024_top30",
+            version_name="優化版 BM25+Embedding+RRF+Rerank Top 30",
+            version_id="optimized_hybrid_rrf_rerank_child256_parent1024_top30",
             table="child_chunks",
             optimized=True,
+            dense_index=child_dense_index,
+            parent_by_key=parent_by_key,
+            reranker=reranker,
+            embedding_model=args.embedding_model,
+            reranker_model=args.reranker_model,
         )
 
     payload = {
-        "schema_version": "fujitsu-rag-hard-100-retrieval-only-v3-parent1024-child256-top30",
+        "schema_version": "fujitsu-rag-hard-100-retrieval-only-v4-hybrid-rrf-rerank-parent1024-child256-top30",
         "dataset": DATASET_NAME,
         "dataset_url": DATASET_URL,
         "source_blog_url": BLOG_URL,
@@ -766,10 +1136,22 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "child_chunk_tokens": CHILD_TOKENS,
             "child_overlap_tokens": CHILD_OVERLAP,
         },
+        "embedding_model": args.embedding_model,
+        "reranker_model": args.reranker_model,
+        "rrf": {
+            "k": RRF_K,
+            "bm25_weight": BM25_WEIGHT,
+            "embedding_weight": EMBEDDING_WEIGHT,
+            "bm25_candidate_k": BM25_CANDIDATE_K,
+            "embedding_candidate_k": DENSE_CANDIDATE_K,
+            "candidate_k": RRF_CANDIDATE_K,
+            "rerank_pool_k": RERANK_POOL_K,
+            "final_top_k": FINAL_TOP_K,
+        },
         "query_rewrite_enabled": False,
-        "embedding_enabled": False,
-        "rrf_enabled": False,
-        "reranking_enabled": False,
+        "embedding_enabled": True,
+        "rrf_enabled": True,
+        "reranking_enabled": True,
         "published_metrics": list(PUBLISHED_METRICS),
         "public_reference": {
             "available": False,
@@ -784,6 +1166,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "index_reused": index_meta["index_reused"],
             "parent_chunk_count": index_meta["parent_chunk_count"],
             "child_chunk_count": index_meta["child_chunk_count"],
+            "parent_embedding_count": len(parent_dense_index.rows),
+            "child_embedding_count": len(child_dense_index.rows),
         },
         "versions": [unoptimized, optimized],
     }
@@ -799,6 +1183,8 @@ def main() -> int:
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--summary", type=Path, default=DEFAULT_SUMMARY)
     parser.add_argument("--checkpoint-root", type=Path, default=DEFAULT_CHECKPOINT_ROOT)
+    parser.add_argument("--embedding-model", default=EMBEDDING_MODEL)
+    parser.add_argument("--reranker-model", default=RERANKER_MODEL)
     args = parser.parse_args()
     payload = run(args)
     for path in (args.output, args.report, args.summary):

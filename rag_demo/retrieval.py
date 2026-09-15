@@ -50,8 +50,8 @@ def hybrid_search(
     embeddings: Optional[Sequence[Sequence[float]]] = None,
     embed_query_fn: Optional[Callable[[str], Sequence[float]]] = None,
     top_k: int = 5,
-    keyword_weight: float = 0.5,
-    embedding_weight: float = 0.5,
+    keyword_weight: float = 0.6,
+    embedding_weight: float = 0.4,
     metadata_boost_max: float = 0.18,
     fusion_method: str = "rrf",
     rrf_k: int = 60,
@@ -92,11 +92,11 @@ def hybrid_search(
         rrf_constant = max(1, int(rrf_k))
         for result in scored:
             result["rrf_score"] = (
-                (1.0 / (rrf_constant + keyword_rank[result["id"]]))
+                (keyword_weight / (rrf_constant + keyword_rank[result["id"]]))
                 if result["id"] in keyword_rank
                 else 0.0
             ) + (
-                (1.0 / (rrf_constant + embedding_rank[result["id"]]))
+                (embedding_weight / (rrf_constant + embedding_rank[result["id"]]))
                 if result["id"] in embedding_rank
                 else 0.0
             )

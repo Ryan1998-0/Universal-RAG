@@ -57,7 +57,7 @@ V2_RAG_ARCHITECTURE = RagArchitecture(
         ),
         ArchitectureStep(
             name="Child Chunk BM25 + Dense",
-            purpose="使用 128 token 子 Chunk 產生精細的字面與語意候選。",
+            purpose="使用 256 token 子 Chunk 產生精細的字面與語意候選。",
             input="original question, filtered child chunks, embeddings",
             output="ranked child candidates",
         ),
@@ -87,7 +87,7 @@ V2_RAG_ARCHITECTURE = RagArchitecture(
         ),
         ArchitectureStep(
             name="Parent Chunk Expansion",
-            purpose="把命中的子 Chunk 展開成 512 token 父 Chunk，提供完整語境給模型。",
+            purpose="把命中的子 Chunk 展開成 1024 token 父 Chunk，提供完整語境給模型。",
             input="selected child candidates, parent mapping",
             output="parent evidence",
         ),

@@ -24,7 +24,7 @@
 
 | 項目 | 設定 |
 | --- | --- |
-| Chunk | 父 512 tokens、子 128 tokens |
+| Chunk | 父 1024 tokens、子 256 tokens |
 | Embedding | 可替換；`RAG_EMBEDDING_MODEL` 設定模型、`RAG_EMBEDDING_DIMENSIONS` 設定維度，預設為 `bugBug04S/legal-embed-modernbert-v2`（768 維） |
 | 混合檢索 | BM25 + Embedding，RRF `k=60` |
 | 候選與證據 | 前 100 候選，最終 Top 5 |

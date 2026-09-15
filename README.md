@@ -40,7 +40,7 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 ## 測試報告
 
-### MultiHop-RAG
+### MultiHop-RAG 新聞資料
 
 本次使用 MultiHop-RAG 全量資料集，包含 2,556 題測試題與 609 份新聞文件，用來比較無優化版與全優化版的證據檢索表現。
 
@@ -51,7 +51,7 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/multihop_rag_retrieval_full/retrieval-full-results.json)｜[彙整報告](evals/multihop_rag_retrieval_full/retrieval-full-report.md)｜[摘要](evals/multihop_rag_retrieval_full/retrieval-full-summary.json)
 
-### LegalBench-RAG
+### LegalBench-RAG 法律資料
 
 使用公開 held-out 710 題，依每題 `document_path` 限定文件範圍：
 
@@ -63,7 +63,7 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 公開 Ettin 數據來源：[LegalBenchRAG-Ettin-150M-Reranker 模型卡](https://huggingface.co/lxyuan/LegalBenchRAG-Ettin-150M-Reranker)。完整結果：[逐題結果](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-report.md)｜[摘要](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-summary.json)
 
-### EnterpriseRAG-Bench
+### EnterpriseRAG-Bench 企業資料
 
 使用完整 500 題核心題庫與 511,962 份企業文件；無優化版與優化版採相同 BM25 Top 30、父／子 Chunk 200／40、overlap 10 設定，差異為優化版增加父子 Chunk 證據展開。兩個版本均不進行問題改寫、Embedding 或重排。
 
@@ -76,7 +76,7 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/enterpriserag_bench_full/retrieval-results.json)｜[彙整報告](evals/enterpriserag_bench_full/retrieval-report.md)｜[摘要](evals/enterpriserag_bench_full/retrieval-summary.json)
 
-### Open RAG Benchmark
+### Open RAG Benchmark PDF資料
 
 使用 Vectara `open_ragbench` 完整 3,045 題、1,000 份 PDF 文件與 18,840 個 section；兩個版本均只使用 BM25、Top 30 與原始問題。無優化版直接檢索 200-token Chunk；優化版使用 40-token 子 Chunk（overlap 10）檢索後展開至 200-token 父 Chunk，不使用 Embedding、問題改寫或重排。
 
@@ -89,7 +89,7 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/open_rag_bench_full/retrieval-results.json)｜[彙整報告](evals/open_rag_bench_full/retrieval-report.md)｜[摘要](evals/open_rag_bench_full/retrieval-summary.json)
 
-### Fujitsu RAG Hard Benchmark
+### Fujitsu RAG Hard Benchmark 困難題型資料
 
 使用公開 benchmark 的 100 題與 34 份參考 PDF（1,794 頁），只使用 BM25，不啟用 Embedding、RRF、重排或回答模型。父／子 Chunk 設定為 1024／256。
 

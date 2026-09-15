@@ -186,5 +186,10 @@
         }
       ]
     }
+  ],
+  "report_notes": [
+    "本次執行完整 2,556 題與 609 份新聞文件，只執行證據檢索，不呼叫回答模型。",
+    "Gold evidence 僅在檢索完成後用於評分，不會放入查詢或檢索流程。",
+    "Character recall@5 以加權 Gold fact recall 對應。"
   ]
 }

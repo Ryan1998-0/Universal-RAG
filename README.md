@@ -42,32 +42,52 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 ### MultiHop-RAG 新聞資料
 
-本次使用 MultiHop-RAG 全量資料集，包含 2,556 題測試題與 609 份新聞文件，用來比較無優化版與全優化版的證據檢索表現。
+無優化版  chunk: 600/0<br>
+檢索: BM25 & Embedding 直接相加<br>
+證據: 直接取 TOP5
+
+全優化版  chunk: 1024/256<br>
+檢索: BM25 & Embedding RRF 加權(k=60)<br>
+證據: 簡單問題直接取 TOP5；複雜問題使用 Cross-Encoder Top 5；命中子 Chunk 展開父 Chunk 作為證據 Prompt
 
 | 版本 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
-| 無優化版 | 57.59% | 92.86% | 0.482 秒 |
-| 全優化版 | 94.40% | 99.96% | 2.970 秒 |
+| 無優化版 | 57.59% | 92.86% | 0.482 |
+| 全優化版 | 94.40% | 99.96% | 2.970 |
 
 完整結果：[逐題結果](evals/multihop_rag_retrieval_full/retrieval-full-results.json)｜[彙整報告](evals/multihop_rag_retrieval_full/retrieval-full-report.md)｜[摘要](evals/multihop_rag_retrieval_full/retrieval-full-summary.json)
 
 ### LegalBench-RAG 法律資料
 
-使用公開 held-out 710 題，依每題 `document_path` 限定文件範圍：
+無優化版  chunk: 600/0<br>
+檢索: BM25 & Embedding 直接相加<br>
+證據: 直接取 TOP5
+
+優化版  chunk: 1024/256<br>
+檢索: BM25 & Embedding RRF 加權(k=60)<br>
+證據: 簡單問題直接取 TOP5；複雜問題使用 Cross-Encoder Top 5；命中子 Chunk 展開父 Chunk 作為證據 Prompt
+
+公開 Ettin 版  chunk: 384/96<br>
+檢索: BM25 Top 32<br>
+證據: Ettin Cross-Encoder Top 5
 
 | 版本 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
-| 無優化版 | 15.16% | 37.46% | 0.004 秒 |
-| 優化版 | 81.55% | 93.10% | 0.954 秒 |
+| 無優化版 | 15.16% | 37.46% | 0.004 |
+| 優化版 | 81.55% | 93.10% | 0.954 |
 | 公開 Ettin 版 | 80.41% | 86.76% | — |
 
-公開 Ettin 數據來源：[LegalBenchRAG-Ettin-150M-Reranker 模型卡](https://huggingface.co/lxyuan/LegalBenchRAG-Ettin-150M-Reranker)。完整結果：[逐題結果](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-report.md)｜[摘要](https://github.com/Ryan1998-0/Universal-RAG/blob/main/evals/legalbench_public710_full/retrieval-summary.json)
+完整結果：[逐題結果](evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](evals/legalbench_public710_full/retrieval-report.md)｜[摘要](evals/legalbench_public710_full/retrieval-summary.json)
 
 ### EnterpriseRAG-Bench 企業資料
 
-使用完整 500 題核心題庫與 511,962 份企業文件；無優化版與優化版採相同 BM25 Top 30、父／子 Chunk 200／40、overlap 10 設定，差異為優化版增加父子 Chunk 證據展開。兩個版本均不進行問題改寫、Embedding 或重排。
+無優化版  chunk: 文件級<br>
+檢索: BM25<br>
+證據: 直接取 TOP30
 
-參數調整觀察：原先使用 512／128 Chunk，逐步縮小後召回率沒有明顯變化，因此採用較小的 Chunk；證據候選數則由 Top 5 逐步提高至 Top 30，作為目前測試設定。
+優化版  chunk: 200/40（子 Chunk overlap 10）<br>
+檢索: BM25<br>
+證據: 取 TOP30；命中子 Chunk 展開父 Chunk
 
 | 版本 | Document recall@30 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
@@ -78,29 +98,37 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 ### Open RAG Benchmark PDF資料
 
-使用 Vectara `open_ragbench` 完整 3,045 題、1,000 份 PDF 文件與 18,840 個 section；兩個版本均只使用 BM25、Top 30 與原始問題。無優化版直接檢索 200-token Chunk；優化版使用 40-token 子 Chunk（overlap 10）檢索後展開至 200-token 父 Chunk，不使用 Embedding、問題改寫或重排。
+無優化版  chunk: 200/0<br>
+檢索: BM25<br>
+證據: 直接取 TOP30
+
+優化版  chunk: 200/40（子 Chunk overlap 10）<br>
+檢索: BM25<br>
+證據: 取 TOP30；命中子 Chunk 展開父 Chunk
 
 | 版本 | Document recall@30 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
 | 無優化版 BM25 Top 30 | 99.15% | 96.32% | 0.075 |
 | 優化版 BM25 Top 30 | 98.33% | 93.40% | 0.246 |
 
-公開參考：[Linkence-Benchmarks full 結果](https://github.com/Linkence-AI/Linkence-Benchmarks/blob/main/README.md) 使用 hybrid hashed-TF-IDF＋`text-embedding-3-small`、Top 20；公開 relaxed document hit@20 為 99.77%、strict section hit@20 為 96.91%、p50 latency 為 0.419 秒，與本次 Top 30 平均耗時不直接等同。
-
 完整結果：[逐題結果](evals/open_rag_bench_full/retrieval-results.json)｜[彙整報告](evals/open_rag_bench_full/retrieval-report.md)｜[摘要](evals/open_rag_bench_full/retrieval-summary.json)
 
 ### Fujitsu RAG Hard Benchmark 困難題型資料
 
-使用公開 benchmark 的 100 題與 34 份參考 PDF（1,794 頁），只使用 BM25，不啟用 Embedding、RRF、重排或回答模型。父／子 Chunk 設定為 1024／256。
+無優化版  chunk: 1024/0<br>
+檢索: BM25<br>
+證據: 直接取 TOP30
+
+優化版  chunk: 1024/256（子 Chunk overlap 10）<br>
+檢索: BM25<br>
+證據: 取 TOP30；命中子 Chunk 展開父 Chunk
 
 | 版本 | Document recall@30 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
 | 無優化版 BM25 Top 30 | 79.50% | 79.00% | 0.020 |
 | 優化版 BM25 Top 30 | 79.50% | 78.00% | 0.024 |
 
-完整結果：[逐題結果](evals/fujitsu_rag_hard_full_1024_256/retrieval-results.json)｜[彙整報告](evals/fujitsu_rag_hard_full_1024_256/retrieval-report.md)｜[摘要](evals/fujitsu_rag_hard_full_1024_256/retrieval-summary.json)｜[評測程式](scripts/run_fujitsu_rag_hard_full_eval.py)
-
-上一輪 512／128 設定保留於[歷史報告](evals/fujitsu_rag_hard_full_512_128/retrieval-report.md)；更早的 200／40 設定保留於[歷史報告](evals/fujitsu_rag_hard_full/retrieval-report.md)。
+完整結果：[逐題結果](evals/fujitsu_rag_hard_full_1024_256/retrieval-results.json)｜[彙整報告](evals/fujitsu_rag_hard_full_1024_256/retrieval-report.md)｜[摘要](evals/fujitsu_rag_hard_full_1024_256/retrieval-summary.json)
 
 ## RAG 資料庫來源
 

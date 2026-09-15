@@ -72,5 +72,10 @@
         "average_question_seconds": 0.245796
       }
     }
+  ],
+  "report_notes": [
+    "本次執行完整 3,045 題、1,000 份 PDF 與 18,840 個 section，只執行證據檢索，不呼叫回答模型。",
+    "題目包含文字、表格與圖片來源；本次檢索未額外執行 OCR 或圖片 caption。",
+    "Linkence 公開數據使用 Top 20，提供 relaxed document hit@20、strict section hit@20 與 p50 latency；評估口徑與本次 Top 30 平均耗時不同，僅作外部參考。"
   ]
 }

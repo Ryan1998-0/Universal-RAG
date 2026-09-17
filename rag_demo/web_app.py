@@ -342,12 +342,18 @@ class RagRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path == "/api/health":
+            health_settings = RagConfig.from_env().normalized()
+            retrieval_label = (
+                "parent-child(1024/256)+bm25+dense+rrf+cross-encoder"
+                if not health_settings.complexity_routing_enabled
+                else "parent-child(1024/256)+bm25+dense+rrf+complexity-gated-cross-encoder"
+            )
             self._send_json({
                 "ok": True,
                 "model": DEFAULT_MODEL,
                 "profile": DEFAULT_PROFILE,
                 "static_root": str(STATIC_ROOT),
-                "retrieval": "parent-child(1024/256)+bm25+dense+rrf+complexity-gated-cross-encoder",
+                "retrieval": retrieval_label,
                 "document_upload": sorted(SUPPORTED_FORMATS),
                 "document_folders": True,
             })

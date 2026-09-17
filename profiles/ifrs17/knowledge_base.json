@@ -1,6 +1,0 @@
-{
-  "raw_dir": "./raw",
-  "index_dir": "./index",
-  "alias_path": "./entities/aliases.json",
-  "graph_path": "./graph/graph.json"
-}

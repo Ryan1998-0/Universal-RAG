@@ -43,7 +43,7 @@ class AdaptiveWebAppTest(unittest.TestCase):
         runtime = _runtime_config_payload()
 
         profile_ids = {profile["id"] for profile in runtime["profiles"]}
-        self.assertIn("ifrs17", profile_ids)
+        self.assertIn("labor_standards_act", profile_ids)
         self.assertEqual(runtime["models"][0]["id"], runtime["default_model"])
         self.assertGreater(runtime["retrieval"]["top_k"], 0)
 

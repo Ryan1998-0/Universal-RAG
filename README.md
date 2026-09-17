@@ -2,6 +2,8 @@
 
 本機優先的多格式 RAG 系統。文件、知識庫、Embedding、重排模型與回答模型都可以替換，適合用來做企業文件問答與檢索實驗。
 
+目前示範預設使用勞動部《勞動基準法》官方最新頁面（民國 113 年 7 月 31 日修正），資料源設定為 `RAG_PROFILE=labor_standards_act`；引擎程式以 GitHub `main` 分支為準。
+
 ## 核心功能
 
 - 多格式匯入：PDF、掃描 PDF、圖片、DOCX、TXT、Markdown、JSON，支援 OCR。

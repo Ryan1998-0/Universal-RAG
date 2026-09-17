@@ -21,6 +21,10 @@ profiles/ifrs17/raw/*.txt
 profiles/ifrs17/index/*
 !profiles/ifrs17/index/.gitkeep
 
+# Labor law embeddings are generated locally from the tracked official text.
+profiles/labor_standards_act/index/*
+!profiles/labor_standards_act/index/.gitkeep
+
 # Retrieval runs may include copyrighted content previews from local documents.
 evals/ifrs17_retrieval/runs/
 evals/graph_suitability/runs/

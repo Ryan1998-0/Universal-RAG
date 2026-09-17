@@ -2,6 +2,7 @@ name: universal-rag
 
 x-app-environment: &app-environment
   RAG_ENV: production
+  RAG_PROFILE: ${RAG_PROFILE:-labor_standards_act}
   RAG_SERVICE_VERSION: ${RAG_SERVICE_VERSION:-0.2.0}
   RAG_DATABASE_URL: postgresql+psycopg://rag:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/rag
   RAG_REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379/0

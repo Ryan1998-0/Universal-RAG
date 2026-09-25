@@ -17,6 +17,8 @@
 
 `POST /v1/ask` 回傳 `request_id`、`run_id`、`answer`、`citations`、`confidence`、`grounding_warnings`、`evidence_validation`、`model`、`retrieval` 與 `timings`。完整執行紀錄可由 `GET /v1/answer-runs/{run_id}` 讀取。
 
+`evidence_validation` 會逐句檢查來源 rank，並列出 `uncited_claims` 與 `unsupported_claims`。後者表示主張與所引用片段缺少可檢查的數值或詞彙支持；此確定性檢查無法取代人工或端到端語意評估。
+
 `timings` 保留既有摘要欄位（例如 `routeMs`、`retrieveMs`、`generateMs`、`totalMs`），並新增：
 
 ```json

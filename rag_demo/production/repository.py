@@ -1681,6 +1681,11 @@ def _safe_retrieval_record(raw_retrieval, raw_evidence_validation=None) -> dict:
                 for claim in raw_evidence_validation.get("uncited_claims") or []
                 if str(claim).strip()
             ][:20],
+            "unsupported_claims": [
+                str(claim)[:500]
+                for claim in raw_evidence_validation.get("unsupported_claims") or []
+                if str(claim).strip()
+            ][:20],
             "reason": str(raw_evidence_validation.get("reason") or ""),
         }
     return retrieval

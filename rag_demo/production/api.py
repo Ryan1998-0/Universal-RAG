@@ -1919,6 +1919,11 @@ def _public_result(
                 for claim in validation.get("uncited_claims") or []
                 if str(claim).strip()
             ][:20],
+            "unsupported_claims": [
+                str(claim)[:500]
+                for claim in validation.get("unsupported_claims") or []
+                if str(claim).strip()
+            ][:20],
             "reason": str(validation.get("reason") or ""),
         }
     return {

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal
 from typing import Any, Sequence
 
 
@@ -18,6 +19,20 @@ _SOURCE_LINE = re.compile(
 _CITATIONS_AFTER_PUNCTUATION = re.compile(
     r"([。！？；])\s*((?:\[\d+\]\s*)+)"
 )
+_REFUSAL_SOURCE_FOOTER = re.compile(
+    r"\s+(?:來源|資料來源|引用|參考資料)\s*[：:]\s*"
+    r"(?:\[\d+\]\s*[,，、]?\s*)+$"
+)
+_NUMBER_PATTERN = re.compile(
+    r"(?:\d+(?:\.\d+)?|[零〇一二兩三四五六七八九十百千萬億]+?)\s*"
+    r"(?:萬元|日|天|年|月|小時|分鐘|秒|%|％|元|分之一)"
+)
+_CHINESE_DIGITS = {
+    "零": 0, "〇": 0, "一": 1, "二": 2, "兩": 2, "三": 3,
+    "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9,
+}
+_CHINESE_UNITS = {"十": 10, "百": 100, "千": 1000, "萬": 10000, "億": 100000000}
+_MINIMUM_CLAIM_OVERLAP = 0.25
 
 
 def validate_answer_evidence(
@@ -28,18 +43,21 @@ def validate_answer_evidence(
 
     This deterministic post-generation check complements the upstream
     retrieval Evidence Gate. It rejects mixed refusals, fabricated citation
-    ranks and factual sentences without their own citation. Citation presence
-    does not by itself prove semantic support from the cited passage.
+    ranks and factual sentences without their own citation. It also checks
+    numerical details and minimum lexical support against the cited passages.
+    These deterministic checks do not prove semantic entailment.
     """
 
     text = str(answer or "").strip()
-    if any(re.fullmatch(re.escape(marker) + r"[。.!！]?", text) for marker in REFUSAL_MARKERS):
+    refusal_text = normalized_refusal_answer(text)
+    if refusal_text is not None:
         return {
             "sufficient": True,
             "status": "refused",
             "valid_citations": [],
             "invalid_citations": [],
             "uncited_claims": [],
+            "unsupported_claims": [],
             "reason": "模型依證據不足規則拒答。",
         }
 
@@ -56,6 +74,9 @@ def validate_answer_evidence(
 
     claim_segments, footer_citations = _answer_segments(text)
     uncited_claims = _uncited_claims(claim_segments, footer_citations)
+    unsupported_claims = _unsupported_claims(
+        claim_segments, footer_citations, context_by_rank
+    )
     if any(marker in text for marker in REFUSAL_MARKERS):
         reason = "拒答語句混有其他內容；只接受完整拒答。"
     elif not claim_segments:
@@ -66,10 +87,12 @@ def validate_answer_evidence(
         reason = "回答包含不在本次檢索結果中的來源標記。"
     elif uncited_claims:
         reason = "回答有未逐句引用的主張。"
+    elif unsupported_claims:
+        reason = "回答的主張與所引用片段缺少可檢查的直接支持。"
     else:
-        reason = "通過逐句來源標記與證據範圍檢查。"
+        reason = "通過逐句來源、數值與詞彙支持檢查。"
 
-    sufficient = bool(claim_segments) and bool(valid) and not invalid and not uncited_claims and not any(
+    sufficient = bool(claim_segments) and bool(valid) and not invalid and not uncited_claims and not unsupported_claims and not any(
         marker in text for marker in REFUSAL_MARKERS
     )
 
@@ -79,8 +102,25 @@ def validate_answer_evidence(
         "valid_citations": valid,
         "invalid_citations": invalid,
         "uncited_claims": uncited_claims,
+        "unsupported_claims": unsupported_claims,
         "reason": reason,
     }
+
+
+def normalized_refusal_answer(text: str) -> str | None:
+    """Accept a refusal plus one missing-evidence explanation, without citations."""
+
+    clean = _REFUSAL_SOURCE_FOOTER.sub("", str(text or "").strip()).strip()
+    for marker in REFUSAL_MARKERS:
+        match = re.fullmatch(
+            re.escape(marker)
+            + r"[。.!！]?"
+            + r"(?:\s*(缺少(?:的(?:是|證據|資料|資訊))?[：:]?\s*[^。！？；\r\n]{1,300}[。.!！]?))?",
+            clean,
+        )
+        if match:
+            return f"{marker}。" + (match.group(1) or "")
+    return None
 
 
 def _answer_segments(text: str) -> tuple[list[str], list[str]]:
@@ -117,3 +157,82 @@ def _uncited_claims(segments: list[str], footer_citations: list[str]) -> list[st
         if not re.search(r"\[\d+\]", clean):
             claims.append(clean[:500])
     return claims[:20]
+
+
+def _unsupported_claims(
+    segments: list[str],
+    footer_citations: list[str],
+    context_by_rank: dict[int, dict[str, Any]],
+) -> list[str]:
+    unsupported = []
+    for segment in segments:
+        ranks = [int(rank) for rank in re.findall(r"\[(\d+)\]", segment)]
+        if not ranks and len(segments) == 1:
+            ranks = [int(rank[1:-1]) for rank in footer_citations]
+        if not ranks:
+            continue  # Reported separately as an uncited claim.
+        cited_text = "\n".join(
+            str(context_by_rank[rank].get("content") or "")
+            for rank in ranks if rank in context_by_rank
+        )
+        claim = re.sub(r"\[\d+\]", "", segment).strip()
+        if not cited_text or not _has_minimum_evidence_overlap(claim, cited_text):
+            unsupported.append(claim[:500])
+    return unsupported[:20]
+
+
+def _has_minimum_evidence_overlap(claim: str, cited_text: str) -> bool:
+    claim_numbers = {_normalize_number_token(value) for value in _NUMBER_PATTERN.findall(claim)}
+    source_numbers = {_normalize_number_token(value) for value in _NUMBER_PATTERN.findall(cited_text)}
+    if not claim_numbers.issubset(source_numbers):
+        return False
+    normalized_claim = _normalize_text(claim)
+    normalized_source = _normalize_text(cited_text)
+    if normalized_claim and normalized_claim in normalized_source:
+        return True
+    claim_grams = _character_grams(normalized_claim)
+    source_grams = _character_grams(normalized_source)
+    return bool(claim_grams) and len(claim_grams & source_grams) / len(claim_grams) >= _MINIMUM_CLAIM_OVERLAP
+
+
+def _normalize_text(value: str) -> str:
+    return re.sub(r"[^\w]+", "", value).casefold()
+
+
+def _character_grams(text: str) -> set[str]:
+    return {
+        text[index:index + size]
+        for size in (2, 3)
+        for index in range(max(0, len(text) - size + 1))
+    }
+
+
+def _normalize_number_token(token: str) -> tuple[str, str]:
+    clean = re.sub(r"\s+", "", token)
+    unit_match = re.search(r"(萬元|日|天|年|月|小時|分鐘|秒|%|％|元|分之一)$", clean)
+    unit = unit_match.group(1) if unit_match else ""
+    number = clean[:-len(unit)] if unit else clean
+    if re.fullmatch(r"\d+(?:\.\d+)?", number):
+        value = Decimal(number)
+        if unit == "萬元":
+            value *= 10_000
+        return format(value.normalize(), "f"), "元" if unit == "萬元" else unit.replace("％", "%")
+    if not number or not all(char in _CHINESE_DIGITS or char in _CHINESE_UNITS for char in number):
+        return clean, unit
+    if not any(char in _CHINESE_UNITS for char in number):
+        value = int("".join(str(_CHINESE_DIGITS[char]) for char in number))
+        return str(value * (10_000 if unit == "萬元" else 1)), "元" if unit == "萬元" else unit
+    total = section = current = 0
+    for char in number:
+        if char in _CHINESE_DIGITS:
+            current = _CHINESE_DIGITS[char]
+        else:
+            multiplier = _CHINESE_UNITS[char]
+            if multiplier >= 10_000:
+                total += (section + current) * multiplier
+                section = current = 0
+            else:
+                section += (current or 1) * multiplier
+                current = 0
+    value = total + section + current
+    return str(value * (10_000 if unit == "萬元" else 1)), "元" if unit == "萬元" else unit

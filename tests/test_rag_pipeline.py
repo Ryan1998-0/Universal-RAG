@@ -183,14 +183,31 @@ class RagPipelineContractTests(unittest.TestCase):
         contexts = [{"rank": 1, "content": "正確證據"}]
 
         refused = enforce_grounded_answer_contract("模型直接猜了一個答案。", contexts)
-        accepted = enforce_grounded_answer_contract("依資料可確認。來源：[1]", contexts)
+        accepted = enforce_grounded_answer_contract("正確證據。來源：[1]", contexts)
 
         self.assertIn("沒有通過來源約束", refused)
-        self.assertEqual(accepted, "依資料可確認。來源：[1]")
+        self.assertEqual(accepted, "正確證據。來源：[1]")
 
     def test_grounded_answer_mixed_refusal_fails_closed(self):
         contexts = [{"rank": 1, "content": "員工請假規則。"}]
         answer = "資料不足。不過所有員工都可領一百萬元。來源：[1]"
+
+        refused = enforce_grounded_answer_contract(answer, contexts)
+
+        self.assertIn("沒有通過來源約束", refused)
+        self.assertNotIn("一百萬元", refused)
+
+    def test_grounded_refusal_keeps_missing_reason_without_source_footer(self):
+        contexts = [{"rank": 1, "content": "員工請假規則。"}]
+        answer = "根據目前檢索資料無法確認。缺少的是獎金扣發方式。\n來源：[1]"
+
+        refused = enforce_grounded_answer_contract(answer, contexts)
+
+        self.assertEqual(refused, "根據目前檢索資料無法確認。缺少的是獎金扣發方式。")
+
+    def test_grounded_answer_with_unrelated_valid_source_fails_closed(self):
+        contexts = [{"rank": 1, "content": "員工請假規則。"}]
+        answer = "所有員工都可領一百萬元。來源：[1]"
 
         refused = enforce_grounded_answer_contract(answer, contexts)
 

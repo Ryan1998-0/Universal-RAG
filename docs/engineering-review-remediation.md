@@ -8,7 +8,7 @@ until the relevant runtime behavior or answer quality has been checked.
 | Order | Finding | Status | Evidence / next check |
 | --- | --- | --- | --- |
 | 1 | Non-root container log directory | Code changed | Image now creates `/var/lib/rag/logs` for UID 10001. Existing observability unit tests pass; container smoke is in CI and awaits a CI run. |
-| 2 | Answer evidence validation | Pending | Add regressions for mixed refusal and unsupported claims before tightening the validator. |
+| 2 | Answer evidence validation | In progress | Mixed refusals and multi-sentence answers with only a footer citation now fail closed. Targeted tests pass. Citation-to-passage support still needs a measured check. |
 | 3 | Production query variants and evidence query | Pending | Trace and align production retrieval with its public contract. |
 | 4 | Production `/api/ask` end-to-end release gate | Pending | Define a representative, reproducible gate. |
 | 5 | Benchmark interpretation and provenance | Pending | Record exact scope, metric definitions, model versions and latency distribution. |

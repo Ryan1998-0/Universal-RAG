@@ -188,6 +188,15 @@ class RagPipelineContractTests(unittest.TestCase):
         self.assertIn("沒有通過來源約束", refused)
         self.assertEqual(accepted, "依資料可確認。來源：[1]")
 
+    def test_grounded_answer_mixed_refusal_fails_closed(self):
+        contexts = [{"rank": 1, "content": "員工請假規則。"}]
+        answer = "資料不足。不過所有員工都可領一百萬元。來源：[1]"
+
+        refused = enforce_grounded_answer_contract(answer, contexts)
+
+        self.assertIn("沒有通過來源約束", refused)
+        self.assertNotIn("一百萬元", refused)
+
     def test_citations_follow_answer_markers_instead_of_first_four_contexts(self):
         contexts = [
             {

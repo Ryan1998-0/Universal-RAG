@@ -28,6 +28,29 @@ class EvidenceValidationTests(unittest.TestCase):
         self.assertEqual(result["status"], "refused")
         self.assertTrue(result["sufficient"])
 
+    def test_rejects_refusal_mixed_with_factual_claim(self):
+        answer = "資料不足。不過所有員工都可領一百萬元。來源：[1]"
+        result = validate_answer_evidence(answer, self.contexts)
+        self.assertEqual(result["status"], "failed")
+        self.assertFalse(result["sufficient"])
+
+    def test_rejects_multiple_claims_with_only_footer_citation(self):
+        answer = "第一項有規定。第二項也有規定。來源：[1]"
+        result = validate_answer_evidence(answer, self.contexts)
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["uncited_claims"], ["第一項有規定。", "第二項也有規定。"])
+
+    def test_accepts_each_sentence_cited_after_punctuation(self):
+        answer = "第一項有規定。[1] 第二項也有規定。[2] 來源：[1], [2]"
+        result = validate_answer_evidence(answer, self.contexts)
+        self.assertTrue(result["sufficient"])
+        self.assertEqual(result["uncited_claims"], [])
+
+    def test_rejects_source_footer_without_answer(self):
+        result = validate_answer_evidence("來源：[1]", self.contexts)
+        self.assertEqual(result["status"], "failed")
+        self.assertFalse(result["sufficient"])
+
 
 if __name__ == "__main__":
     unittest.main()

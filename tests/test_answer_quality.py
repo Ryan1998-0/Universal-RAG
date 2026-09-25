@@ -40,6 +40,16 @@ class AnswerQualityTests(unittest.TestCase):
         self.assertFalse(result["answer_in_retrieved_chunks"]["passed"])
         self.assertTrue(result["hallucination"]["hallucination_free"])
 
+    def test_mixed_refusal_still_checks_unsupported_claims(self):
+        result = evaluate_answer_quality(
+            question="薪資？",
+            answer="資料不足。不過所有員工都可領一百萬元。來源：[1]",
+            contexts=[{"rank": 1, "content": "員工請假規則。"}],
+        )
+        self.assertFalse(result["refused"])
+        self.assertFalse(result["answer_in_retrieved_chunks"]["passed"])
+        self.assertTrue(result["hallucination"]["detected"])
+
     def test_cited_comparative_inference_is_supported_by_expected_facts(self):
         result = evaluate_answer_quality(
             question="兩版本相同嗎？",

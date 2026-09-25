@@ -1289,6 +1289,14 @@ class ProductionApiTests(unittest.TestCase):
 
 
 class ProductionSettingsTests(unittest.TestCase):
+    def test_production_rejects_flag_only_prompt_injection_policy(self):
+        with self.assertRaisesRegex(ValidationError, "production requires RAG_PROMPT_INJECTION_POLICY=quarantine"):
+            ProductionSettings(
+                RAG_ENV="production",
+                RAG_DATABASE_URL="postgresql+psycopg://user:pass@db/rag",
+                RAG_PROMPT_INJECTION_POLICY="flag",
+            )
+
     def test_production_rejects_development_auth(self):
         with self.assertRaises(ValidationError):
             ProductionSettings(

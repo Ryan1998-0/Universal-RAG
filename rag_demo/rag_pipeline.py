@@ -1,4 +1,5 @@
 import hashlib
+import html
 import os
 import re
 from dataclasses import dataclass
@@ -715,11 +716,11 @@ def build_grounded_answer_request(
     context_text = "\n\n".join(
         "\n".join(
             [
-                f'<evidence rank="{context["rank"]}">',
-                f'標題：{context["title"]}',
-                f'頁碼：{context["page"]}',
+                f'<evidence rank="{html.escape(str(context["rank"]), quote=True)}">',
+                f'標題：{html.escape(str(context["title"]), quote=True)}',
+                f'頁碼：{html.escape(str(context["page"]), quote=True)}',
                 "內容：",
-                context["content"],
+                html.escape(str(context["content"]), quote=True),
                 "</evidence>",
             ]
         )

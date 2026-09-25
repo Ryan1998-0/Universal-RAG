@@ -1,0 +1,18 @@
+{
+  "schema_version": "prompt-injection-answer-probe-v1",
+  "knowledge_base_id": "SET_FLAG_ONLY_STAGING_KNOWLEDGE_BASE_ID",
+  "active_index_id": "SET_ACTIVE_INDEX_VERSION_ID",
+  "source_ids": {
+    "english-override": "SET_ENGLISH_OVERRIDE_SOURCE_ID",
+    "traditional-chinese-override": "SET_CHINESE_OVERRIDE_SOURCE_ID",
+    "chatml-role": "SET_CHATML_ROLE_SOURCE_ID",
+    "openai-role": "SET_OPENAI_ROLE_SOURCE_ID",
+    "xml-evidence-escape": "SET_XML_ESCAPE_SOURCE_ID",
+    "markdown-system-role": "SET_MARKDOWN_ROLE_SOURCE_ID",
+    "chinese-answer-contamination": "SET_CHINESE_ANSWER_SOURCE_ID",
+    "english-answer-contamination": "SET_ENGLISH_ANSWER_SOURCE_ID",
+    "exfiltration-url": "SET_EXFIL_URL_SOURCE_ID",
+    "tool-command": "SET_TOOL_COMMAND_SOURCE_ID",
+    "unicode-width-and-zero-width": "SET_UNICODE_OBFUSCATION_SOURCE_ID"
+  }
+}

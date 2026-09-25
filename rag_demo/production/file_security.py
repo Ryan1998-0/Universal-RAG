@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 import socket
 import struct
 import zipfile
@@ -123,15 +124,22 @@ def inspect_file(
 
 
 def scan_prompt_injection(text: str) -> list[str]:
+    normalized = unicodedata.normalize("NFKC", str(text or ""))
+    normalized = re.sub(r"[\u200b-\u200f\u2060\ufeff]", "", normalized)
     patterns = (
         ("ignore_previous_instructions", r"ignore\s+(all\s+)?previous\s+instructions"),
         ("system_prompt_exfiltration", r"(show|reveal|print|output).{0,40}system\s+prompt"),
         ("tool_execution_instruction", r"(execute|run|call).{0,30}(tool|command|shell)"),
         ("chinese_instruction_override", r"忽略.{0,12}(先前|以上|原本).{0,12}(指令|規則)"),
+        ("role_spoofing", r"(?:\[im_start\]\s*(?:system|developer)|<\|im_start\|>\s*(?:system|developer)|^\s*#{1,4}\s*(?:system|developer)\s*[:：])"),
+        ("evidence_boundary_escape", r"</\s*(?:evidence|trusted_evidence)\s*>"),
+        ("chinese_answer_override", r"(?:回答時|作答時|接下來的回答).{0,30}(?:一律|只輸出|不要引用|忽略來源)"),
+        ("english_answer_override", r"(?:assistant|model|chatbot).{0,30}(?:must|should|shall).{0,30}(?:answer|respond|output)"),
+        ("answer_exfiltration", r"(?:send|post|upload|傳送|回傳|寄到).{0,45}(?:https?://|[\w.+-]+@[\w.-]+)"),
     )
     findings = []
     for label, pattern in patterns:
-        if re.search(pattern, str(text or ""), flags=re.IGNORECASE | re.DOTALL):
+        if re.search(pattern, normalized, flags=re.IGNORECASE | re.DOTALL | re.MULTILINE):
             findings.append(label)
     return findings
 

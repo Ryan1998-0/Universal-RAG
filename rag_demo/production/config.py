@@ -189,6 +189,8 @@ class ProductionSettings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_environment_security(self):
+        if self.environment == "production" and self.prompt_injection_policy == "flag":
+            raise ValueError("production requires RAG_PROMPT_INJECTION_POLICY=quarantine")
         if self.environment in {"staging", "production"}:
             if self.auth_mode != "oidc":
                 raise ValueError("staging and production require RAG_AUTH_MODE=oidc")

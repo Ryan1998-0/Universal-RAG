@@ -1,5 +1,6 @@
 import unittest
 
+from rag_demo.config import RagConfig
 from rag_demo.production.retriever import ProductionHybridRetriever
 from rag_demo.production.vector_repository import DenseSearchHit
 from rag_demo.rag_pipeline import normalize_contexts
@@ -54,6 +55,79 @@ def _payload(chunk_id, content):
 
 
 class ProductionHybridRetrieverTests(unittest.TestCase):
+    def test_planned_variants_and_evidence_query_are_retrieved_with_same_scope(self):
+        class QueryRuntime(FakeRuntime):
+            def __init__(self):
+                super().__init__()
+                self.queries = []
+
+            def embed_query(self, query):
+                self.queries.append(query)
+                return query
+
+            def sparse_query(self, query):
+                return query
+
+        class QueryRepository(FakeVectorRepository):
+            def search(self, **kwargs):
+                self.calls.append(("dense", kwargs))
+                query = kwargs["query_vector"]
+                chunk_id = "focus" if query == "focused evidence" else "common"
+                return [DenseSearchHit(chunk_id, 0.8, _payload(chunk_id, query))]
+
+            def search_sparse(self, **kwargs):
+                self.calls.append(("sparse", kwargs))
+                query = kwargs["query_sparse_vector"]
+                chunk_id = "focus" if query == "focused evidence" else "common"
+                return [DenseSearchHit(chunk_id, 4.0, _payload(chunk_id, query))]
+
+        vectors = QueryRepository()
+        runtime = QueryRuntime()
+        retriever = ProductionHybridRetriever(
+            vectors, runtime, settings=RagConfig(multi_query_max_variants=4)
+        )
+        scope = RetrievalScope("tenant-a", "kb-a", "index-1")
+
+        result = retriever.retrieve(
+            question="main question",
+            retrieval_query="primary",
+            query_variants=("primary", "alternate"),
+            evidence_query="focused evidence",
+            source_ids=["source-1"],
+            top_k=2,
+            candidate_k=8,
+            retrieval_scope=scope,
+        )
+
+        self.assertEqual(
+            result["retrievalQueries"],
+            ["main question primary", "primary", "alternate", "focused evidence"],
+        )
+        self.assertEqual(runtime.queries, result["retrievalQueries"])
+        self.assertEqual(result["diagnostics"]["perQueryCandidateK"], 2)
+        self.assertEqual(len(vectors.calls), 8)
+        self.assertTrue(all(kwargs["scope"] is scope for _, kwargs in vectors.calls))
+        self.assertTrue(all(kwargs["source_ids"] == ["source-1"] for _, kwargs in vectors.calls))
+        self.assertTrue(all(kwargs["top_k"] == 2 for _, kwargs in vectors.calls))
+        self.assertIn("focus", [context["id"] for context in result["contexts"]])
+
+    def test_multi_query_can_be_disabled(self):
+        vectors = FakeVectorRepository()
+        runtime = FakeRuntime()
+        retriever = ProductionHybridRetriever(
+            vectors, runtime, settings=RagConfig(multi_query_enabled=False)
+        )
+        result = retriever.retrieve(
+            question="main question",
+            retrieval_query="primary",
+            query_variants=("alternate",),
+            evidence_query="focused evidence",
+            retrieval_scope=RetrievalScope("tenant-a", "kb-a", "index-1"),
+        )
+
+        self.assertEqual(result["retrievalQueries"], ["main question primary"])
+        self.assertEqual(len(vectors.calls), 2)
+
     def test_hybrid_branches_share_scope_and_cross_encoder_sets_final_order(self):
         vectors = FakeVectorRepository()
         runtime = FakeRuntime()

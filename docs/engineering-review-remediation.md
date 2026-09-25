@@ -9,7 +9,7 @@ until the relevant runtime behavior or answer quality has been checked.
 | --- | --- | --- | --- |
 | 1 | Non-root container log directory | Code changed | Image now creates `/var/lib/rag/logs` for UID 10001. Existing observability unit tests pass; container smoke is in CI and awaits a CI run. |
 | 2 | Answer evidence validation | Code changed | Mixed refusals, uncited sentences, unrelated cited passages and numbers absent from cited passages now fail closed. The historical 10-case leave-rules artifact retains 5 accepted answers and 3 valid refusals; 2 malformed answers fail. This deterministic lexical check cannot prove semantic entailment, so item 4 must measure real answer support. |
-| 3 | Production query variants and evidence query | Pending | Trace and align production retrieval with its public contract. |
+| 3 | Production query variants and evidence query | Code changed | Production now runs bounded Dense/Sparse searches for distinct planned variants and the focused evidence query, then fuses their ranks. Scope and source filters are reused on every search. The focused retriever tests pass; live corpus recall/latency still need item 4's gate. |
 | 4 | Production `/api/ask` end-to-end release gate | Pending | Define a representative, reproducible gate. |
 | 5 | Benchmark interpretation and provenance | Pending | Record exact scope, metric definitions, model versions and latency distribution. |
 | 6 | Embedding defaults across README and production | Pending | Clarify effective profiles and prevent incompatible index/query configuration. |

@@ -47,6 +47,7 @@ chmod 600 .env.production
 4. 令 `RAG_CORS_ORIGINS` 與 `https://<APP_DOMAIN>` 完全一致。
 5. 填入容器可連線的 `RAG_OLLAMA_URL`。
 6. 確認 Embedding 維度與選用模型一致；正式索引建立後不要直接修改維度。
+7. `RAG_MULTI_QUERY_ENABLED` 預設開啟，`RAG_MULTI_QUERY_MAX_VARIANTS` 預設為 4。每個查詢變體都會執行 Dense 與 Sparse 檢索；上線前需比較召回與延遲。
 
 檢查設定與建置：
 

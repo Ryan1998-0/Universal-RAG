@@ -33,6 +33,22 @@ _CHINESE_DIGITS = {
 }
 _CHINESE_UNITS = {"十": 10, "百": 100, "千": 1000, "萬": 10000, "億": 100000000}
 _MINIMUM_CLAIM_OVERLAP = 0.25
+_POLARITY_CLAUSE_SPLIT = re.compile(
+    r"[。！？；，、,\r\n]+|(?<=[.!?;])\s+|"
+    r"但是|然而|不過|但|惟|(?i:\b(?:but|however|except)\b)"
+)
+_NEGATIVE_PERMISSION = re.compile(
+    r"(?i:\b(?:may\s+not|may\s+be\s+(?:prohibited|forbidden)|"
+    r"can\s+not|cannot|can't|must\s+not|shall\s+not|"
+    r"not\s+(?:be\s+)?allowed|not\s+(?:be\s+)?permitted|"
+    r"prohibited|forbidden|prohibits?|forbids?)\b)"
+    r"|不得以|不可以|不允許|不准許|不得|不能|不可|不准|禁止|無權"
+)
+_POSITIVE_PERMISSION = re.compile(
+    r"(?i:\b(?:may|can|allowed|permitted|authorized|authorised|entitled)\b)"
+    r"|可以|准許|允許|准予|有權|可"
+)
+_MINIMUM_POLARITY_TAIL_OVERLAP = 0.60
 
 
 def validate_answer_evidence(
@@ -44,8 +60,9 @@ def validate_answer_evidence(
     This deterministic post-generation check complements the upstream
     retrieval Evidence Gate. It rejects mixed refusals, fabricated citation
     ranks and factual sentences without their own citation. It also checks
-    numerical details and minimum lexical support against the cited passages.
-    These deterministic checks do not prove semantic entailment.
+    numerical details, minimum lexical support, and clear permission-polarity
+    conflicts against the cited passages. These deterministic checks do not
+    prove semantic entailment.
     """
 
     text = str(answer or "").strip()
@@ -176,7 +193,11 @@ def _unsupported_claims(
             for rank in ranks if rank in context_by_rank
         )
         claim = re.sub(r"\[\d+\]", "", segment).strip()
-        if not cited_text or not _has_minimum_evidence_overlap(claim, cited_text):
+        if (
+            not cited_text
+            or not _has_minimum_evidence_overlap(claim, cited_text)
+            or _has_clear_polarity_conflict(claim, cited_text)
+        ):
             unsupported.append(claim[:500])
     return unsupported[:20]
 
@@ -193,6 +214,53 @@ def _has_minimum_evidence_overlap(claim: str, cited_text: str) -> bool:
     claim_grams = _character_grams(normalized_claim)
     source_grams = _character_grams(normalized_source)
     return bool(claim_grams) and len(claim_grams & source_grams) / len(claim_grams) >= _MINIMUM_CLAIM_OVERLAP
+
+
+def _has_clear_polarity_conflict(claim: str, cited_text: str) -> bool:
+    """Reject a clearly matching permission claim with the opposite source polarity.
+
+    This catches direct allow/deny inversions; it is not a general semantic
+    entailment check. Clause splitting keeps separate permission and limit
+    statements from being compared as if they described the same action.
+    """
+
+    claim_phrases = _permission_phrases(claim)
+    source_phrases = _permission_phrases(cited_text)
+    for claim_polarity, claim_tail in claim_phrases:
+        claim_grams = _character_grams(claim_tail)
+        if not claim_grams:
+            continue
+        matching_polarities = set()
+        for source_polarity, source_tail in source_phrases:
+            source_grams = _character_grams(source_tail)
+            if not source_grams:
+                continue
+            overlap = len(claim_grams & source_grams) / len(claim_grams)
+            if overlap >= _MINIMUM_POLARITY_TAIL_OVERLAP:
+                matching_polarities.add(source_polarity)
+        opposite = "negative" if claim_polarity == "positive" else "positive"
+        if opposite in matching_polarities and claim_polarity not in matching_polarities:
+            return True
+    return False
+
+
+def _permission_phrases(text: str) -> list[tuple[str, str]]:
+    phrases = []
+    for clause in _POLARITY_CLAUSE_SPLIT.split(str(text or "")):
+        if not clause.strip():
+            continue
+        masked = list(clause)
+        for match in _NEGATIVE_PERMISSION.finditer(clause):
+            tail = _normalize_text(clause[match.end():])
+            if tail and _character_grams(tail):
+                phrases.append(("negative", tail))
+            masked[match.start():match.end()] = " " * (match.end() - match.start())
+        positive_source = "".join(masked)
+        for match in _POSITIVE_PERMISSION.finditer(positive_source):
+            tail = _normalize_text(clause[match.end():])
+            if tail and _character_grams(tail):
+                phrases.append(("positive", tail))
+    return phrases
 
 
 def _normalize_text(value: str) -> str:

@@ -177,6 +177,7 @@ class SqlAlchemyIndexingRepository:
                 version_number=next_number,
                 status="building",
                 embedding_model=settings.embedding_model,
+                sparse_embedding_model=settings.sparse_embedding_model,
                 embedding_dimensions=settings.embedding_dimensions,
                 reranker_model=settings.reranker_model,
                 chunk_schema_version=settings.chunk_schema_version,

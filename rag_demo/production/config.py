@@ -9,6 +9,7 @@ Environment = Literal["development", "test", "staging", "production"]
 AuthMode = Literal["dev_hs256", "oidc"]
 UploadMode = Literal["proxy", "presigned"]
 PromptInjectionPolicy = Literal["quarantine", "flag"]
+DEFAULT_SPARSE_EMBEDDING_MODEL = "Qdrant/bm25"
 
 
 class ProductionSettings(BaseSettings):
@@ -47,7 +48,7 @@ class ProductionSettings(BaseSettings):
         alias="RAG_EMBEDDING_DIMENSIONS",
     )
     sparse_embedding_model: str = Field(
-        default="Qdrant/bm25",
+        default=DEFAULT_SPARSE_EMBEDDING_MODEL,
         alias="RAG_SPARSE_EMBEDDING_MODEL",
     )
     reranker_model: str = Field(

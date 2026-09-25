@@ -18,6 +18,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
+from rag_demo.production.config import DEFAULT_SPARSE_EMBEDDING_MODEL
+
 
 def new_id() -> str:
     return str(uuid4())
@@ -156,6 +158,9 @@ class IndexVersionRecord(Base):
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="building")
     embedding_model: Mapped[str] = mapped_column(String(255), nullable=False)
+    sparse_embedding_model: Mapped[str] = mapped_column(
+        String(255), nullable=False, default=DEFAULT_SPARSE_EMBEDDING_MODEL
+    )
     embedding_dimensions: Mapped[int] = mapped_column(Integer, nullable=False)
     reranker_model: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     chunk_schema_version: Mapped[str] = mapped_column(String(100), nullable=False)

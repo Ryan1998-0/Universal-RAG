@@ -1323,6 +1323,8 @@ def create_app(
 
         if authorized.active_index_version_id and any((
             authorized.embedding_model != resolved_settings.embedding_model,
+            authorized.sparse_embedding_model
+            != resolved_settings.sparse_embedding_model,
             authorized.embedding_dimensions != resolved_settings.embedding_dimensions,
             authorized.chunk_schema_version != resolved_settings.chunk_schema_version,
             authorized.qdrant_collection != resolved_settings.qdrant_collection,

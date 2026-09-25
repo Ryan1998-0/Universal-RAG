@@ -56,6 +56,10 @@ class AuthorizedKnowledgeBase:
     active_index_version_id: Optional[str]
     activation_generation: int
     can_write: bool
+    embedding_model: Optional[str] = None
+    embedding_dimensions: Optional[int] = None
+    chunk_schema_version: Optional[str] = None
+    qdrant_collection: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -878,6 +882,10 @@ class SqlAlchemyTenantRepository:
                 active_index_version_id=knowledge_base.active_index_version_id,
                 activation_generation=knowledge_base.activation_generation,
                 can_write=can_write,
+                embedding_model=active_index.embedding_model if knowledge_base.active_index_version_id else None,
+                embedding_dimensions=active_index.embedding_dimensions if knowledge_base.active_index_version_id else None,
+                chunk_schema_version=active_index.chunk_schema_version if knowledge_base.active_index_version_id else None,
+                qdrant_collection=active_index.qdrant_collection if knowledge_base.active_index_version_id else None,
             )
 
     def reserve_upload(

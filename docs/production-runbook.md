@@ -46,7 +46,7 @@ chmod 600 .env.production
 3. 填入 OIDC Issuer、Audience、JWKS、Authorization、Token URL 與 Client。
 4. 令 `RAG_CORS_ORIGINS` 與 `https://<APP_DOMAIN>` 完全一致。
 5. 填入容器可連線的 `RAG_OLLAMA_URL`。
-6. 確認 Embedding 維度與選用模型一致；正式索引建立後不要直接修改維度。
+6. 預設 Embedding 為 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`（384 維），與 `compose.yaml`、`.env.production.example` 及正式服務程式一致。更換模型前，確認 FastEmbed 能載入、實際維度正確，並為新設定建立索引；不可直接修改維度後沿用舊索引。
 7. `RAG_MULTI_QUERY_ENABLED` 預設開啟，`RAG_MULTI_QUERY_MAX_VARIANTS` 預設為 4。每個查詢變體都會執行 Dense 與 Sparse 檢索；上線前需比較召回與延遲。
 
 檢查設定與建置：
@@ -59,6 +59,8 @@ docker compose --env-file .env.production ps
 ```
 
 `migrate` 會先執行 Alembic，`bootstrap` 會建立 Object Storage Bucket 與 Qdrant Collection；兩者成功後 API、Worker、Beat 與 Caddy 才會啟動。
+
+若既有 Qdrant collection 的 Dense 向量維度與設定不同，`bootstrap` 會失敗，避免在不相容的 collection 中寫入。`/v1/ask` 也會比對 Active Index 記錄的 Embedding 模型、維度、Chunk schema 與 Qdrant collection；不一致時回 `503 INDEX_CONFIGURATION_MISMATCH`。變更這些設定時，先在 staging 以新設定完成建索引及驗收，再安排服務設定和 Active Index 一起切換。若切換中斷，恢復原設定或完成新索引啟用後再提供問答；不要忽略 503 繼續用舊索引。
 
 ## 4. 建立第一個租戶與使用者
 

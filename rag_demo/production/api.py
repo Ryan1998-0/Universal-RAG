@@ -1321,6 +1321,25 @@ def create_app(
             )
             raise ApiError(503, "DEPENDENCY_UNAVAILABLE", "The service is temporarily unavailable.")
 
+        if authorized.active_index_version_id and any((
+            authorized.embedding_model != resolved_settings.embedding_model,
+            authorized.embedding_dimensions != resolved_settings.embedding_dimensions,
+            authorized.chunk_schema_version != resolved_settings.chunk_schema_version,
+            authorized.qdrant_collection != resolved_settings.qdrant_collection,
+        )):
+            _log_event(
+                "retrieval.index_configuration_mismatch",
+                request_id=request.state.request_id,
+                tenant_id=principal.tenant_id,
+                knowledge_base_id=authorized.id,
+                index_version_id=authorized.active_index_version_id,
+            )
+            raise ApiError(
+                503,
+                "INDEX_CONFIGURATION_MISMATCH",
+                "The active index is incompatible with the configured retrieval runtime.",
+            )
+
         conversation_id = str(payload.conversation_id or "")
         history = []
         if conversation_id:

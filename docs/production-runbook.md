@@ -192,6 +192,7 @@ export RAG_LOAD_CONCURRENCY=5
 2. 建立冷備份。
 3. 記錄目前 Git Commit、Image Tag、Alembic Head 與每個知識庫的 Active Index ID。
 4. 在 Staging 跑 Smoke、格式回歸、跨租戶與負載測試。
+5. 將 `evals/production_release_gate/fixtures/` 匯入 Staging，填好本機 manifest，執行 `scripts/run_production_release_gate.py`；只有退出碼為 0 且逐題 artifact 經檢查後才能繼續發版。
 
 部署：
 

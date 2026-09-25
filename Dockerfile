@@ -5,7 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     TOKENIZERS_PARALLELISM=false \
-    HF_HOME=/var/lib/rag/huggingface
+    HF_HOME=/var/lib/rag/huggingface \
+    RAG_LOG_DIR=/var/lib/rag/logs
 
 WORKDIR /app
 
@@ -33,7 +34,7 @@ COPY profiles ./profiles
 COPY scripts ./scripts
 RUN python -m pip install --no-deps . \
     && chmod 0555 /app/scripts/docker-entrypoint.sh \
-    && mkdir -p /var/lib/rag/huggingface \
+    && mkdir -p /var/lib/rag/huggingface /var/lib/rag/logs \
     && chown -R rag:rag /var/lib/rag
 
 USER 10001:10001

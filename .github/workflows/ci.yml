@@ -69,9 +69,14 @@ jobs:
           context: .
           file: Dockerfile
           push: false
+          load: true
           tags: universal-rag:ci
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
+      - name: Verify non-root container can create its log file
+        run: |
+          docker run --rm --user 10001:10001 --entrypoint python universal-rag:ci -c \
+            "from pathlib import Path; from rag_demo.observability import configure_logging; path = configure_logging(); assert path == Path('/var/lib/rag/logs/rag.log'); assert path.is_file()"
       - name: Build web image
         uses: docker/build-push-action@v6
         with:

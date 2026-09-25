@@ -85,7 +85,7 @@ RAG_RERANKER_MODEL
 
 ## Log 與除錯
 
-服務啟動時會建立旋轉 JSON Lines log：預設為 `logs/rag.log`。可用下列環境變數調整：
+服務啟動時會建立旋轉 JSON Lines log：本機執行預設為 `logs/rag.log`；正式容器映像預設為非 root 使用者可寫的 `/var/lib/rag/logs/rag.log`。可用下列環境變數調整：
 
 ```text
 RAG_LOG_DIR=logs

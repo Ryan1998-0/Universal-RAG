@@ -40,6 +40,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 ## 測試報告
 
+以下為各資料集當時的**檢索階段**實驗，沒有評估生成答案的正確率、引用充分性或正式 `/v1/ask` 服務。不同資料集的指標定義、搜尋範圍、硬體與耗時統計方式不同，數值不可直接橫向比較；也不能視為目前部署版本的保證。各表的「平均耗時」僅對應該次實驗的檢索流程，不含文件匯入及回答生成。詳見[評測方法與可重現性](docs/benchmark-methodology.md)。
+
 ### MultiHop-RAG 新聞資料
 
 無優化版  chunk: 600/0<br>
@@ -50,12 +52,14 @@ RAG_EMBEDDING_DIMENSIONS=768
 檢索: BM25 & Embedding RRF 加權(k=60)<br>
 證據: 簡單問題直接取 TOP5；複雜問題使用 Cross-Encoder Top 5；命中子 Chunk 展開父 Chunk 作為證據 Prompt
 
-| 版本 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |
+| 版本 | 加權 Gold fact recall@5 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
 | 無優化版 | 57.59% | 92.86% | 0.482 |
 | 全優化版 | 94.40% | 99.96% | 2.970 |
 
 完整結果：[逐題結果](evals/multihop_rag_retrieval_full/retrieval-full-results.json)｜[彙整報告](evals/multihop_rag_retrieval_full/retrieval-full-report.md)｜[摘要](evals/multihop_rag_retrieval_full/retrieval-full-summary.json)
+
+本表為 2,556 題、609 份新聞文件的檢索實驗。題庫沒有字元 span 標註，94.40% 是 Gold fact 字串／詞項覆蓋啟發式的加權召回，**不是**字元召回或回答正確率；null 題不計入召回分母。
 
 ------------------------------------------------------------
 
@@ -80,6 +84,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/legalbench_public710_full/retrieval-results.json)｜[彙整報告](evals/legalbench_public710_full/retrieval-report.md)｜[摘要](evals/legalbench_public710_full/retrieval-summary.json)
 
+本表為 710 題的**已知文件**檢索：每題只搜尋標註的 `document_path`，沒有衡量從整個知識庫找對文件的能力。Character recall 是 Gold span 字元覆蓋率；耗時是 CUDA 環境下去掉最快與最慢各 20 題後的平均值。
+
 ------------------------------------------------------------
 
 ### EnterpriseRAG-Bench 企業資料
@@ -98,6 +104,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 | 優化版 BM25 Top 30 | 78.01% | 81.06% | 3.025 |
 
 完整結果：[逐題結果](evals/enterpriserag_bench_full/retrieval-results.json)｜[彙整報告](evals/enterpriserag_bench_full/retrieval-report.md)｜[摘要](evals/enterpriserag_bench_full/retrieval-summary.json)
+
+本表只使用 BM25；父子 Chunk 展開後，文件召回沒有改善，平均耗時由 2.492 秒增至 3.025 秒。
 
 ------------------------------------------------------------
 
@@ -118,6 +126,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 
 完整結果：[逐題結果](evals/open_rag_bench_full/retrieval-results.json)｜[彙整報告](evals/open_rag_bench_full/retrieval-report.md)｜[摘要](evals/open_rag_bench_full/retrieval-summary.json)
 
+本表只使用文字／表格的 BM25，沒有對 PDF 圖片做 OCR；父子 Chunk 版本的兩項命中率較低，耗時較高。
+
 ------------------------------------------------------------
 
 ### Fujitsu RAG Hard Benchmark 困難題型資料
@@ -136,6 +146,8 @@ RAG_EMBEDDING_DIMENSIONS=768
 | 優化版 BM25 Top 30 | 79.50% | 78.00% | 0.024 |
 
 完整結果：[逐題結果](evals/fujitsu_rag_hard_full_1024_256/retrieval-results.json)｜[彙整報告](evals/fujitsu_rag_hard_full_1024_256/retrieval-report.md)｜[摘要](evals/fujitsu_rag_hard_full_1024_256/retrieval-summary.json)
+
+本表只使用 BM25；1,794 頁中 1,775 頁有可抽取文字，圖片頁沒有 OCR。父子 Chunk 版本的文件召回持平、頁面命中略降。
 
 ------------------------------------------------------------
 

@@ -1,6 +1,23 @@
 {
   "schema_version": "production-rag-release-gate-v1",
   "knowledge_base_id": "SET_STAGING_KNOWLEDGE_BASE_ID",
+  "declared_provenance": {
+    "deployment_image_digest": "SET_IMAGE_SHA256_DIGEST",
+    "generation_model_revision": "SET_GENERATION_MODEL_REVISION_OR_DIGEST",
+    "embedding_model_revision": "SET_EMBEDDING_MODEL_REVISION",
+    "reranker_model_revision": "SET_RERANKER_MODEL_REVISION",
+    "active_index_id": "SET_ACTIVE_INDEX_VERSION_ID",
+    "parser_version": "SET_PARSER_VERSION",
+    "chunk_schema_version": "SET_CHUNK_SCHEMA_VERSION",
+    "hardware_profile": "SET_STAGING_HARDWARE_PROFILE"
+  },
+  "fixture_sources": [
+    {"file": "policy-2024.txt", "source_id": "SET_POLICY_2024_SOURCE_ID"},
+    {"file": "policy-2026.txt", "source_id": "SET_POLICY_2026_SOURCE_ID"},
+    {"file": "workflow-request.txt", "source_id": "SET_WORKFLOW_REQUEST_SOURCE_ID"},
+    {"file": "workflow-approval.txt", "source_id": "SET_WORKFLOW_APPROVAL_SOURCE_ID"},
+    {"file": "ocr-notice.png", "source_id": "SET_OCR_NOTICE_SOURCE_ID"}
+  ],
   "max_p95_wall_ms": 180000,
   "max_error_rate": 0,
   "cases": [

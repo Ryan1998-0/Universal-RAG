@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 import os
+import statistics
 import subprocess
 import sys
 import time
@@ -23,6 +24,17 @@ from urllib.request import Request, urlopen
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+FIXTURE_DIR = PROJECT_ROOT / "evals" / "production_release_gate" / "fixtures"
+PROVENANCE_FIELDS = (
+    "deployment_image_digest",
+    "generation_model_revision",
+    "embedding_model_revision",
+    "reranker_model_revision",
+    "active_index_id",
+    "parser_version",
+    "chunk_schema_version",
+    "hardware_profile",
+)
 REQUIRED_TAGS = {
     "traditional_chinese",
     "version_conflict",
@@ -40,6 +52,23 @@ def load_manifest(path: Path) -> dict:
         raise ValueError(f"manifest schema_version must be {SCHEMA_VERSION}")
     if not _configured_id(manifest.get("knowledge_base_id")):
         raise ValueError("manifest needs a real staging knowledge_base_id")
+    declared = manifest.get("declared_provenance")
+    if not isinstance(declared, dict) or any(
+        not _configured_id(declared.get(field)) for field in PROVENANCE_FIELDS
+    ):
+        raise ValueError("manifest needs complete declared_provenance")
+    sources = manifest.get("fixture_sources")
+    expected_files = {path.name for path in FIXTURE_DIR.iterdir() if path.is_file()}
+    if not isinstance(sources, list) or {item.get("file") for item in sources if isinstance(item, dict)} != expected_files:
+        raise ValueError("fixture_sources must map every frozen fixture file")
+    if len(sources) != len(expected_files) or any(
+        not isinstance(item, dict) or not _configured_id(item.get("source_id"))
+        for item in sources
+    ):
+        raise ValueError("fixture_sources need unique files and real source IDs")
+    fixture_source_ids = [item["source_id"] for item in sources]
+    if len(set(fixture_source_ids)) != len(fixture_source_ids):
+        raise ValueError("fixture source IDs must be unique")
     cases = manifest.get("cases")
     if not isinstance(cases, list) or not cases or any(not isinstance(case, dict) for case in cases):
         raise ValueError("manifest needs nonempty cases")
@@ -57,6 +86,8 @@ def load_manifest(path: Path) -> dict:
             raise ValueError(f"case {case['id']} source_ids must be a list")
         if any(not _configured_id(source_id) for source_id in case.get("source_ids") or []):
             raise ValueError(f"case {case['id']} has an unconfigured source_id")
+        if any(source_id not in fixture_source_ids for source_id in case.get("source_ids") or []):
+            raise ValueError(f"case {case['id']} uses a source outside the frozen corpus")
         expect = case.get("expect") or {}
         if not isinstance(expect, dict) or not isinstance(expect.get("retrieval_needed"), bool):
             raise ValueError(f"case {case['id']} needs a boolean retrieval_needed expectation")
@@ -74,6 +105,8 @@ def load_manifest(path: Path) -> dict:
             raise ValueError(f"multi_hop case {case['id']} needs at least two citations")
         if any(not _configured_id(source_id) for source_id in expect.get("allowed_citation_source_ids") or []):
             raise ValueError(f"case {case['id']} has an unconfigured citation source_id")
+        if any(source_id not in fixture_source_ids for source_id in expect.get("allowed_citation_source_ids") or []):
+            raise ValueError(f"case {case['id']} permits a citation outside the frozen corpus")
     tags = {tag for case in cases for tag in case["tags"]}
     missing_tags = REQUIRED_TAGS - tags
     if missing_tags:
@@ -137,20 +170,14 @@ def run_gate(manifest: dict, client: HttpClient) -> dict:
     started_at = datetime.now(timezone.utc).isoformat()
     case_results = []
     request_errors = 0
-    try:
-        ready_status, ready = client.request("/health/ready")
-        ready_error = ""
-    except Exception as exc:
-        ready_status, ready = 0, {}
-        ready_error = f"{type(exc).__name__}: {exc}"
-    ready_ok = ready_status == 200 and ready.get("status") == "ready"
-    if not ready_ok:
+    preflight = _preflight(manifest, client)
+    if not preflight["passed"]:
         return {
             "schema_version": SCHEMA_VERSION,
             "status": "failed",
             "started_at": started_at,
             "finished_at": datetime.now(timezone.utc).isoformat(),
-            "preflight": {"ready": False, "http_status": ready_status, "error": ready_error},
+            "preflight": preflight,
             "summary": {
                 "case_count": 0, "passed_cases": 0, "p95_wall_ms": None,
                 "max_p95_wall_ms": manifest["max_p95_wall_ms"],
@@ -215,11 +242,10 @@ def run_gate(manifest: dict, client: HttpClient) -> dict:
         })
 
     durations = sorted(item["wall_ms"] for item in case_results)
-    p95_wall_ms = durations[math.ceil(0.95 * len(durations)) - 1]
+    p95_wall_ms = _percentile_nearest_rank(durations, 0.95)
     error_rate = request_errors / len(case_results)
     passed = (
-        ready_ok
-        and all(item["passed"] for item in case_results)
+        all(item["passed"] for item in case_results)
         and all(item["passed"] for item in unauthorized_results)
         and p95_wall_ms <= float(manifest["max_p95_wall_ms"])
         and error_rate <= float(manifest["max_error_rate"])
@@ -229,10 +255,21 @@ def run_gate(manifest: dict, client: HttpClient) -> dict:
         "status": "passed" if passed else "failed",
         "started_at": started_at,
         "finished_at": datetime.now(timezone.utc).isoformat(),
-        "preflight": {"ready": ready_ok, "http_status": ready_status, "error": ready_error},
+        "preflight": preflight,
         "summary": {
             "case_count": len(case_results),
             "passed_cases": sum(item["passed"] for item in case_results),
+            "latency": {
+                "unit": "ms",
+                "method": "client wall time; nearest-rank percentiles; answer requests only",
+                "sample_count": len(durations),
+                "min": durations[0],
+                "p50": _percentile_nearest_rank(durations, 0.50),
+                "p95": p95_wall_ms,
+                "p99": _percentile_nearest_rank(durations, 0.99),
+                "max": durations[-1],
+                "mean": round(statistics.mean(durations), 2),
+            },
             "p95_wall_ms": p95_wall_ms,
             "max_p95_wall_ms": manifest["max_p95_wall_ms"],
             "error_rate": round(error_rate, 4),
@@ -242,6 +279,57 @@ def run_gate(manifest: dict, client: HttpClient) -> dict:
         "cases": case_results,
         "unauthorized_checks": unauthorized_results,
     }
+
+
+def _preflight(manifest: dict, client: HttpClient) -> dict:
+    try:
+        ready_status, ready = client.request("/health/ready")
+        ready_error = ""
+    except Exception as exc:
+        ready_status, ready = 0, {}
+        ready_error = f"{type(exc).__name__}: {exc}"
+    ready_ok = ready_status == 200 and ready.get("status") == "ready"
+    snapshot = {"ready": ready_ok, "http_status": ready_status, "error": ready_error}
+    if not ready_ok:
+        snapshot["passed"] = False
+        return snapshot
+    try:
+        runtime_status, runtime = client.request("/v1/runtime")
+        models_status, models = client.request("/v1/models")
+        kb_status, kb_payload = client.request("/v1/knowledge-bases")
+    except Exception as exc:
+        snapshot.update({"passed": False, "error": f"runtime provenance unavailable: {exc}"})
+        return snapshot
+    knowledge_base = next((item for item in kb_payload.get("items", [])
+                           if item.get("id") == manifest["knowledge_base_id"]), None)
+    active_index = (knowledge_base or {}).get("active_index_version_id")
+    snapshot.update({
+        "runtime_http_status": runtime_status,
+        "models_http_status": models_status,
+        "knowledge_bases_http_status": kb_status,
+        "observed": {
+            "default_model": runtime.get("default_model"),
+            "allowed_models": runtime.get("allowed_models"),
+            "embedding_model": (models.get("components") or {}).get("embedding", {}).get("model"),
+            "sparse_embedding_model": (models.get("components") or {}).get("sparse_embedding", {}).get("model"),
+            "reranker_model": (models.get("components") or {}).get("reranker", {}).get("model"),
+            "active_index_id": active_index,
+        },
+    })
+    snapshot["passed"] = (
+        runtime_status == models_status == kb_status == 200
+        and bool(knowledge_base)
+        and active_index == manifest["declared_provenance"]["active_index_id"]
+        and bool(snapshot["observed"]["embedding_model"])
+        and bool(snapshot["observed"]["reranker_model"])
+    )
+    if not snapshot["passed"]:
+        snapshot["error"] = "staging runtime or active index does not match the release manifest"
+    return snapshot
+
+
+def _percentile_nearest_rank(sorted_values: list[float], quantile: float) -> float:
+    return sorted_values[math.ceil(quantile * len(sorted_values)) - 1]
 
 
 def _check_answer(case: dict, status: int, response: dict) -> list[str]:
@@ -298,6 +386,24 @@ def _git_provenance() -> dict:
     return {"commit": run("rev-parse", "HEAD"), "dirty": bool(run("status", "--porcelain"))}
 
 
+def _corpus_provenance(manifest: dict) -> dict:
+    files = []
+    for item in sorted(manifest["fixture_sources"], key=lambda source: source["file"]):
+        name = item["file"]
+        files.append({
+            "file": name,
+            "source_id": item["source_id"],
+            "sha256": hashlib.sha256((FIXTURE_DIR / name).read_bytes()).hexdigest(),
+        })
+    canonical = json.dumps(files, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return {
+        "fixture_sources": files,
+        "fixture_manifest_sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+        "scope": "staging knowledge base; case source_ids further restrict retrieval",
+        "staging_content_verified": False,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
@@ -315,6 +421,8 @@ def main() -> int:
         **_git_provenance(),
         "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
         "base_url": base_url,
+        "declared": manifest["declared_provenance"],
+        "corpus": _corpus_provenance(manifest),
     }
     output = args.output or (
         PROJECT_ROOT / "evals" / "production_release_gate" / "runs"

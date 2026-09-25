@@ -18,10 +18,12 @@ knowledge base and wait until its immutable index is active:
 
 Use a separate knowledge base owned by another staging tenant for the access
 denial check. Copy `manifest.template.json` to a local manifest and replace
-the knowledge base IDs and source IDs with the IDs returned by staging. The
-template intentionally cannot run with its placeholders. Review the expected
-facts and latency threshold for the staging hardware before using the result
-as a release decision.
+the knowledge base IDs, source IDs and every `declared_provenance` placeholder.
+For the model fields, record an exact revision or content digest rather than
+only a mutable model tag. Match `fixture_sources` to the upload records for
+these exact five files. The template intentionally cannot run with its
+placeholders. Review the expected facts and latency threshold for the staging
+hardware before using the result as a release decision.
 
 ## Run
 
@@ -35,8 +37,13 @@ python scripts/run_production_release_gate.py \
 
 The script writes a detailed JSON artifact under `runs/` and prints a short
 summary. `runs/` is ignored by Git because answers and deployment details may
-be sensitive. Keep the configured manifest with the release record, along with
-the commit, image tag, model revision, active index ID and fixture hashes.
+be sensitive. The artifact includes a manifest hash, per-file SHA-256, operator
+declared deployment details, server-reported model names and active index,
+per-case client wall times, and min/p50/p95/p99/max/mean latency. It checks
+that the server's active index matches the declared one before sending any
+questions. Save the configured manifest and staging upload receipts with the
+release record: the API cannot prove which file bytes were uploaded or verify
+the declared model revisions and image digest.
 
 The checks are deterministic: they verify expected fact strings and the
 server's citation diagnostics. They cannot prove that every natural-language

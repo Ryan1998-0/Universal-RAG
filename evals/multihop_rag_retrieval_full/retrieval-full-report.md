@@ -12,7 +12,7 @@
 
 ## 主要結果
 
-| 版本 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |
+| 版本 | 加權 Gold fact recall@5 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | ---: | ---: | ---: |
 | 無優化版 | 57.6% | 92.9% | 0.482 秒 |
 | 全優化版 | 94.4% | 100.0% | 2.970 秒 |
@@ -21,13 +21,13 @@
 
 ## 差異（全優化版 − 無優化版）
 
-- Character recall@5（加權 Gold fact recall）：`+36.8%`
+- 加權 Gold fact recall@5：`+36.8 個百分點`
 - 任一證據命中率：`+7.1%`
 - 平均耗時差異：`+2.488 秒`
 
 ## 題型分組
 
-| 版本 | 題型 | 題數 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |
+| 版本 | 題型 | 題數 | 加權 Gold fact recall@5 | 任一證據命中 | 平均耗時（秒／題） |
 | --- | --- | ---: | ---: | ---: | ---: |
 | 無優化版 | `comparison_query` | 856 | 66.0% | 95.0% | 0.472 秒 |
 | 無優化版 | `inference_query` | 816 | 50.9% | 91.4% | 0.496 秒 |
@@ -45,4 +45,4 @@
 - 兩個版本都使用同一份 corpus、同一個 embedding 模型、同一個 top-5 證據預算與同一批 2,556 題。
 - 本次沒有回答模型、沒有對話記憶、沒有外部搜尋、沒有把 gold answer 或 gold evidence 注入檢索查詢。
 - Gold fact 命中採完整字串或 BM25 token 覆蓋率至少 45% 的 deterministic heuristic；它衡量檢索召回，不等同於回答正確率或幻覺率。
-- MultiHop-RAG 題庫沒有 LegalBench 使用的字元 span 標註，因此本報告的 Character recall@5 欄位以加權 Gold fact recall 對應；LegalBench-RAG 的同名欄位則是字元覆蓋率。
+- MultiHop-RAG 題庫沒有 LegalBench 使用的字元 span 標註。本報告的加權 Gold fact recall 使用字串／詞項覆蓋啟發式，不能和 LegalBench-RAG 的字元覆蓋率直接比較。

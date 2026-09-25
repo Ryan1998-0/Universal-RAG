@@ -89,6 +89,7 @@ export function validateAgentResponse(rawResponse) {
     model: rawResponse.model || { provider: "unknown", name: "unknown" },
     qualityEvaluation: rawResponse.quality_evaluation || null,
     timings: rawResponse.timings || {},
+    timingTrace: rawResponse.timing_trace || null,
   };
 }
 

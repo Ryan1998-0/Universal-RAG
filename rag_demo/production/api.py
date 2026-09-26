@@ -1177,6 +1177,8 @@ def create_app(
             )
         except ResourceNotFoundError:
             raise ApiError(404, "ANSWER_RUN_NOT_FOUND", "Answer run not found.")
+        except AccessDeniedError:
+            raise ApiError(403, "ACCESS_DENIED", "Access to this resource is denied.")
         for citation in result.get("citations") or []:
             version_id = (
                 str(citation.get("document_version_id") or "")
@@ -1372,6 +1374,8 @@ def create_app(
                 )
             except ResourceNotFoundError:
                 raise ApiError(404, "CONVERSATION_NOT_FOUND", "Conversation not found.")
+            except AccessDeniedError:
+                raise ApiError(403, "ACCESS_DENIED", "Access to this resource is denied.")
 
         pipeline_request = RagPipelineRequest(
             question=payload.question,

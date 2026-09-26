@@ -49,6 +49,8 @@ chmod 600 .env.production
 6. 預設 Embedding 為 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`（384 維），與 `compose.yaml`、`.env.production.example` 及正式服務程式一致。更換模型前，確認 FastEmbed 能載入、實際維度正確，並為新設定建立索引；不可直接修改維度後沿用舊索引。
 7. `RAG_MULTI_QUERY_ENABLED` 預設開啟，`RAG_MULTI_QUERY_MAX_VARIANTS` 預設為 4。每個查詢變體都會執行 Dense 與 Sparse 檢索；上線前需比較召回與延遲。
 
+Staging/Production 不接受執行期 `PUT`/`DELETE /v1/models/{node}` 全域覆寫；模型變更須更新部署設定並走發版驗收，避免單一租戶管理 Token 影響其他租戶。
+
 檢查設定與建置：
 
 ```bash

@@ -821,6 +821,12 @@ def create_app(
         return validation
 
     def require_model_admin(principal: Principal) -> None:
+        if production_environment:
+            raise ApiError(
+                403,
+                "MODEL_MANAGEMENT_FORBIDDEN",
+                "Runtime model replacement is disabled in staging and production.",
+            )
         if not ({"owner", "admin"} & set(principal.roles)):
             raise ApiError(403, "MODEL_MANAGEMENT_FORBIDDEN", "Model replacement requires owner or admin role.")
 

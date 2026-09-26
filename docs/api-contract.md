@@ -56,7 +56,7 @@
 
 ### 執行期替換
 
-具 `owner` 或 `admin` 角色的使用者可呼叫：
+Development/Test 中具 `owner` 或 `admin` 角色的使用者可呼叫：
 
 ```http
 PUT /v1/models/generation
@@ -65,7 +65,7 @@ Content-Type: application/json
 {"model": "ollama:qwen2.5:14b"}
 ```
 
-替換只作用於目前 API process，重啟後回到環境設定；`DELETE /v1/models/{node}` 可清除執行期覆寫。請求層級的 `model` 欄位仍可作為單次呼叫覆寫，但必須通過 allowlist。
+替換只作用於目前 API process，重啟後回到環境設定；`DELETE /v1/models/{node}` 可清除執行期覆寫。由於此覆寫會影響同一 process 的所有租戶，Staging/Production 暫時拒絕這兩個寫入端點，直到具資料庫成員狀態檢查與明確平台管理員權限的持久方案完成。請求層級的 `model` 欄位仍可作為單次呼叫覆寫，但必須通過 allowlist。
 
 可用環境變數：
 

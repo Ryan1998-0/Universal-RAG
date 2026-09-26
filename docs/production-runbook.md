@@ -115,6 +115,8 @@ Token 不可放進 Shell History、CI Log 或版本控制；正式自動化應�
 
 外部 Caddy 故意封鎖 `/metrics`。Prometheus 應在私有 Compose 網路抓取 `http://api:8080/metrics`。
 
+預設 API 容器使用單一 Uvicorn worker，讓 `/metrics` 的程序內計數器與直方圖涵蓋該容器全部請求。不要只把 worker 數改成多個：多程序部署須先設定 Prometheus Python client 的 multiprocess 收集、啟動時清理資料目錄及 worker 結束時清理 Gauge，並在每個 API 實例驗證抓取結果。單 worker 的容量須通過第 8 節 staging 負載驗證後才可正式上線。
+
 重要指標：
 
 - `rag_http_requests_total`

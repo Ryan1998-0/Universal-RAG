@@ -101,6 +101,19 @@ for volume in "${volumes[@]}"; do
   docker volume inspect "${project_name}_${volume}" >/dev/null
 done
 
+for service in migrate bootstrap provision; do
+  running_writer=$(docker ps --quiet \
+    --filter "label=com.docker.compose.project=${project_name}" \
+    --filter "label=com.docker.compose.service=${service}") || {
+    echo "Cannot inspect running Compose writers" >&2
+    exit 1
+  }
+  if [[ -n $running_writer ]]; then
+    echo "Cannot restore while ${service} is running" >&2
+    exit 1
+  fi
+done
+
 for volume in "${volumes[@]}"; do
   echo "Checking ${volume} archive before stopping services..."
   docker run --rm \

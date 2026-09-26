@@ -175,7 +175,7 @@ export RAG_LOAD_CONCURRENCY=5
 
 備份與還原腳本預設使用專案根目錄的 `.env.production`，並從 Compose 解析實際 project name，停機前檢查設定及目標 Volume。若環境檔另存他處，先設定 `RAG_COMPOSE_ENV_FILE` 為該檔路徑。備份失敗時腳本仍會嘗試重啟服務；重啟失敗會以非零狀態結束，操作人員須立即處理。還原會先要求四份封存的完整 SHA-256 清單及相符的 project metadata，並確認每包可由還原映像解開，再停止服務。若解包或重啟失敗，服務應保持關閉，從已驗證的備份重新復原後才能開放流量。
 
-四份封存只包含上述資料 Volume。空白主機復原還需要另外以加密方式保存 `.env.production` 與相關密鑰、部署用的 Git Commit 與映像版本，以及重新取得模型與 TLS 憑證的操作資料；`caddy-data`、`caddy-config` 和 `model-cache` 不在這四包內。不得把明文密鑰放進此備份目錄或版本控制。現行腳本也尚未排除並行的 migration/bootstrap/provision 工作，且 Compose 啟動成功不等於 API、Worker 與 Beat 已就緒；執行冷備份前必須安排維護時段並確認沒有這些工作在執行。
+四份封存只包含上述資料 Volume。空白主機復原還需要另外以加密方式保存 `.env.production` 與相關密鑰、部署用的 Git Commit 與映像版本，以及重新取得模型與 TLS 憑證的操作資料；`caddy-data`、`caddy-config` 和 `model-cache` 不在這四包內。不得把明文密鑰放進此備份目錄或版本控制。腳本會拒絕開始時正在執行的 migration/bootstrap/provision 容器，但還沒有與發版流程共用的維護鎖，無法阻止檢查後新啟動的工作；執行冷備份或還原前仍須安排維護時段。Compose 啟動成功也不等於 API、Worker 與 Beat 已就緒。
 
 ```bash
 ./scripts/cold-backup.sh /mnt/encrypted-backups/$(date -u +%Y%m%dT%H%M%SZ)

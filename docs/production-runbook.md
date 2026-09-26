@@ -6,7 +6,7 @@
 
 ## 1. 上線前提
 
-- 一台可執行 Docker Engine 與 Docker Compose v2 的 Linux 主機。
+- 一台可執行 Docker Engine、Docker Compose v2、Python 3 與 `timeout` 的 Linux 主機。
 - 一個指向主機的 DNS 名稱，TCP `80/443` 對外開放。
 - 一個 OIDC Provider 與已建立的 Web Client。
 - 一個可由 Compose 網路連線的 Ollama 或相容推論端點。
@@ -46,7 +46,10 @@ chmod 600 .env.production
 3. 填入 OIDC Issuer、Audience、JWKS、Authorization、Token URL 與 Client。
 4. 令 `RAG_CORS_ORIGINS` 與 `https://<APP_DOMAIN>` 完全一致。
 5. 填入容器可連線的 `RAG_OLLAMA_URL`。
-6. 確認 Embedding 維度與選用模型一致；正式索引建立後不要直接修改維度。
+6. 預設 Embedding 為 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`（384 維），與 `compose.yaml`、`.env.production.example` 及正式服務程式一致。更換模型前，確認 FastEmbed 能載入、實際維度正確，並為新設定建立索引；不可直接修改維度後沿用舊索引。
+7. `RAG_MULTI_QUERY_ENABLED` 預設開啟，`RAG_MULTI_QUERY_MAX_VARIANTS` 預設為 4。每個查詢變體都會執行 Dense 與 Sparse 檢索；上線前需比較召回與延遲。
+
+Staging/Production 不接受執行期 `PUT`/`DELETE /v1/models/{node}` 全域覆寫；模型變更須更新部署設定並走發版驗收，避免單一租戶管理 Token 影響其他租戶。
 
 檢查設定與建置：
 
@@ -58,6 +61,8 @@ docker compose --env-file .env.production ps
 ```
 
 `migrate` 會先執行 Alembic，`bootstrap` 會建立 Object Storage Bucket 與 Qdrant Collection；兩者成功後 API、Worker、Beat 與 Caddy 才會啟動。
+
+若既有 Qdrant collection 的 Dense 維度或 Cosine distance、`bm25` Sparse IDF 設定不同，`bootstrap` 會失敗，避免在不相容的 collection 中寫入。`/v1/ask` 也會比對 Active Index 記錄的 Embedding 模型、維度、Chunk schema 與 Qdrant collection；不一致時回 `503 INDEX_CONFIGURATION_MISMATCH`。變更這些設定時，先在 staging 以新設定完成建索引及驗收，再安排服務設定和 Active Index 一起切換。若切換中斷，恢復原設定或完成新索引啟用後再提供問答；不要忽略 503 繼續用舊索引。
 
 ## 4. 建立第一個租戶與使用者
 
@@ -108,9 +113,13 @@ Token 不可放進 Shell History、CI Log 或版本控制；正式自動化應�
 
 支援：PDF、PNG/JPEG/WebP/TIFF/BMP/HEIC、DOCX、TXT、MD/Markdown、JSON。
 
+Staging 與 Production 目前只允許 `RAG_UPLOAD_MODE=proxy`。Presigned 直傳仍缺儲存端內容校驗及經 HTTPS/CORS/CSP 驗證的瀏覽器路徑，設定為 presigned 時服務會拒絕啟動。待隔離 staging 完成這些驗收後才能重新開放。
+
 ## 7. 監控與診斷
 
 外部 Caddy 故意封鎖 `/metrics`。Prometheus 應在私有 Compose 網路抓取 `http://api:8080/metrics`。
+
+預設 API 容器使用單一 Uvicorn worker，讓 `/metrics` 的程序內計數器與直方圖涵蓋該容器全部請求。不要只把 worker 數改成多個：多程序部署須先設定 Prometheus Python client 的 multiprocess 收集、啟動時清理資料目錄及 worker 結束時清理 Gauge，並在每個 API 實例驗證抓取結果。單 worker 的容量須通過第 8 節 staging 負載驗證後才可正式上線。
 
 重要指標：
 
@@ -164,6 +173,10 @@ export RAG_LOAD_CONCURRENCY=5
 
 冷備份會短暫停止寫入路徑，封存 PostgreSQL、Redis、Qdrant 與 Object Storage 四個 Volume，產生 SHA-256 清單後重啟服務。
 
+備份與還原腳本預設使用專案根目錄的 `.env.production`，並從 Compose 解析實際 project name，停機前檢查設定及目標 Volume。若環境檔另存他處，先設定 `RAG_COMPOSE_ENV_FILE` 為該檔路徑。備份失敗時腳本仍會嘗試重啟服務；重啟失敗會以非零狀態結束，操作人員須立即處理。還原會先要求四份封存的完整 SHA-256 清單及相符的 project metadata，並確認每包可由還原映像解開，再停止服務。若解包或重啟失敗，服務應保持關閉，從已驗證的備份重新復原後才能開放流量。
+
+四份封存只包含上述資料 Volume。空白主機復原還需要另外以加密方式保存 `.env.production` 與相關密鑰、部署用的 Git Commit 與映像版本，以及重新取得模型與 TLS 憑證的操作資料；`caddy-data`、`caddy-config` 和 `model-cache` 不在這四包內。不得把明文密鑰放進此備份目錄或版本控制。腳本會拒絕開始時正在執行的 migration/bootstrap/provision 容器，但還沒有與發版流程共用的維護鎖，無法阻止檢查後新啟動的工作；執行冷備份或還原前仍須安排維護時段。重啟後腳本以預設 600 秒為就緒期限，每次 Docker 查詢另有 10 秒上限；API `/health/ready`（含復機後的新 Beat-to-Worker 心跳）必須為 healthy，且 Caddy、Worker、Beat 容器皆在執行。可用 `RAG_RESTART_READY_TIMEOUT_SECONDS` 將期限設為 1–600 秒。這不是對外 TLS 或完整業務 Smoke 的替代。
+
 ```bash
 ./scripts/cold-backup.sh /mnt/encrypted-backups/$(date -u +%Y%m%dT%H%M%SZ)
 ```
@@ -176,7 +189,7 @@ export RAG_LOAD_CONCURRENCY=5
 
 還原後依序執行：
 
-1. `docker compose ps`
+1. `docker compose --env-file .env.production ps`
 2. `/health/ready`
 3. `scripts/smoke_production.py`
 4. 隨機抽查文件下載、引用內容與 Active Index。
@@ -191,6 +204,7 @@ export RAG_LOAD_CONCURRENCY=5
 2. 建立冷備份。
 3. 記錄目前 Git Commit、Image Tag、Alembic Head 與每個知識庫的 Active Index ID。
 4. 在 Staging 跑 Smoke、格式回歸、跨租戶與負載測試。
+5. 將 `evals/production_release_gate/fixtures/` 匯入 Staging，填好本機 manifest，執行 `scripts/run_production_release_gate.py`；只有退出碼為 0 且逐題 artifact 經檢查後才能繼續發版。
 
 部署：
 

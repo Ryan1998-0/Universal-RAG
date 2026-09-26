@@ -186,6 +186,9 @@ class ProductionApiTests(unittest.TestCase):
             RAG_DEV_JWT_SECRET=SECRET,
             RAG_MODEL="ollama:qwen2.5:7b",
             RAG_ALLOWED_MODELS="ollama:qwen2.5:7b",
+            RAG_EMBEDDING_MODEL="test-embedding",
+            RAG_EMBEDDING_DIMENSIONS=2,
+            RAG_CHUNK_SCHEMA_VERSION="test-v1",
             RAG_ENABLE_API_DOCS=True,
         )
         self.engine = create_database_engine(database_url)
@@ -511,6 +514,30 @@ class ProductionApiTests(unittest.TestCase):
         self.assertEqual(answer_runs[0].source_ids_json, ["a-ready"])
         self.assertEqual(len(audit_events), 1)
         self.assertEqual(audit_events[0].outcome, "success")
+
+    def test_ask_rejects_active_index_with_incompatible_retrieval_settings(self):
+        mismatches = {
+            "embedding_model": "another-embedding",
+            "embedding_dimensions": 768,
+            "chunk_schema_version": "another-chunk-schema",
+            "qdrant_collection": "another-collection",
+        }
+        for field, mismatched_value in mismatches.items():
+            with self.subTest(field=field):
+                with self.session_factory.begin() as session:
+                    index = session.get(IndexVersionRecord, "index-a")
+                    original = getattr(index, field)
+                    setattr(index, field, mismatched_value)
+                response = self.client.post(
+                    "/v1/ask",
+                    headers=self._headers(),
+                    json={"question": "什麼是 CSM？", "knowledge_base_id": "kb-a"},
+                )
+                self.assertEqual(response.status_code, 503, response.text)
+                self.assertEqual(response.json()["error"]["code"], "INDEX_CONFIGURATION_MISMATCH")
+                self.assertEqual(self.pipeline.calls, [])
+                with self.session_factory.begin() as session:
+                    setattr(session.get(IndexVersionRecord, "index-a"), field, original)
 
     def test_answer_run_and_source_content_are_protected_and_traceable(self):
         source_payload = b"%PDF-1.4\nsource\n%%EOF"
@@ -1262,6 +1289,14 @@ class ProductionApiTests(unittest.TestCase):
 
 
 class ProductionSettingsTests(unittest.TestCase):
+    def test_production_rejects_flag_only_prompt_injection_policy(self):
+        with self.assertRaisesRegex(ValidationError, "production requires RAG_PROMPT_INJECTION_POLICY=quarantine"):
+            ProductionSettings(
+                RAG_ENV="production",
+                RAG_DATABASE_URL="postgresql+psycopg://user:pass@db/rag",
+                RAG_PROMPT_INJECTION_POLICY="flag",
+            )
+
     def test_production_rejects_development_auth(self):
         with self.assertRaises(ValidationError):
             ProductionSettings(

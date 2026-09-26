@@ -1,4 +1,5 @@
 import hashlib
+import html
 import os
 import re
 from dataclasses import dataclass
@@ -9,7 +10,7 @@ from uuid import uuid4
 from rag_demo.config import RagConfig
 from rag_demo.conversation_store import ConversationStore
 from rag_demo.evidence_focus import focus_retrieved_evidence
-from rag_demo.evidence_validation import validate_answer_evidence
+from rag_demo.evidence_validation import normalized_refusal_answer, validate_answer_evidence
 from rag_demo.fine_evidence import retrieve_fine_evidence
 from rag_demo.general_answer import (
     CURRENT_DATETIME_REASON,
@@ -681,6 +682,7 @@ def answer_from_contexts(
                 "valid_citations": [],
                 "invalid_citations": [],
                 "uncited_claims": [],
+                "unsupported_claims": [],
                 "reason": "由可驗證的門檻證據直接產生答案。",
             })
         return render_threshold_answer(threshold_evidence)
@@ -714,11 +716,11 @@ def build_grounded_answer_request(
     context_text = "\n\n".join(
         "\n".join(
             [
-                f'<evidence rank="{context["rank"]}">',
-                f'標題：{context["title"]}',
-                f'頁碼：{context["page"]}',
+                f'<evidence rank="{html.escape(str(context["rank"]), quote=True)}">',
+                f'標題：{html.escape(str(context["title"]), quote=True)}',
+                f'頁碼：{html.escape(str(context["page"]), quote=True)}',
                 "內容：",
-                context["content"],
+                html.escape(str(context["content"]), quote=True),
                 "</evidence>",
             ]
         )
@@ -777,7 +779,7 @@ def enforce_grounded_answer_contract(answer: str, contexts: Sequence[dict]) -> s
     text = str(answer or "").strip()
     validation = validate_answer_evidence(text, contexts)
     if validation["status"] == "refused":
-        return text
+        return normalized_refusal_answer(text) or "根據目前檢索資料無法確認。"
     if validation["sufficient"]:
         return text
 

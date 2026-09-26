@@ -9,6 +9,7 @@ Environment = Literal["development", "test", "staging", "production"]
 AuthMode = Literal["dev_hs256", "oidc"]
 UploadMode = Literal["proxy", "presigned"]
 PromptInjectionPolicy = Literal["quarantine", "flag"]
+DEFAULT_SPARSE_EMBEDDING_MODEL = "Qdrant/bm25"
 
 
 class ProductionSettings(BaseSettings):
@@ -47,7 +48,7 @@ class ProductionSettings(BaseSettings):
         alias="RAG_EMBEDDING_DIMENSIONS",
     )
     sparse_embedding_model: str = Field(
-        default="Qdrant/bm25",
+        default=DEFAULT_SPARSE_EMBEDDING_MODEL,
         alias="RAG_SPARSE_EMBEDDING_MODEL",
     )
     reranker_model: str = Field(
@@ -189,6 +190,8 @@ class ProductionSettings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_environment_security(self):
+        if self.environment == "production" and self.prompt_injection_policy == "flag":
+            raise ValueError("production requires RAG_PROMPT_INJECTION_POLICY=quarantine")
         if self.environment in {"staging", "production"}:
             if self.auth_mode != "oidc":
                 raise ValueError("staging and production require RAG_AUTH_MODE=oidc")
@@ -216,11 +219,10 @@ class ProductionSettings(BaseSettings):
                     "S3 configuration is incomplete: "
                     + ", ".join(missing_object_storage)
                 )
-            if self.upload_mode == "presigned" and not str(
-                self.s3_public_endpoint_url or ""
-            ).startswith(("http://", "https://")):
+            if self.upload_mode == "presigned":
                 raise ValueError(
-                    "production presigned uploads require RAG_S3_PUBLIC_ENDPOINT_URL"
+                    "staging and production require RAG_UPLOAD_MODE=proxy until "
+                    "presigned upload integrity and HTTPS browser delivery are verified"
                 )
             missing_web_auth = [
                 name

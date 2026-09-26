@@ -3,12 +3,14 @@ import hashlib
 import unittest
 from types import SimpleNamespace
 
+from qdrant_client import models
+
 from rag_demo.production.object_storage import (
     ObjectStorageError,
     S3ObjectStorage,
     document_object_key,
 )
-from rag_demo.production.vector_repository import QdrantChunkRepository
+from rag_demo.production.vector_repository import QdrantChunkRepository, VectorRepositoryError
 from rag_demo.retrieval_scope import RetrievalScope
 
 
@@ -171,6 +173,40 @@ class ProductionVectorRepositoryTests(unittest.TestCase):
         self.assertEqual(values["index_version_id"], "index-7")
         self.assertEqual(values["source_id"], ["doc-a", "doc-b"])
         self.assertEqual(hits[0].as_chunk()["embedding_score"], 0.83)
+
+    def test_existing_collection_rejects_wrong_embedding_dimensions(self):
+        class ExistingCollectionClient(FakeQdrantClient):
+            def __init__(self, dense_size):
+                super().__init__()
+                self.dense_size = dense_size
+
+            def collection_exists(self, name):
+                return True
+
+            def get_collection(self, **kwargs):
+                vectors = {
+                    "dense": SimpleNamespace(
+                        size=self.dense_size,
+                        distance=models.Distance.COSINE,
+                    )
+                }
+                sparse_vectors = {
+                    "bm25": SimpleNamespace(modifier=models.Modifier.IDF)
+                }
+                return SimpleNamespace(config=SimpleNamespace(params=SimpleNamespace(
+                    vectors=vectors,
+                    sparse_vectors=sparse_vectors,
+                )))
+
+            def create_payload_index(self, **kwargs):
+                return None
+
+        incompatible = QdrantChunkRepository(ExistingCollectionClient(768), "rag_chunks")
+        with self.assertRaisesRegex(VectorRepositoryError, "incompatible dense vector size"):
+            incompatible.ensure_collection(384)
+
+        compatible = QdrantChunkRepository(ExistingCollectionClient(384), "rag_chunks")
+        compatible.ensure_collection(384)
 
     def test_empty_source_selection_returns_no_data_without_query(self):
         self.assertEqual(

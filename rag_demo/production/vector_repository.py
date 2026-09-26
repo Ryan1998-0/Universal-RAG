@@ -63,7 +63,30 @@ class QdrantChunkRepository:
         if vector_size <= 0:
             raise ValueError("vector_size must be positive")
         models = _models()
-        if not self.client.collection_exists(self.collection_name):
+        if self.client.collection_exists(self.collection_name):
+            collection = self.client.get_collection(collection_name=self.collection_name)
+            params = collection.config.params
+            vectors = params.vectors
+            dense = vectors.get("dense") if isinstance(vectors, dict) else None
+            if dense is None or int(dense.size) != int(vector_size):
+                raise VectorRepositoryError(
+                    "existing Qdrant collection has an incompatible dense vector size"
+                )
+            if dense.distance != models.Distance.COSINE:
+                raise VectorRepositoryError(
+                    "existing Qdrant collection must use Cosine distance for dense vectors"
+                )
+            sparse_vectors = params.sparse_vectors
+            bm25 = (
+                sparse_vectors.get("bm25")
+                if isinstance(sparse_vectors, dict)
+                else None
+            )
+            if bm25 is None or bm25.modifier != models.Modifier.IDF:
+                raise VectorRepositoryError(
+                    "existing Qdrant collection requires a bm25 sparse vector with IDF"
+                )
+        else:
             self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config={

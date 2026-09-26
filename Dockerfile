@@ -5,7 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     TOKENIZERS_PARALLELISM=false \
-    HF_HOME=/var/lib/rag/huggingface
+    HF_HOME=/var/lib/rag/huggingface \
+    RAG_LOG_DIR=/var/lib/rag/logs
 
 WORKDIR /app
 
@@ -33,7 +34,7 @@ COPY profiles ./profiles
 COPY scripts ./scripts
 RUN python -m pip install --no-deps . \
     && chmod 0555 /app/scripts/docker-entrypoint.sh \
-    && mkdir -p /var/lib/rag/huggingface \
+    && mkdir -p /var/lib/rag/huggingface /var/lib/rag/logs \
     && chown -R rag:rag /var/lib/rag
 
 USER 10001:10001
@@ -44,4 +45,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/live', timeout=2)"
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/app/scripts/docker-entrypoint.sh"]
-CMD ["uvicorn", "rag_demo.production.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080", "--workers", "2", "--proxy-headers", "--forwarded-allow-ips=*"]
+CMD ["uvicorn", "rag_demo.production.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips=*"]

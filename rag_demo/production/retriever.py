@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+import re
 from time import perf_counter
 from typing import Optional, Sequence
 
@@ -54,6 +56,13 @@ class ProductionHybridRetriever:
             )
             if item
         ))
+        retrieval_queries = _retrieval_queries(
+            combined_query,
+            query_variants or (),
+            evidence_query,
+            enabled=self.settings.multi_query_enabled,
+            max_variants=self.settings.multi_query_max_variants,
+        )
         if retrieval_scope is None or not retrieval_scope.index_version_id:
             return _empty_result(
                 question=question,
@@ -63,32 +72,39 @@ class ProductionHybridRetriever:
                 trace=trace,
             )
 
-        dense_started = perf_counter()
-        query_vector = self.embedding_runtime.embed_query(combined_query)
-        dense_hits = self.vector_repository.search(
-            scope=retrieval_scope,
-            query_vector=query_vector,
-            top_k=candidate_k,
-            source_ids=source_ids,
-        )
-        dense_ms = _elapsed_ms(dense_started)
-        trace.record("retrieval.embedding", dense_ms, candidates=len(dense_hits))
+        per_query_k = max(top_k, math.ceil(candidate_k / len(retrieval_queries)))
+        query_hits = []
+        dense_ms = sparse_ms = 0.0
+        dense_hit_count = sparse_hit_count = 0
+        for query in retrieval_queries:
+            dense_started = perf_counter()
+            query_vector = self.embedding_runtime.embed_query(query)
+            dense_hits = self.vector_repository.search(
+                scope=retrieval_scope,
+                query_vector=query_vector,
+                top_k=per_query_k,
+                source_ids=source_ids,
+            )
+            dense_ms += _elapsed_ms(dense_started)
+            dense_hit_count += len(dense_hits)
 
-        sparse_started = perf_counter()
-        sparse_vector = self.embedding_runtime.sparse_query(combined_query)
-        sparse_hits = self.vector_repository.search_sparse(
-            scope=retrieval_scope,
-            query_sparse_vector=sparse_vector,
-            top_k=candidate_k,
-            source_ids=source_ids,
-        )
-        sparse_ms = _elapsed_ms(sparse_started)
-        trace.record("retrieval.bm25", sparse_ms, candidates=len(sparse_hits))
+            sparse_started = perf_counter()
+            sparse_vector = self.embedding_runtime.sparse_query(query)
+            sparse_hits = self.vector_repository.search_sparse(
+                scope=retrieval_scope,
+                query_sparse_vector=sparse_vector,
+                top_k=per_query_k,
+                source_ids=source_ids,
+            )
+            sparse_ms += _elapsed_ms(sparse_started)
+            sparse_hit_count += len(sparse_hits)
+            query_hits.append((dense_hits, sparse_hits))
+        trace.record("retrieval.embedding", dense_ms, candidates=dense_hit_count, query_count=len(retrieval_queries))
+        trace.record("retrieval.bm25", sparse_ms, candidates=sparse_hit_count, query_count=len(retrieval_queries))
 
         fusion_started = perf_counter()
-        candidates = _reciprocal_rank_fusion(
-            dense_hits,
-            sparse_hits,
+        candidates = _reciprocal_rank_fusion_many(
+            query_hits,
             rrf_k=self.settings.hybrid_rrf_k,
             bm25_weight=self.settings.keyword_weight,
             embedding_weight=self.settings.embedding_weight,
@@ -235,10 +251,11 @@ class ProductionHybridRetriever:
             "variant": "qdrant_bm25_dense_rrf_cross_encoder",
             "query": question,
             "retrievalQuery": combined_query,
+            "retrievalQueries": retrieval_queries,
             "contexts": contexts,
             "pipeline": [
-                {"name": "BM25 sparse", "detail": f"Qdrant sparse candidates: {len(sparse_hits)}."},
-                {"name": "Dense embedding", "detail": f"Qdrant dense candidates: {len(dense_hits)}."},
+                {"name": "BM25 sparse", "detail": f"Qdrant sparse candidates: {sparse_hit_count} across {len(retrieval_queries)} queries."},
+                {"name": "Dense embedding", "detail": f"Qdrant dense candidates: {dense_hit_count} across {len(retrieval_queries)} queries."},
                 {
                     "name": "Candidate Merge",
                     "detail": f"Union {len(candidates)} candidates for rank diagnostics.",
@@ -268,6 +285,8 @@ class ProductionHybridRetriever:
                 "tenantScopeApplied": True,
                 "indexVersionId": retrieval_scope.index_version_id,
                 "candidateCount": len(candidates),
+                "queryCount": len(retrieval_queries),
+                "perQueryCandidateK": per_query_k,
                 "rerankApplied": rerank_applied,
                 "queryComplexity": complexity_decision.as_dict(),
                 "fusionMethod": RRF_FUSION_METHOD if self.settings.hybrid_fusion_method == "rrf" else LAMBDA_MART_FUSION_METHOD,
@@ -280,6 +299,73 @@ class ProductionHybridRetriever:
                 "evidenceChunkLevel": "parent" if any(str(item.get("payload", {}).get("chunk_level") or "").lower() == "child" for item in candidates) else "same",
             },
         }
+
+
+def _retrieval_queries(
+    combined_query: str,
+    query_variants: Sequence[str],
+    evidence_query: str,
+    *,
+    enabled: bool,
+    max_variants: int,
+) -> list[str]:
+    """Keep the original query and a bounded set of distinct planned queries."""
+
+    if not enabled:
+        return [combined_query]
+    limit = max(1, min(int(max_variants), 8))
+    queries = []
+    seen = set()
+    for value in (combined_query, *query_variants):
+        query = re.sub(r"\s+", " ", str(value or "")).strip()[:512].rstrip()
+        if query and query.casefold() not in seen:
+            queries.append(query)
+            seen.add(query.casefold())
+    focused = re.sub(r"\s+", " ", str(evidence_query or "")).strip()[:512].rstrip()
+    if focused and focused.casefold() not in seen and limit > 1:
+        queries = queries[:limit - 1] + [focused]
+    return (queries or [combined_query])[:limit]
+
+
+def _reciprocal_rank_fusion_many(
+    query_hits,
+    *,
+    rrf_k: int,
+    bm25_weight: float,
+    embedding_weight: float,
+) -> list[dict]:
+    """Fuse both retrieval branches across queries without multiplying scores."""
+
+    if len(query_hits) == 1:
+        dense_hits, sparse_hits = query_hits[0]
+        return _reciprocal_rank_fusion(
+            dense_hits,
+            sparse_hits,
+            rrf_k=rrf_k,
+            bm25_weight=bm25_weight,
+            embedding_weight=embedding_weight,
+        )
+    candidates = {}
+    for dense_hits, sparse_hits in query_hits:
+        per_query = _reciprocal_rank_fusion(
+            dense_hits,
+            sparse_hits,
+            rrf_k=rrf_k,
+            bm25_weight=bm25_weight,
+            embedding_weight=embedding_weight,
+        )
+        for hit in per_query:
+            item = candidates.setdefault(hit["point_id"], {
+                "point_id": hit["point_id"],
+                "payload": hit["payload"],
+                "dense_score": 0.0,
+                "sparse_score": 0.0,
+                "rrf_score": 0.0,
+            })
+            item["dense_score"] = max(item["dense_score"], hit["dense_score"])
+            item["sparse_score"] = max(item["sparse_score"], hit["sparse_score"])
+            item["rrf_score"] += hit["rrf_score"] / len(query_hits)
+    return sorted(candidates.values(), key=lambda item: item["rrf_score"], reverse=True)
 
 
 def _reciprocal_rank_fusion(

@@ -4,6 +4,7 @@ import tempfile
 import time
 import unittest
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import patch
 
 from sqlalchemy import select
@@ -276,6 +277,22 @@ class ProductionIngestionTests(unittest.TestCase):
             "ignore_previous_instructions",
             canonical["prompt_injection_findings"],
         )
+
+    def test_traditional_chinese_attack_is_quarantined_before_artifact_write(self):
+        corpus_path = Path(__file__).resolve().parents[1] / "evals/prompt_injection/corpus.json"
+        corpus = json.loads(corpus_path.read_text(encoding="utf-8"))
+        attack = next(case for case in corpus["cases"] if case["id"] == "traditional-chinese-override")
+        payload = attack["text"].encode("utf-8")
+        with self.session_factory.begin() as session:
+            version = session.get(DocumentVersionRecord, "version-a")
+            version.sha256 = hashlib.sha256(payload).hexdigest()
+            version.size_bytes = len(payload)
+        storage = FakeIngestionStorage(payload)
+        result = self._service(storage).process(job_id="job-a", worker_id="worker-a")
+        self.assertEqual(result["status"], "quarantined")
+        self.assertEqual(storage.artifacts, {})
+        with self.session_factory() as session:
+            self.assertEqual(session.get(DocumentVersionRecord, "version-a").status, "quarantined")
 
 
 if __name__ == "__main__":

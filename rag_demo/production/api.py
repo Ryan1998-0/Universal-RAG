@@ -821,6 +821,12 @@ def create_app(
         return validation
 
     def require_model_admin(principal: Principal) -> None:
+        if production_environment:
+            raise ApiError(
+                403,
+                "MODEL_MANAGEMENT_FORBIDDEN",
+                "Runtime model replacement is disabled in staging and production.",
+            )
         if not ({"owner", "admin"} & set(principal.roles)):
             raise ApiError(403, "MODEL_MANAGEMENT_FORBIDDEN", "Model replacement requires owner or admin role.")
 
@@ -1171,8 +1177,14 @@ def create_app(
             )
         except ResourceNotFoundError:
             raise ApiError(404, "ANSWER_RUN_NOT_FOUND", "Answer run not found.")
+        except AccessDeniedError:
+            raise ApiError(403, "ACCESS_DENIED", "Access to this resource is denied.")
         for citation in result.get("citations") or []:
-            version_id = str(citation.get("document_version_id") or "")
+            version_id = (
+                str(citation.get("document_version_id") or "")
+                if citation.get("available") is True
+                else ""
+            )
             citation["source_url"] = (
                 f"/v1/document-versions/{version_id}/content"
                 if version_id
@@ -1321,6 +1333,27 @@ def create_app(
             )
             raise ApiError(503, "DEPENDENCY_UNAVAILABLE", "The service is temporarily unavailable.")
 
+        if authorized.active_index_version_id and any((
+            authorized.embedding_model != resolved_settings.embedding_model,
+            authorized.sparse_embedding_model
+            != resolved_settings.sparse_embedding_model,
+            authorized.embedding_dimensions != resolved_settings.embedding_dimensions,
+            authorized.chunk_schema_version != resolved_settings.chunk_schema_version,
+            authorized.qdrant_collection != resolved_settings.qdrant_collection,
+        )):
+            _log_event(
+                "retrieval.index_configuration_mismatch",
+                request_id=request.state.request_id,
+                tenant_id=principal.tenant_id,
+                knowledge_base_id=authorized.id,
+                index_version_id=authorized.active_index_version_id,
+            )
+            raise ApiError(
+                503,
+                "INDEX_CONFIGURATION_MISMATCH",
+                "The active index is incompatible with the configured retrieval runtime.",
+            )
+
         conversation_id = str(payload.conversation_id or "")
         history = []
         if conversation_id:
@@ -1341,6 +1374,8 @@ def create_app(
                 )
             except ResourceNotFoundError:
                 raise ApiError(404, "CONVERSATION_NOT_FOUND", "Conversation not found.")
+            except AccessDeniedError:
+                raise ApiError(403, "ACCESS_DENIED", "Access to this resource is denied.")
 
         pipeline_request = RagPipelineRequest(
             question=payload.question,
@@ -1917,6 +1952,11 @@ def _public_result(
             "uncited_claims": [
                 str(claim)[:500]
                 for claim in validation.get("uncited_claims") or []
+                if str(claim).strip()
+            ][:20],
+            "unsupported_claims": [
+                str(claim)[:500]
+                for claim in validation.get("unsupported_claims") or []
                 if str(claim).strip()
             ][:20],
             "reason": str(validation.get("reason") or ""),

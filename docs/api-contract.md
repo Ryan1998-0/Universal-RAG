@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | 問題輸入 | `POST /v1/ask` | 傳入 `question`、`knowledge_base_id`，可選 `source_ids`、`top_k`、`conversation_id` 與請求層級 `model`。伺服器自行建立檢索與證據，不接受外部偽造 contexts。 |
 | 建立上傳工作 | `POST /v1/knowledge-bases/{knowledge_base_id}/uploads` | 先預約檔案，傳入檔名、MIME、大小與 SHA-256。 |
-| 上傳檔案內容 | `PUT /v1/uploads/{upload_id}/content` | 以 request body 傳入檔案內容；支援 proxy 或 presigned 流程。 |
+| 上傳檔案內容 | `PUT /v1/uploads/{upload_id}/content` | 以 request body 傳入檔案內容；staging 與 production 僅開放 proxy 流程，presigned 直傳尚待完整性與瀏覽器安全驗收。 |
 | 完成上傳 | `POST /v1/uploads/{upload_id}/complete` | 驗證物件後建立解析與索引工作。 |
 
 支援 PDF、圖片、DOCX、TXT、Markdown 與 JSON。文件解析、OCR、切分、Embedding 與索引工作會由背景服務處理。
@@ -16,6 +16,8 @@
 ## 資料輸出
 
 `POST /v1/ask` 回傳 `request_id`、`run_id`、`answer`、`citations`、`confidence`、`grounding_warnings`、`evidence_validation`、`model`、`retrieval` 與 `timings`。完整執行紀錄可由 `GET /v1/answer-runs/{run_id}` 讀取。
+
+`evidence_validation` 會逐句檢查來源 rank，並列出 `uncited_claims` 與 `unsupported_claims`。後者表示主張與所引用片段缺少可檢查的數值或詞彙支持；此確定性檢查無法取代人工或端到端語意評估。
 
 `timings` 保留既有摘要欄位（例如 `routeMs`、`retrieveMs`、`generateMs`、`totalMs`），並新增：
 
@@ -54,7 +56,7 @@
 
 ### 執行期替換
 
-具 `owner` 或 `admin` 角色的使用者可呼叫：
+Development/Test 中具 `owner` 或 `admin` 角色的使用者可呼叫：
 
 ```http
 PUT /v1/models/generation
@@ -63,7 +65,7 @@ Content-Type: application/json
 {"model": "ollama:qwen2.5:14b"}
 ```
 
-替換只作用於目前 API process，重啟後回到環境設定；`DELETE /v1/models/{node}` 可清除執行期覆寫。請求層級的 `model` 欄位仍可作為單次呼叫覆寫，但必須通過 allowlist。
+替換只作用於目前 API process，重啟後回到環境設定；`DELETE /v1/models/{node}` 可清除執行期覆寫。由於此覆寫會影響同一 process 的所有租戶，Staging/Production 暫時拒絕這兩個寫入端點，直到具資料庫成員狀態檢查與明確平台管理員權限的持久方案完成。請求層級的 `model` 欄位仍可作為單次呼叫覆寫，但必須通過 allowlist。
 
 可用環境變數：
 
@@ -85,7 +87,7 @@ RAG_RERANKER_MODEL
 
 ## Log 與除錯
 
-服務啟動時會建立旋轉 JSON Lines log：預設為 `logs/rag.log`。可用下列環境變數調整：
+服務啟動時會建立旋轉 JSON Lines log：本機執行預設為 `logs/rag.log`；正式容器映像預設為非 root 使用者可寫的 `/var/lib/rag/logs/rag.log`。可用下列環境變數調整：
 
 ```text
 RAG_LOG_DIR=logs

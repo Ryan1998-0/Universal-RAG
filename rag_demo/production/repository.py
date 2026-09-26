@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Sequence
@@ -56,6 +57,11 @@ class AuthorizedKnowledgeBase:
     active_index_version_id: Optional[str]
     activation_generation: int
     can_write: bool
+    embedding_model: Optional[str] = None
+    sparse_embedding_model: Optional[str] = None
+    embedding_dimensions: Optional[int] = None
+    chunk_schema_version: Optional[str] = None
+    qdrant_collection: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -478,14 +484,22 @@ class SqlAlchemyTenantRepository:
         limit: int = 10,
     ) -> list[dict]:
         with self.session_factory() as session:
+            user, membership = self._active_identity(session, principal)
             conversation = session.scalar(select(ConversationRecord.id).where(
                 ConversationRecord.id == conversation_id,
                 ConversationRecord.tenant_id == principal.tenant_id,
-                ConversationRecord.user_id == authorized.user_id,
+                ConversationRecord.user_id == user.id,
                 ConversationRecord.knowledge_base_id == authorized.id,
             ))
             if conversation is None:
                 raise ResourceNotFoundError("conversation was not found")
+            self._require_knowledge_base_read(
+                session,
+                principal=principal,
+                user=user,
+                membership=membership,
+                knowledge_base_id=authorized.id,
+            )
             rows = list(session.scalars(
                 select(MessageRecord)
                 .where(
@@ -502,25 +516,40 @@ class SqlAlchemyTenantRepository:
 
     def list_conversations(self, *, principal: Principal) -> list[dict]:
         with self.session_factory() as session:
-            user, _membership = self._active_identity(session, principal)
-            rows = list(session.scalars(
-                select(ConversationRecord)
+            user, membership = self._active_identity(session, principal)
+            rows = list(session.execute(
+                select(ConversationRecord, KnowledgeBaseRecord)
+                .join(
+                    KnowledgeBaseRecord,
+                    KnowledgeBaseRecord.id == ConversationRecord.knowledge_base_id,
+                )
                 .where(
                     ConversationRecord.tenant_id == principal.tenant_id,
                     ConversationRecord.user_id == user.id,
                 )
                 .order_by(ConversationRecord.updated_at.desc(), ConversationRecord.id)
             ))
-            return [
-                {
+            items = []
+            for row, knowledge_base in rows:
+                try:
+                    self._require_knowledge_base_read(
+                        session,
+                        principal=principal,
+                        user=user,
+                        membership=membership,
+                        knowledge_base_id=row.knowledge_base_id,
+                        knowledge_base=knowledge_base,
+                    )
+                except (ResourceNotFoundError, AccessDeniedError):
+                    continue
+                items.append({
                     "id": row.id,
                     "knowledge_base_id": row.knowledge_base_id,
                     "title": row.title,
                     "created_at": row.created_at.isoformat(),
                     "updated_at": row.updated_at.isoformat(),
-                }
-                for row in rows
-            ]
+                })
+            return items
 
     def get_conversation(
         self,
@@ -529,7 +558,7 @@ class SqlAlchemyTenantRepository:
         conversation_id: str,
     ) -> dict:
         with self.session_factory() as session:
-            user, _membership = self._active_identity(session, principal)
+            user, membership = self._active_identity(session, principal)
             row = session.scalar(select(ConversationRecord).where(
                 ConversationRecord.id == conversation_id,
                 ConversationRecord.tenant_id == principal.tenant_id,
@@ -537,6 +566,13 @@ class SqlAlchemyTenantRepository:
             ))
             if row is None:
                 raise ResourceNotFoundError("conversation was not found")
+            self._require_knowledge_base_read(
+                session,
+                principal=principal,
+                user=user,
+                membership=membership,
+                knowledge_base_id=row.knowledge_base_id,
+            )
             messages = list(session.scalars(
                 select(MessageRecord)
                 .where(
@@ -628,7 +664,7 @@ class SqlAlchemyTenantRepository:
         run_id: str,
     ) -> dict:
         with self.session_factory() as session:
-            user, _membership = self._active_identity(session, principal)
+            user, membership = self._active_identity(session, principal)
             run = session.scalar(select(AnswerRunRecord).where(
                 AnswerRunRecord.id == run_id,
                 AnswerRunRecord.tenant_id == principal.tenant_id,
@@ -636,6 +672,13 @@ class SqlAlchemyTenantRepository:
             ))
             if run is None:
                 raise ResourceNotFoundError("answer run was not found")
+            self._require_knowledge_base_read(
+                session,
+                principal=principal,
+                user=user,
+                membership=membership,
+                knowledge_base_id=run.knowledge_base_id,
+            )
             citations = list(session.scalars(
                 select(CitationRecord)
                 .where(
@@ -646,17 +689,6 @@ class SqlAlchemyTenantRepository:
             ))
             evidence = []
             for citation in citations:
-                chunk = (
-                    session.scalar(
-                        select(ChunkRecord).where(
-                            ChunkRecord.id == citation.chunk_record_id,
-                            ChunkRecord.tenant_id == principal.tenant_id,
-                            ChunkRecord.knowledge_base_id == run.knowledge_base_id,
-                        )
-                    )
-                    if citation.chunk_record_id
-                    else None
-                )
                 version = (
                     session.scalar(
                         select(DocumentVersionRecord).where(
@@ -679,8 +711,26 @@ class SqlAlchemyTenantRepository:
                     if version is not None
                     else None
                 )
+                chunk = (
+                    session.scalar(
+                        select(ChunkRecord).where(
+                            ChunkRecord.id == citation.chunk_record_id,
+                            ChunkRecord.tenant_id == principal.tenant_id,
+                            ChunkRecord.knowledge_base_id == run.knowledge_base_id,
+                            ChunkRecord.document_id == document.id,
+                            ChunkRecord.document_version_id == version.id,
+                            ChunkRecord.index_version_id == run.index_version_id,
+                        )
+                    )
+                    if document is not None and citation.chunk_record_id and run.index_version_id
+                    else None
+                )
+                if document is None:
+                    evidence.append({"rank": citation.rank, "available": False})
+                    continue
                 evidence.append({
                     "rank": citation.rank,
+                    "available": True,
                     "chunk_id": citation.chunk_id,
                     "chunk_record_id": citation.chunk_record_id,
                     "document_version_id": citation.document_version_id,
@@ -767,6 +817,39 @@ class SqlAlchemyTenantRepository:
             raise AccessDeniedError("identity is not an active tenant member")
         return user, membership
 
+    @staticmethod
+    def _require_knowledge_base_read(
+        session,
+        *,
+        principal: Principal,
+        user: UserIdentity,
+        membership: Membership,
+        knowledge_base_id: str,
+        knowledge_base: Optional[KnowledgeBaseRecord] = None,
+    ) -> KnowledgeBaseRecord:
+        row = knowledge_base
+        if row is None:
+            row = session.scalar(select(KnowledgeBaseRecord).where(
+                KnowledgeBaseRecord.id == knowledge_base_id,
+                KnowledgeBaseRecord.tenant_id == principal.tenant_id,
+                KnowledgeBaseRecord.active.is_(True),
+            ))
+        if (
+            row is None
+            or row.id != knowledge_base_id
+            or row.tenant_id != principal.tenant_id
+            or not row.active
+        ):
+            raise ResourceNotFoundError("knowledge base was not found")
+        if not (
+            membership.role in {"owner", "admin"}
+            or principal.has_role("tenant_admin")
+            or row.owner_user_id == user.id
+            or row.visibility == "tenant"
+        ):
+            raise AccessDeniedError("knowledge base access is denied")
+        return row
+
     def authorize_knowledge_base(
         self,
         principal: Principal,
@@ -774,53 +857,14 @@ class SqlAlchemyTenantRepository:
         requested_source_ids: Optional[Sequence[str]],
     ) -> AuthorizedKnowledgeBase:
         with self.session_factory() as session:
-            tenant = session.scalar(
-                select(Tenant).where(
-                    Tenant.id == principal.tenant_id,
-                    Tenant.active.is_(True),
-                )
+            user, membership = self._active_identity(session, principal)
+            knowledge_base = self._require_knowledge_base_read(
+                session,
+                principal=principal,
+                user=user,
+                membership=membership,
+                knowledge_base_id=knowledge_base_id,
             )
-            if tenant is None:
-                raise AccessDeniedError("tenant is not active")
-
-            user = session.scalar(
-                select(UserIdentity).where(
-                    UserIdentity.tenant_id == principal.tenant_id,
-                    UserIdentity.subject == principal.subject,
-                    UserIdentity.active.is_(True),
-                )
-            )
-            if user is None:
-                raise AccessDeniedError("identity is not an active tenant member")
-
-            membership = session.scalar(
-                select(Membership).where(
-                    Membership.tenant_id == principal.tenant_id,
-                    Membership.user_id == user.id,
-                    Membership.active.is_(True),
-                )
-            )
-            if membership is None:
-                raise AccessDeniedError("identity is not an active tenant member")
-
-            knowledge_base = session.scalar(
-                select(KnowledgeBaseRecord).where(
-                    KnowledgeBaseRecord.id == knowledge_base_id,
-                    KnowledgeBaseRecord.tenant_id == principal.tenant_id,
-                    KnowledgeBaseRecord.active.is_(True),
-                )
-            )
-            if knowledge_base is None:
-                raise ResourceNotFoundError("knowledge base was not found")
-
-            can_read = (
-                membership.role in {"owner", "admin"}
-                or principal.has_role("tenant_admin")
-                or knowledge_base.owner_user_id == user.id
-                or knowledge_base.visibility == "tenant"
-            )
-            if not can_read:
-                raise AccessDeniedError("knowledge base access is denied")
             can_write = (
                 membership.role in {"owner", "admin"}
                 or principal.has_role("tenant_admin")
@@ -841,6 +885,9 @@ class SqlAlchemyTenantRepository:
                     raise InvalidServiceStateError(
                         "knowledge base active index is inconsistent"
                     )
+                # A replacement upload changes the document workflow status
+                # before its new index is published. The active membership and
+                # current version remain the authority for searchable sources.
                 ready_source_ids = list(session.scalars(
                     select(DocumentRecord.source_id)
                     .join(
@@ -850,7 +897,6 @@ class SqlAlchemyTenantRepository:
                     .where(
                         DocumentRecord.tenant_id == principal.tenant_id,
                         DocumentRecord.knowledge_base_id == knowledge_base.id,
-                        DocumentRecord.status == "ready",
                         DocumentRecord.deleted_at.is_(None),
                         DocumentRecord.current_version_id
                         == IndexDocumentRecord.document_version_id,
@@ -878,6 +924,15 @@ class SqlAlchemyTenantRepository:
                 active_index_version_id=knowledge_base.active_index_version_id,
                 activation_generation=knowledge_base.activation_generation,
                 can_write=can_write,
+                embedding_model=active_index.embedding_model if knowledge_base.active_index_version_id else None,
+                sparse_embedding_model=(
+                    active_index.sparse_embedding_model
+                    if knowledge_base.active_index_version_id
+                    else None
+                ),
+                embedding_dimensions=active_index.embedding_dimensions if knowledge_base.active_index_version_id else None,
+                chunk_schema_version=active_index.chunk_schema_version if knowledge_base.active_index_version_id else None,
+                qdrant_collection=active_index.qdrant_collection if knowledge_base.active_index_version_id else None,
             )
 
     def reserve_upload(
@@ -909,7 +964,10 @@ class SqlAlchemyTenantRepository:
                 if (
                     existing.knowledge_base_id != authorized.id
                     or existing.owner_user_id != authorized.user_id
+                    or existing.folder_id != folder_id
+                    or existing.target_document_id != target_document_id
                     or existing.filename != filename
+                    or existing.declared_mime_type != declared_mime_type
                     or existing.expected_size_bytes != expected_size_bytes
                     or existing.expected_sha256 != expected_sha256
                 ):
@@ -1407,9 +1465,10 @@ class SqlAlchemyTenantRepository:
         expected_active_index_id: Optional[str] = None,
         expected_generation: Optional[int] = None,
         grace_period_seconds: int = 600,
+        session=None,
     ) -> None:
         """Atomically publish one validated immutable index version."""
-        with self.session_factory.begin() as session:
+        with (nullcontext(session) if session is not None else self.session_factory.begin()) as session:
             knowledge_base = session.scalar(
                 select(KnowledgeBaseRecord)
                 .where(
@@ -1679,6 +1738,11 @@ def _safe_retrieval_record(raw_retrieval, raw_evidence_validation=None) -> dict:
             "uncited_claims": [
                 str(claim)[:500]
                 for claim in raw_evidence_validation.get("uncited_claims") or []
+                if str(claim).strip()
+            ][:20],
+            "unsupported_claims": [
+                str(claim)[:500]
+                for claim in raw_evidence_validation.get("unsupported_claims") or []
                 if str(claim).strip()
             ][:20],
             "reason": str(raw_evidence_validation.get("reason") or ""),

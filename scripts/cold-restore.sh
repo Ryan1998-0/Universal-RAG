@@ -101,7 +101,28 @@ for volume in "${volumes[@]}"; do
   docker volume inspect "${project_name}_${volume}" >/dev/null
 done
 
+for volume in "${volumes[@]}"; do
+  echo "Checking ${volume} archive before stopping services..."
+  docker run --rm \
+    -v "${backup_root}:/backup:ro" \
+    "$helper_image" \
+    tar -tzf "/backup/${volume}.tar.gz" >/dev/null
+done
+
+restore_started=0
+restore_exit() {
+  exit_status=$?
+  if [[ $restore_started -eq 1 && $exit_status -ne 0 ]]; then
+    if ! compose stop "${services[@]}" >/dev/null; then
+      echo "Could not stop every service after restore failure; isolate traffic immediately." >&2
+    fi
+    echo "Restore failed; data may be partial. Recover from a verified backup before reopening traffic." >&2
+  fi
+}
+trap restore_exit EXIT
+
 echo "Stopping services before destructive restore..."
+restore_started=1
 compose stop "${services[@]}"
 
 for volume in "${volumes[@]}"; do
@@ -115,4 +136,5 @@ done
 
 echo "Starting restored stack..."
 compose up -d
+restore_started=0
 echo "Restore complete. Verify /health/ready and run the smoke test before reopening traffic."

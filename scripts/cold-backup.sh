@@ -13,6 +13,7 @@ fi
 
 command -v docker >/dev/null 2>&1 || { echo "docker is required" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || { echo "python3 is required" >&2; exit 1; }
+command -v timeout >/dev/null 2>&1 || { echo "timeout is required" >&2; exit 1; }
 docker compose version >/dev/null
 
 project_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -72,6 +73,49 @@ for service in migrate bootstrap provision; do
   fi
 done
 
+restart_ready_timeout=${RAG_RESTART_READY_TIMEOUT_SECONDS:-600}
+[[ $restart_ready_timeout =~ ^[1-9][0-9]{0,2}$ ]] \
+  && (( restart_ready_timeout <= 600 )) || {
+  echo "RAG_RESTART_READY_TIMEOUT_SECONDS must be between 1 and 600" >&2
+  exit 1
+}
+
+compose_timed() {
+  timeout 10s docker compose --project-directory "$project_dir" --env-file "$compose_env_file" \
+    -f "$project_dir/compose.yaml" --project-name "$project_name" "$@"
+}
+
+wait_for_stack_ready() {
+  local deadline=$((SECONDS + restart_ready_timeout))
+  local api_id worker_id beat_id caddy_id api_state worker_state beat_state caddy_state
+  while :; do
+    api_id=$(compose_timed ps -q api) || { echo "Cannot inspect API container" >&2; return 1; }
+    worker_id=$(compose_timed ps -q worker) || { echo "Cannot inspect Worker container" >&2; return 1; }
+    beat_id=$(compose_timed ps -q beat) || { echo "Cannot inspect Beat container" >&2; return 1; }
+    caddy_id=$(compose_timed ps -q caddy) || { echo "Cannot inspect Caddy container" >&2; return 1; }
+    if [[ -n $api_id && -n $worker_id && -n $beat_id && -n $caddy_id ]]; then
+      api_state=$(timeout 10s docker inspect --format \
+        '{{.State.Running}} {{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}' \
+        "$api_id") || { echo "Cannot inspect API health" >&2; return 1; }
+      worker_state=$(timeout 10s docker inspect --format '{{.State.Running}}' \
+        "$worker_id") || { echo "Cannot inspect Worker state" >&2; return 1; }
+      beat_state=$(timeout 10s docker inspect --format '{{.State.Running}}' \
+        "$beat_id") || { echo "Cannot inspect Beat state" >&2; return 1; }
+      caddy_state=$(timeout 10s docker inspect --format '{{.State.Running}}' \
+        "$caddy_id") || { echo "Cannot inspect Caddy state" >&2; return 1; }
+      if [[ $api_state == "true healthy" && $worker_state == true \
+        && $beat_state == true && $caddy_state == true ]]; then
+        return 0
+      fi
+    fi
+    if (( SECONDS >= deadline )); then
+      echo "Stack did not become ready within ${restart_ready_timeout} seconds" >&2
+      return 1
+    fi
+    sleep 5 || { echo "Readiness polling was interrupted" >&2; return 1; }
+  done
+}
+
 restart_stack() {
   exit_status=$?
   trap - EXIT
@@ -79,10 +123,13 @@ restart_stack() {
     if ! compose up -d; then
       echo "Failed to restart the stack after backup; manual recovery is required." >&2
       exit_status=1
+    elif ! wait_for_stack_ready; then
+      echo "Stack restart did not become ready after backup; manual recovery is required." >&2
+      exit_status=1
     fi
   fi
   if [[ $exit_status -eq 0 ]]; then
-    echo "Backup complete; Compose restart succeeded: ${backup_root}"
+    echo "Backup complete; API health passed and Caddy, Worker and Beat are running: ${backup_root}"
   fi
   exit "$exit_status"
 }

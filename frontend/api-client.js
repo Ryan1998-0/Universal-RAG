@@ -207,9 +207,29 @@ export async function pollJob(
   { success, failure, timeoutMs = 15 * 60 * 1000, intervalMs = 1500 },
   fetchImpl = globalThis.fetch,
 ) {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < timeoutMs) {
-    const job = await requestJson(path, {}, fetchImpl);
+  const deadline = Date.now() + timeoutMs;
+  const timeoutError = new ApiClientError("背景工作未在期限內完成。", {
+    code: "BACKGROUND_JOB_TIMEOUT",
+  });
+  while (Date.now() < deadline) {
+    const controller = new AbortController();
+    const remainingMs = deadline - Date.now();
+    let timeoutId;
+    const requestTimeout = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(timeoutError);
+        controller.abort();
+      }, remainingMs);
+    });
+    let job;
+    try {
+      job = await Promise.race([
+        requestJson(path, { signal: controller.signal }, fetchImpl),
+        requestTimeout,
+      ]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
     if (success.includes(job.status)) return job;
     if (failure.includes(job.status)) {
       throw new ApiClientError(
@@ -217,11 +237,9 @@ export async function pollJob(
         { code: String(job.error_code || "BACKGROUND_JOB_FAILED") },
       );
     }
-    await delay(intervalMs);
+    await delay(Math.min(intervalMs, Math.max(0, deadline - Date.now())));
   }
-  throw new ApiClientError("背景工作未在期限內完成。", {
-    code: "BACKGROUND_JOB_TIMEOUT",
-  });
+  throw timeoutError;
 }
 
 export async function sha256File(file) {

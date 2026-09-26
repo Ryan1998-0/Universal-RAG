@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Iterable, List, Optional, Sequence
 
-from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy import and_, func, select, text
 from sqlalchemy.exc import IntegrityError
 
 from rag_demo.production.auth import Principal
@@ -49,6 +49,7 @@ class ConcurrentPublishError(RuntimeError):
 
 
 _WITHDRAWN_ANSWER_TEXT = "此歷史回答的來源無法確認或已失效，因此不再顯示。"
+_CITATION_LINEAGE_KEY = "citation_lineage_v1"
 
 
 @dataclass(frozen=True)
@@ -532,10 +533,8 @@ class SqlAlchemyTenantRepository:
             withdrawn_run_ids = self._withdrawn_answer_run_ids(
                 session,
                 tenant_id=principal.tenant_id,
-                user_id=user.id,
                 knowledge_base_id=authorized.id,
-                conversation_id=conversation_id,
-                run_ids=answer_runs.keys(),
+                answer_runs=answer_runs,
             )
             history = []
             for row in reversed(rows):
@@ -637,10 +636,8 @@ class SqlAlchemyTenantRepository:
             withdrawn_run_ids = self._withdrawn_answer_run_ids(
                 session,
                 tenant_id=principal.tenant_id,
-                user_id=user.id,
                 knowledge_base_id=row.knowledge_base_id,
-                conversation_id=row.id,
-                run_ids=answer_runs.keys(),
+                answer_runs=answer_runs,
             )
             return {
                 "id": row.id,
@@ -697,22 +694,22 @@ class SqlAlchemyTenantRepository:
         session,
         *,
         tenant_id: str,
-        user_id: str,
         knowledge_base_id: str,
-        conversation_id: str,
-        run_ids: Iterable[str],
+        answer_runs: dict[str, AnswerRunRecord],
     ) -> set[str]:
-        selected_ids = [run_id for run_id in run_ids if run_id]
-        if not selected_ids:
+        if not answer_runs:
             return set()
-        return set(session.scalars(
-            select(AnswerRunRecord.id)
-            .outerjoin(
+        citations_by_run: dict[str, list[CitationRecord]] = {
+            run_id: [] for run_id in answer_runs
+        }
+        withdrawn = set()
+        rows = session.execute(
+            select(
                 CitationRecord,
-                and_(
-                    CitationRecord.answer_run_id == AnswerRunRecord.id,
-                    CitationRecord.tenant_id == tenant_id,
-                ),
+                DocumentVersionRecord.id,
+                DocumentRecord.id,
+                DocumentRecord.deleted_at,
+                DocumentRecord.status,
             )
             .outerjoin(
                 DocumentVersionRecord,
@@ -730,29 +727,27 @@ class SqlAlchemyTenantRepository:
                 ),
             )
             .where(
-                AnswerRunRecord.id.in_(selected_ids),
-                AnswerRunRecord.tenant_id == tenant_id,
-                AnswerRunRecord.user_id == user_id,
-                AnswerRunRecord.knowledge_base_id == knowledge_base_id,
-                AnswerRunRecord.conversation_id == conversation_id,
-                or_(
-                    and_(
-                        AnswerRunRecord.retrieval_needed.is_(True),
-                        CitationRecord.id.is_(None),
-                    ),
-                    and_(
-                        CitationRecord.id.is_not(None),
-                        or_(
-                            DocumentVersionRecord.id.is_(None),
-                            DocumentRecord.id.is_(None),
-                            DocumentRecord.deleted_at.is_not(None),
-                            DocumentRecord.status == "deleted",
-                        ),
-                    ),
-                ),
+                CitationRecord.tenant_id == tenant_id,
+                CitationRecord.answer_run_id.in_(answer_runs),
             )
-            .distinct()
-        ))
+        )
+        for citation, version_id, document_id, deleted_at, status in rows:
+            citations_by_run[citation.answer_run_id].append(citation)
+            if (
+                version_id is None
+                or document_id is None
+                or deleted_at is not None
+                or status == "deleted"
+            ):
+                withdrawn.add(citation.answer_run_id)
+        for run_id, run in answer_runs.items():
+            citations = citations_by_run[run_id]
+            if (
+                (run.retrieval_needed and not citations)
+                or not _citation_lineage_intact(run.retrieval_json, citations)
+            ):
+                withdrawn.add(run_id)
+        return withdrawn
 
     def delete_conversation(
         self,
@@ -805,9 +800,15 @@ class SqlAlchemyTenantRepository:
                 )
                 .order_by(CitationRecord.rank, CitationRecord.id)
             ))
+            lineage_intact = _citation_lineage_intact(run.retrieval_json, citations)
             evidence = []
-            answer_withdrawn = bool(run.retrieval_needed and not citations)
+            answer_withdrawn = bool(
+                not lineage_intact or (run.retrieval_needed and not citations)
+            )
             for citation in citations:
+                if not lineage_intact:
+                    evidence.append({"rank": citation.rank, "available": False})
+                    continue
                 version = (
                     session.scalar(
                         select(DocumentVersionRecord).where(
@@ -1734,6 +1735,35 @@ class SqlAlchemyTenantRepository:
                 )
                 if conversation is None:
                     raise ResourceNotFoundError("conversation was not found")
+            citation_records = [
+                CitationRecord(
+                    tenant_id=principal.tenant_id,
+                    answer_run_id=str(result["run_id"]),
+                    chunk_id=str(citation.get("id") or ""),
+                    rank=int(citation.get("rank") or 0),
+                    page=str(citation.get("page") or ""),
+                    content_sha256=str(citation.get("content_sha256") or ""),
+                    document_version_id=(
+                        str(citation.get("document_version_id"))
+                        if citation.get("document_version_id")
+                        else None
+                    ),
+                    chunk_record_id=(
+                        str(citation.get("chunk_record_id"))
+                        if citation.get("chunk_record_id")
+                        else None
+                    ),
+                    verified=bool(citation.get("verified", False)),
+                )
+                for citation in result.get("citations") or []
+            ]
+            retrieval_record = _safe_retrieval_record(
+                result.get("retrieval"),
+                result.get("evidence_validation"),
+            )
+            retrieval_record[_CITATION_LINEAGE_KEY] = _citation_lineage(
+                citation_records
+            )
             run = AnswerRunRecord(
                 id=str(result["run_id"]),
                 tenant_id=principal.tenant_id,
@@ -1749,10 +1779,7 @@ class SqlAlchemyTenantRepository:
                 retrieval_needed=bool(result.get("retrieval", {}).get("needed")),
                 source_ids_json=list(authorized.source_ids),
                 timings_json=dict(result.get("timings") or {}),
-                retrieval_json=_safe_retrieval_record(
-                    result.get("retrieval"),
-                    result.get("evidence_validation"),
-                ),
+                retrieval_json=retrieval_record,
             )
             session.add(run)
             if conversation is not None:
@@ -1791,26 +1818,7 @@ class SqlAlchemyTenantRepository:
                 if int(previous_user_count) == 0:
                     conversation.title = " ".join(question.split())[:80] or "新對話"
                 conversation.updated_at = utc_now()
-            for citation in result.get("citations") or []:
-                session.add(CitationRecord(
-                    tenant_id=principal.tenant_id,
-                    answer_run_id=run.id,
-                    chunk_id=str(citation.get("id") or ""),
-                    rank=int(citation.get("rank") or 0),
-                    page=str(citation.get("page") or ""),
-                    content_sha256=str(citation.get("content_sha256") or ""),
-                    document_version_id=(
-                        str(citation.get("document_version_id"))
-                        if citation.get("document_version_id")
-                        else None
-                    ),
-                    chunk_record_id=(
-                        str(citation.get("chunk_record_id"))
-                        if citation.get("chunk_record_id")
-                        else None
-                    ),
-                    verified=bool(citation.get("verified", False)),
-                ))
+            session.add_all(citation_records)
 
     def record_audit_event(
         self,
@@ -1833,6 +1841,39 @@ class SqlAlchemyTenantRepository:
                 outcome=outcome,
                 details_json=dict(details or {}),
             ))
+
+
+def _citation_lineage(citations: Iterable[CitationRecord]) -> list[dict]:
+    entries = [
+        {
+            "rank": int(citation.rank),
+            "document_version_id": str(citation.document_version_id or ""),
+            "chunk_record_id": str(citation.chunk_record_id or ""),
+            "chunk_id": str(citation.chunk_id or ""),
+            "content_sha256": str(citation.content_sha256 or ""),
+            "page": str(citation.page or ""),
+            "verified": bool(citation.verified),
+        }
+        for citation in citations
+    ]
+    return sorted(entries, key=lambda entry: (
+        entry["rank"],
+        entry["document_version_id"],
+        entry["chunk_record_id"],
+        entry["chunk_id"],
+        entry["content_sha256"],
+        entry["page"],
+        entry["verified"],
+    ))
+
+
+def _citation_lineage_intact(
+    retrieval_json: dict,
+    citations: Iterable[CitationRecord],
+) -> bool:
+    if not isinstance(retrieval_json, dict) or _CITATION_LINEAGE_KEY not in retrieval_json:
+        return True  # Runs created before lineage persistence use the older checks.
+    return retrieval_json[_CITATION_LINEAGE_KEY] == _citation_lineage(citations)
 
 
 def _safe_retrieval_record(raw_retrieval, raw_evidence_validation=None) -> dict:

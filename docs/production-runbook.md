@@ -6,7 +6,7 @@
 
 ## 1. 上線前提
 
-- 一台可執行 Docker Engine 與 Docker Compose v2 的 Linux 主機。
+- 一台可執行 Docker Engine、Docker Compose v2 與 Python 3 的 Linux 主機。
 - 一個指向主機的 DNS 名稱，TCP `80/443` 對外開放。
 - 一個 OIDC Provider 與已建立的 Web Client。
 - 一個可由 Compose 網路連線的 Ollama 或相容推論端點。
@@ -60,7 +60,7 @@ docker compose --env-file .env.production ps
 
 `migrate` 會先執行 Alembic，`bootstrap` 會建立 Object Storage Bucket 與 Qdrant Collection；兩者成功後 API、Worker、Beat 與 Caddy 才會啟動。
 
-若既有 Qdrant collection 的 Dense 向量維度與設定不同，`bootstrap` 會失敗，避免在不相容的 collection 中寫入。`/v1/ask` 也會比對 Active Index 記錄的 Embedding 模型、維度、Chunk schema 與 Qdrant collection；不一致時回 `503 INDEX_CONFIGURATION_MISMATCH`。變更這些設定時，先在 staging 以新設定完成建索引及驗收，再安排服務設定和 Active Index 一起切換。若切換中斷，恢復原設定或完成新索引啟用後再提供問答；不要忽略 503 繼續用舊索引。
+若既有 Qdrant collection 的 Dense 維度或 Cosine distance、`bm25` Sparse IDF 設定不同，`bootstrap` 會失敗，避免在不相容的 collection 中寫入。`/v1/ask` 也會比對 Active Index 記錄的 Embedding 模型、維度、Chunk schema 與 Qdrant collection；不一致時回 `503 INDEX_CONFIGURATION_MISMATCH`。變更這些設定時，先在 staging 以新設定完成建索引及驗收，再安排服務設定和 Active Index 一起切換。若切換中斷，恢復原設定或完成新索引啟用後再提供問答；不要忽略 503 繼續用舊索引。
 
 ## 4. 建立第一個租戶與使用者
 
@@ -171,6 +171,8 @@ export RAG_LOAD_CONCURRENCY=5
 
 冷備份會短暫停止寫入路徑，封存 PostgreSQL、Redis、Qdrant 與 Object Storage 四個 Volume，產生 SHA-256 清單後重啟服務。
 
+備份與還原腳本預設使用專案根目錄的 `.env.production`，並從 Compose 解析實際 project name，停機前檢查設定及目標 Volume。若環境檔另存他處，先設定 `RAG_COMPOSE_ENV_FILE` 為該檔路徑。備份失敗時腳本仍會嘗試重啟服務；重啟失敗會以非零狀態結束，操作人員須立即處理。還原會先要求四份封存的完整 SHA-256 清單及相符的 project metadata，再停止服務。
+
 ```bash
 ./scripts/cold-backup.sh /mnt/encrypted-backups/$(date -u +%Y%m%dT%H%M%SZ)
 ```
@@ -183,7 +185,7 @@ export RAG_LOAD_CONCURRENCY=5
 
 還原後依序執行：
 
-1. `docker compose ps`
+1. `docker compose --env-file .env.production ps`
 2. `/health/ready`
 3. `scripts/smoke_production.py`
 4. 隨機抽查文件下載、引用內容與 Active Index。

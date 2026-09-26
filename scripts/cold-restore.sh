@@ -11,10 +11,34 @@ if [[ ${1:-} != "--confirm-destroy-existing" || -z ${2:-} ]]; then
 fi
 
 command -v docker >/dev/null 2>&1 || { echo "docker is required" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 is required" >&2; exit 1; }
 docker compose version >/dev/null
 
+project_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+compose_env_file=${RAG_COMPOSE_ENV_FILE:-"${project_dir}/.env.production"}
+if [[ $compose_env_file != /* ]]; then
+  compose_env_file="$(pwd)/${compose_env_file}"
+fi
+[[ -f $compose_env_file && -r $compose_env_file ]] || {
+  echo "Readable Compose environment file is required: ${compose_env_file}" >&2
+  exit 1
+}
+project_name=$(
+  docker compose --project-directory "$project_dir" --env-file "$compose_env_file" \
+    -f "$project_dir/compose.yaml" config --format json \
+    | python3 -c 'import json, sys; print(json.load(sys.stdin)["name"])'
+)
+[[ $project_name =~ ^[a-z0-9][a-z0-9_-]*$ ]] || {
+  echo "Compose project name is invalid" >&2
+  exit 1
+}
+compose() {
+  docker compose --project-directory "$project_dir" --env-file "$compose_env_file" \
+    -f "$project_dir/compose.yaml" --project-name "$project_name" "$@"
+}
+compose config --quiet
+
 backup_root=$(cd "$2" && pwd)
-project_name=${COMPOSE_PROJECT_NAME:-universal-rag}
 helper_image=${BACKUP_HELPER_IMAGE:-python:3.12.13-slim-bookworm}
 volumes=(postgres-data redis-data qdrant-data object-data)
 services=(caddy api worker beat postgres redis qdrant object-storage)
@@ -26,17 +50,61 @@ for volume in "${volumes[@]}"; do
   }
 done
 
+[[ -f ${backup_root}/SHA256SUMS ]] || {
+  echo "Missing backup checksum manifest" >&2
+  exit 1
+}
+checksum_pattern='^[[:xdigit:]]{64}  \./(postgres-data|redis-data|qdrant-data|object-data)\.tar\.gz$'
+declare -A seen_checksum_files=()
+while IFS= read -r checksum_line; do
+  [[ $checksum_line =~ $checksum_pattern ]] || {
+    echo "Backup checksum manifest has an unexpected entry" >&2
+    exit 1
+  }
+  checksum_name=${BASH_REMATCH[1]}
+  [[ -z ${seen_checksum_files[$checksum_name]+x} ]] || {
+    echo "Backup checksum manifest has a duplicate entry" >&2
+    exit 1
+  }
+  seen_checksum_files[$checksum_name]=1
+done <"${backup_root}/SHA256SUMS"
+[[ ${#seen_checksum_files[@]} -eq ${#volumes[@]} ]] || {
+  echo "Backup checksum manifest is incomplete" >&2
+  exit 1
+}
+
+python3 - "${backup_root}/metadata.json" "$project_name" <<'PY'
+import json
+import sys
+
+try:
+    with open(sys.argv[1], encoding="utf-8") as metadata_file:
+        metadata = json.load(metadata_file)
+except (OSError, ValueError) as exc:
+    raise SystemExit(f"Backup metadata cannot be read: {exc}") from exc
+if (
+    metadata.get("format") != "cold-volume-v1"
+    or metadata.get("compose_project") != sys.argv[2]
+    or metadata.get("volumes")
+    != ["postgres-data", "redis-data", "qdrant-data", "object-data"]
+):
+    raise SystemExit("Backup metadata does not match this Compose project")
+PY
+
 if command -v sha256sum >/dev/null 2>&1; then
   (cd "$backup_root" && sha256sum --check SHA256SUMS)
 else
   (cd "$backup_root" && shasum -a 256 -c SHA256SUMS)
 fi
 
-echo "Stopping services before destructive restore..."
-docker compose stop "${services[@]}"
-
 for volume in "${volumes[@]}"; do
   docker volume inspect "${project_name}_${volume}" >/dev/null
+done
+
+echo "Stopping services before destructive restore..."
+compose stop "${services[@]}"
+
+for volume in "${volumes[@]}"; do
   echo "Restoring ${volume}..."
   docker run --rm \
     -v "${project_name}_${volume}:/target" \
@@ -46,5 +114,5 @@ for volume in "${volumes[@]}"; do
 done
 
 echo "Starting restored stack..."
-docker compose up -d
+compose up -d
 echo "Restore complete. Verify /health/ready and run the smoke test before reopening traffic."

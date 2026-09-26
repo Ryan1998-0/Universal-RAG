@@ -3,6 +3,8 @@ import hashlib
 import unittest
 from types import SimpleNamespace
 
+from qdrant_client import models
+
 from rag_demo.production.object_storage import (
     ObjectStorageError,
     S3ObjectStorage,
@@ -182,8 +184,19 @@ class ProductionVectorRepositoryTests(unittest.TestCase):
                 return True
 
             def get_collection(self, **kwargs):
-                vectors = {"dense": SimpleNamespace(size=self.dense_size)}
-                return SimpleNamespace(config=SimpleNamespace(params=SimpleNamespace(vectors=vectors)))
+                vectors = {
+                    "dense": SimpleNamespace(
+                        size=self.dense_size,
+                        distance=models.Distance.COSINE,
+                    )
+                }
+                sparse_vectors = {
+                    "bm25": SimpleNamespace(modifier=models.Modifier.IDF)
+                }
+                return SimpleNamespace(config=SimpleNamespace(params=SimpleNamespace(
+                    vectors=vectors,
+                    sparse_vectors=sparse_vectors,
+                )))
 
             def create_payload_index(self, **kwargs):
                 return None

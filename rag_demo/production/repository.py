@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Sequence
@@ -1433,9 +1434,10 @@ class SqlAlchemyTenantRepository:
         expected_active_index_id: Optional[str] = None,
         expected_generation: Optional[int] = None,
         grace_period_seconds: int = 600,
+        session=None,
     ) -> None:
         """Atomically publish one validated immutable index version."""
-        with self.session_factory.begin() as session:
+        with (nullcontext(session) if session is not None else self.session_factory.begin()) as session:
             knowledge_base = session.scalar(
                 select(KnowledgeBaseRecord)
                 .where(

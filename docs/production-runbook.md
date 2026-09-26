@@ -39,7 +39,7 @@ cp .env.production.example .env.production
 chmod 600 .env.production
 ```
 
-由同一個部署帳號執行所有會變更 Compose 專案或資料 Volume 的操作。先建立位於 checkout 之外、只讓該帳號寫入且不會在發版或回滾時刪除的主機鎖檔目錄；備份排程與每個部署 shell 都要設定相同的絕對路徑：
+由同一個部署帳號執行所有會變更 Compose 專案或資料 Volume 的操作。先建立位於 checkout 之外、主機本機檔案系統上、只讓該帳號寫入且不會在發版或回滾時刪除的鎖檔目錄；備份排程與每個部署 shell 都要設定相同的絕對路徑。以下 `$HOME` 必須位於主機本機檔案系統，不能是網路掛載：
 
 ```bash
 install -d -m 700 "$HOME/.local/state/universal-rag"

@@ -17,6 +17,8 @@
 
 `POST /v1/ask` 回傳 `request_id`、`run_id`、`answer`、`citations`、`confidence`、`grounding_warnings`、`evidence_validation`、`model`、`retrieval` 與 `timings`。完整執行紀錄可由 `GET /v1/answer-runs/{run_id}` 讀取。
 
+文件刪除會先使原件下載與歷史引用片段不可用，再由背景工作移除物件與向量。若歷史 AnswerRun 的任一引用文件已刪除或遺失，或需要檢索卻沒有任何 CitationRecord，`GET /v1/answer-runs/{run_id}` 會回傳 `answer_withdrawn: true`、固定撤回文字與 `evidence_validation: null`。對話中的助理訊息如缺少有效的 AnswerRun 關聯，或其 AnswerRun 已撤回，也會顯示撤回文字。後續問答的近期語境會排除撤回回答及同輪使用者問題；語境先按上限讀取，再過濾，故實際訊息數可能較少。歷史對話中的使用者訊息仍會顯示。這是讀取時遮罩，不代表已清除資料庫中的回答、對話、Chunk 或舊備份；其保留與清除期限仍須另訂。
+
 `evidence_validation` 會逐句檢查來源 rank，並列出 `uncited_claims` 與 `unsupported_claims`。後者表示主張與所引用片段缺少可檢查的數值或詞彙支持；此確定性檢查無法取代人工或端到端語意評估。
 
 `timings` 保留既有摘要欄位（例如 `routeMs`、`retrieveMs`、`generateMs`、`totalMs`），並新增：

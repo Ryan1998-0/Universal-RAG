@@ -1,9 +1,9 @@
 from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional, Sequence
+from typing import Iterable, List, Optional, Sequence
 
-from sqlalchemy import func, select, text
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 
 from rag_demo.production.auth import Principal
@@ -46,6 +46,9 @@ class InvalidServiceStateError(RuntimeError):
 
 class ConcurrentPublishError(RuntimeError):
     pass
+
+
+_WITHDRAWN_ANSWER_TEXT = "此歷史回答的來源無法確認或已失效，因此不再顯示。"
 
 
 @dataclass(frozen=True)
@@ -509,10 +512,42 @@ class SqlAlchemyTenantRepository:
                 .order_by(MessageRecord.created_at.desc(), MessageRecord.id.desc())
                 .limit(max(1, min(int(limit), 50)))
             ))
-            return [
-                {"role": row.role, "content": row.content}
-                for row in reversed(rows)
-            ]
+            run_ids = {
+                str((row.metadata_json or {}).get("run_id") or "")
+                for row in rows
+            }
+            run_ids.discard("")
+            answer_runs = {
+                run.id: run
+                for run in session.scalars(
+                    select(AnswerRunRecord).where(
+                        AnswerRunRecord.id.in_(run_ids),
+                        AnswerRunRecord.tenant_id == principal.tenant_id,
+                        AnswerRunRecord.user_id == user.id,
+                        AnswerRunRecord.knowledge_base_id == authorized.id,
+                        AnswerRunRecord.conversation_id == conversation_id,
+                    )
+                )
+            } if run_ids else {}
+            withdrawn_run_ids = self._withdrawn_answer_run_ids(
+                session,
+                tenant_id=principal.tenant_id,
+                user_id=user.id,
+                knowledge_base_id=authorized.id,
+                conversation_id=conversation_id,
+                run_ids=answer_runs.keys(),
+            )
+            history = []
+            for row in reversed(rows):
+                run_id = str((row.metadata_json or {}).get("run_id") or "")
+                if (
+                    not run_id
+                    or run_id not in answer_runs
+                    or run_id in withdrawn_run_ids
+                ):
+                    continue
+                history.append({"role": row.role, "content": row.content})
+            return history
 
     def list_conversations(self, *, principal: Principal) -> list[dict]:
         with self.session_factory() as session:
@@ -594,40 +629,61 @@ class SqlAlchemyTenantRepository:
                         AnswerRunRecord.id.in_(run_ids),
                         AnswerRunRecord.tenant_id == principal.tenant_id,
                         AnswerRunRecord.user_id == user.id,
+                        AnswerRunRecord.knowledge_base_id == row.knowledge_base_id,
                         AnswerRunRecord.conversation_id == row.id,
                     )
                 )
             } if run_ids else {}
+            withdrawn_run_ids = self._withdrawn_answer_run_ids(
+                session,
+                tenant_id=principal.tenant_id,
+                user_id=user.id,
+                knowledge_base_id=row.knowledge_base_id,
+                conversation_id=row.id,
+                run_ids=answer_runs.keys(),
+            )
             return {
                 "id": row.id,
                 "knowledge_base_id": row.knowledge_base_id,
                 "title": row.title,
                 "created_at": row.created_at.isoformat(),
                 "updated_at": row.updated_at.isoformat(),
-                "messages": [self._conversation_message_payload(message, answer_runs)
-                             for message in messages],
+                "messages": [
+                    self._conversation_message_payload(
+                        message, answer_runs, withdrawn_run_ids,
+                    )
+                    for message in messages
+                ],
             }
 
     @staticmethod
     def _conversation_message_payload(
         message: MessageRecord,
         answer_runs: dict[str, AnswerRunRecord],
+        withdrawn_run_ids: set[str],
     ) -> dict:
+        run_id = str((message.metadata_json or {}).get("run_id") or "")
+        answer_run = answer_runs.get(run_id)
+        withdrawn = (
+            message.role == "assistant"
+            and (answer_run is None or run_id in withdrawn_run_ids)
+        )
         payload = {
             "id": message.id,
             "role": message.role,
-            "content": message.content,
+            "content": _WITHDRAWN_ANSWER_TEXT if withdrawn else message.content,
             "created_at": message.created_at.isoformat(),
         }
-        run_id = str((message.metadata_json or {}).get("run_id") or "")
-        answer_run = answer_runs.get(run_id)
+        if message.role == "assistant":
+            payload["answer_withdrawn"] = withdrawn
         if message.role == "assistant" and answer_run is not None:
             payload["answer_run"] = {
                 "run_id": answer_run.id,
+                "answer_withdrawn": withdrawn,
                 "retrieval": {"needed": answer_run.retrieval_needed},
                 "model": {"name": answer_run.model},
                 "timings": answer_run.timings_json,
-                "evidence_validation": (
+                "evidence_validation": None if withdrawn else (
                     dict((answer_run.retrieval_json or {}).get("evidence_validation") or {})
                     if isinstance(answer_run.retrieval_json, dict)
                     else None
@@ -635,6 +691,68 @@ class SqlAlchemyTenantRepository:
                 "citations": [],
             }
         return payload
+
+    @staticmethod
+    def _withdrawn_answer_run_ids(
+        session,
+        *,
+        tenant_id: str,
+        user_id: str,
+        knowledge_base_id: str,
+        conversation_id: str,
+        run_ids: Iterable[str],
+    ) -> set[str]:
+        selected_ids = [run_id for run_id in run_ids if run_id]
+        if not selected_ids:
+            return set()
+        return set(session.scalars(
+            select(AnswerRunRecord.id)
+            .outerjoin(
+                CitationRecord,
+                and_(
+                    CitationRecord.answer_run_id == AnswerRunRecord.id,
+                    CitationRecord.tenant_id == tenant_id,
+                ),
+            )
+            .outerjoin(
+                DocumentVersionRecord,
+                and_(
+                    DocumentVersionRecord.id == CitationRecord.document_version_id,
+                    DocumentVersionRecord.tenant_id == tenant_id,
+                ),
+            )
+            .outerjoin(
+                DocumentRecord,
+                and_(
+                    DocumentRecord.id == DocumentVersionRecord.document_id,
+                    DocumentRecord.tenant_id == tenant_id,
+                    DocumentRecord.knowledge_base_id == knowledge_base_id,
+                ),
+            )
+            .where(
+                AnswerRunRecord.id.in_(selected_ids),
+                AnswerRunRecord.tenant_id == tenant_id,
+                AnswerRunRecord.user_id == user_id,
+                AnswerRunRecord.knowledge_base_id == knowledge_base_id,
+                AnswerRunRecord.conversation_id == conversation_id,
+                or_(
+                    and_(
+                        AnswerRunRecord.retrieval_needed.is_(True),
+                        CitationRecord.id.is_(None),
+                    ),
+                    and_(
+                        CitationRecord.id.is_not(None),
+                        or_(
+                            DocumentVersionRecord.id.is_(None),
+                            DocumentRecord.id.is_(None),
+                            DocumentRecord.deleted_at.is_not(None),
+                            DocumentRecord.status == "deleted",
+                        ),
+                    ),
+                ),
+            )
+            .distinct()
+        ))
 
     def delete_conversation(
         self,
@@ -688,6 +806,7 @@ class SqlAlchemyTenantRepository:
                 .order_by(CitationRecord.rank, CitationRecord.id)
             ))
             evidence = []
+            answer_withdrawn = bool(run.retrieval_needed and not citations)
             for citation in citations:
                 version = (
                     session.scalar(
@@ -706,6 +825,7 @@ class SqlAlchemyTenantRepository:
                             DocumentRecord.tenant_id == principal.tenant_id,
                             DocumentRecord.knowledge_base_id == run.knowledge_base_id,
                             DocumentRecord.deleted_at.is_(None),
+                            DocumentRecord.status != "deleted",
                         )
                     )
                     if version is not None
@@ -726,6 +846,7 @@ class SqlAlchemyTenantRepository:
                     else None
                 )
                 if document is None:
+                    answer_withdrawn = True
                     evidence.append({"rank": citation.rank, "available": False})
                     continue
                 evidence.append({
@@ -751,10 +872,11 @@ class SqlAlchemyTenantRepository:
                 "model": run.model,
                 "pipeline_version": run.pipeline_version,
                 "question": run.question,
-                "answer": run.answer,
+                "answer": _WITHDRAWN_ANSWER_TEXT if answer_withdrawn else run.answer,
+                "answer_withdrawn": answer_withdrawn,
                 "retrieval_needed": run.retrieval_needed,
                 "timings": run.timings_json,
-                "evidence_validation": (
+                "evidence_validation": None if answer_withdrawn else (
                     dict((run.retrieval_json or {}).get("evidence_validation") or {})
                     if isinstance(run.retrieval_json, dict)
                     else None

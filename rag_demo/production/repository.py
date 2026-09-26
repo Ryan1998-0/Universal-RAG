@@ -651,17 +651,6 @@ class SqlAlchemyTenantRepository:
             ))
             evidence = []
             for citation in citations:
-                chunk = (
-                    session.scalar(
-                        select(ChunkRecord).where(
-                            ChunkRecord.id == citation.chunk_record_id,
-                            ChunkRecord.tenant_id == principal.tenant_id,
-                            ChunkRecord.knowledge_base_id == run.knowledge_base_id,
-                        )
-                    )
-                    if citation.chunk_record_id
-                    else None
-                )
                 version = (
                     session.scalar(
                         select(DocumentVersionRecord).where(
@@ -684,8 +673,26 @@ class SqlAlchemyTenantRepository:
                     if version is not None
                     else None
                 )
+                chunk = (
+                    session.scalar(
+                        select(ChunkRecord).where(
+                            ChunkRecord.id == citation.chunk_record_id,
+                            ChunkRecord.tenant_id == principal.tenant_id,
+                            ChunkRecord.knowledge_base_id == run.knowledge_base_id,
+                            ChunkRecord.document_id == document.id,
+                            ChunkRecord.document_version_id == version.id,
+                            ChunkRecord.index_version_id == run.index_version_id,
+                        )
+                    )
+                    if document is not None and citation.chunk_record_id and run.index_version_id
+                    else None
+                )
+                if document is None:
+                    evidence.append({"rank": citation.rank, "available": False})
+                    continue
                 evidence.append({
                     "rank": citation.rank,
+                    "available": True,
                     "chunk_id": citation.chunk_id,
                     "chunk_record_id": citation.chunk_record_id,
                     "document_version_id": citation.document_version_id,

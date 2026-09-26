@@ -1178,7 +1178,11 @@ def create_app(
         except ResourceNotFoundError:
             raise ApiError(404, "ANSWER_RUN_NOT_FOUND", "Answer run not found.")
         for citation in result.get("citations") or []:
-            version_id = str(citation.get("document_version_id") or "")
+            version_id = (
+                str(citation.get("document_version_id") or "")
+                if citation.get("available") is True
+                else ""
+            )
             citation["source_url"] = (
                 f"/v1/document-versions/{version_id}/content"
                 if version_id

@@ -846,6 +846,9 @@ class SqlAlchemyTenantRepository:
                     raise InvalidServiceStateError(
                         "knowledge base active index is inconsistent"
                     )
+                # A replacement upload changes the document workflow status
+                # before its new index is published. The active membership and
+                # current version remain the authority for searchable sources.
                 ready_source_ids = list(session.scalars(
                     select(DocumentRecord.source_id)
                     .join(
@@ -855,7 +858,6 @@ class SqlAlchemyTenantRepository:
                     .where(
                         DocumentRecord.tenant_id == principal.tenant_id,
                         DocumentRecord.knowledge_base_id == knowledge_base.id,
-                        DocumentRecord.status == "ready",
                         DocumentRecord.deleted_at.is_(None),
                         DocumentRecord.current_version_id
                         == IndexDocumentRecord.document_version_id,

@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | 問題輸入 | `POST /v1/ask` | 傳入 `question`、`knowledge_base_id`，可選 `source_ids`、`top_k`、`conversation_id` 與請求層級 `model`。伺服器自行建立檢索與證據，不接受外部偽造 contexts。 |
 | 建立上傳工作 | `POST /v1/knowledge-bases/{knowledge_base_id}/uploads` | 先預約檔案，傳入檔名、MIME、大小與 SHA-256。 |
-| 上傳檔案內容 | `PUT /v1/uploads/{upload_id}/content` | 以 request body 傳入檔案內容；支援 proxy 或 presigned 流程。 |
+| 上傳檔案內容 | `PUT /v1/uploads/{upload_id}/content` | 以 request body 傳入檔案內容；staging 與 production 僅開放 proxy 流程，presigned 直傳尚待完整性與瀏覽器安全驗收。 |
 | 完成上傳 | `POST /v1/uploads/{upload_id}/complete` | 驗證物件後建立解析與索引工作。 |
 
 支援 PDF、圖片、DOCX、TXT、Markdown 與 JSON。文件解析、OCR、切分、Embedding 與索引工作會由背景服務處理。

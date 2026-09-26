@@ -219,11 +219,10 @@ class ProductionSettings(BaseSettings):
                     "S3 configuration is incomplete: "
                     + ", ".join(missing_object_storage)
                 )
-            if self.upload_mode == "presigned" and not str(
-                self.s3_public_endpoint_url or ""
-            ).startswith(("http://", "https://")):
+            if self.upload_mode == "presigned":
                 raise ValueError(
-                    "production presigned uploads require RAG_S3_PUBLIC_ENDPOINT_URL"
+                    "staging and production require RAG_UPLOAD_MODE=proxy until "
+                    "presigned upload integrity and HTTPS browser delivery are verified"
                 )
             missing_web_auth = [
                 name

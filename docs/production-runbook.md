@@ -111,6 +111,8 @@ Token 不可放進 Shell History、CI Log 或版本控制；正式自動化應�
 
 支援：PDF、PNG/JPEG/WebP/TIFF/BMP/HEIC、DOCX、TXT、MD/Markdown、JSON。
 
+Staging 與 Production 目前只允許 `RAG_UPLOAD_MODE=proxy`。Presigned 直傳仍缺儲存端內容校驗及經 HTTPS/CORS/CSP 驗證的瀏覽器路徑，設定為 presigned 時服務會拒絕啟動。待隔離 staging 完成這些驗收後才能重新開放。
+
 ## 7. 監控與診斷
 
 外部 Caddy 故意封鎖 `/metrics`。Prometheus 應在私有 Compose 網路抓取 `http://api:8080/metrics`。

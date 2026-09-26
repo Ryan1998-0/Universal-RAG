@@ -10,6 +10,9 @@ if [[ ${1:-} != "--confirm-destroy-existing" || -z ${2:-} ]]; then
   exit 2
 fi
 
+source "$(dirname "${BASH_SOURCE[0]}")/maintenance-lock.sh"
+acquire_maintenance_lock
+
 command -v docker >/dev/null 2>&1 || { echo "docker is required" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || { echo "python3 is required" >&2; exit 1; }
 command -v timeout >/dev/null 2>&1 || { echo "timeout is required" >&2; exit 1; }

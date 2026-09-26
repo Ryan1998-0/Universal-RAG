@@ -6,7 +6,7 @@
 
 ## 1. 上線前提
 
-- 一台可執行 Docker Engine、Docker Compose v2、Python 3 與 `timeout` 的 Linux 主機。
+- 一台可執行 Docker Engine、Docker Compose v2、Python 3、`timeout` 與 `flock` 的 Linux 主機。
 - 一個指向主機的 DNS 名稱，TCP `80/443` 對外開放。
 - 一個 OIDC Provider 與已建立的 Web Client。
 - 一個可由 Compose 網路連線的 Ollama 或相容推論端點。
@@ -39,6 +39,15 @@ cp .env.production.example .env.production
 chmod 600 .env.production
 ```
 
+由同一個部署帳號執行所有會變更 Compose 專案或資料 Volume 的操作。先建立位於 checkout 之外、只讓該帳號寫入且不會在發版或回滾時刪除的主機鎖檔目錄；備份排程與每個部署 shell 都要設定相同的絕對路徑：
+
+```bash
+install -d -m 700 "$HOME/.local/state/universal-rag"
+export RAG_MAINTENANCE_LOCK_FILE="$HOME/.local/state/universal-rag/maintenance.lock"
+```
+
+不要刪除或重建鎖檔；若改由另一個部署帳號操作，先安排停機並讓所有操作者改用同一個受保護的主機路徑。未設定鎖檔時，冷備份、還原與持鎖命令會拒絕執行。
+
 編輯 `.env.production`：
 
 1. 設定正式網域與 ACME Email。
@@ -55,8 +64,10 @@ Staging/Production 不接受執行期 `PUT`/`DELETE /v1/models/{node}` 全域覆
 
 ```bash
 docker compose --env-file .env.production config --quiet
-docker compose --env-file .env.production build
-docker compose --env-file .env.production up -d
+./scripts/with-maintenance-lock.sh bash -euc '
+  docker compose --env-file .env.production build
+  docker compose --env-file .env.production up --wait --wait-timeout 1800
+'
 docker compose --env-file .env.production ps
 ```
 
@@ -69,7 +80,7 @@ docker compose --env-file .env.production ps
 先從 OIDC Token 確認實際 `sub` 與租戶 Claim，將值填入 `.env.production` 的 `RAG_PROVISION_*`。禁止猜測或使用顯示名稱代替 `sub`。
 
 ```bash
-docker compose --env-file .env.production \
+./scripts/with-maintenance-lock.sh docker compose --env-file .env.production \
   --profile admin run --rm provision
 ```
 
@@ -175,7 +186,7 @@ export RAG_LOAD_CONCURRENCY=5
 
 備份與還原腳本預設使用專案根目錄的 `.env.production`，並從 Compose 解析實際 project name，停機前檢查設定及目標 Volume。若環境檔另存他處，先設定 `RAG_COMPOSE_ENV_FILE` 為該檔路徑。備份失敗時腳本仍會嘗試重啟服務；重啟失敗會以非零狀態結束，操作人員須立即處理。還原會先要求四份封存的完整 SHA-256 清單及相符的 project metadata，並確認每包可由還原映像解開，再停止服務。若解包或重啟失敗，服務應保持關閉，從已驗證的備份重新復原後才能開放流量。
 
-四份封存只包含上述資料 Volume。空白主機復原還需要另外以加密方式保存 `.env.production` 與相關密鑰、部署用的 Git Commit 與映像版本，以及重新取得模型與 TLS 憑證的操作資料；`caddy-data`、`caddy-config` 和 `model-cache` 不在這四包內。不得把明文密鑰放進此備份目錄或版本控制。腳本會拒絕開始時正在執行的 migration/bootstrap/provision 容器，但還沒有與發版流程共用的維護鎖，無法阻止檢查後新啟動的工作；執行冷備份或還原前仍須安排維護時段。重啟後腳本以預設 600 秒為就緒期限，每次 Docker 查詢另有 10 秒上限；API `/health/ready`（含復機後的新 Beat-to-Worker 心跳）必須為 healthy，且 Caddy、Worker、Beat 容器皆在執行。可用 `RAG_RESTART_READY_TIMEOUT_SECONDS` 將期限設為 1–600 秒。這不是對外 TLS 或完整業務 Smoke 的替代。
+四份封存只包含上述資料 Volume。空白主機復原還需要另外以加密方式保存 `.env.production` 與相關密鑰、部署用的 Git Commit 與映像版本，以及重新取得模型與 TLS 憑證的操作資料；`caddy-data`、`caddy-config` 和 `model-cache` 不在這四包內。不得把明文密鑰放進此備份目錄或版本控制。冷備份與還原會在設定檢查前取得主機維護鎖，一直持有到重啟及就緒檢查結束；發版與 Provisioning 也須使用同一鎖檔。腳本仍會拒絕開始時正在執行的 migration/bootstrap/provision 容器，以防人工命令繞過鎖；直接執行未持鎖的寫入命令仍可繞過此協定。執行冷備份或還原前仍須安排維護時段。重啟後腳本以預設 600 秒為就緒期限，每次 Docker 查詢另有 10 秒上限；API `/health/ready`（含復機後的新 Beat-to-Worker 心跳）必須為 healthy，且 Caddy、Worker、Beat 容器皆在執行。可用 `RAG_RESTART_READY_TIMEOUT_SECONDS` 將期限設為 1–600 秒。這不是對外 TLS 或完整業務 Smoke 的替代。
 
 ```bash
 ./scripts/cold-backup.sh /mnt/encrypted-backups/$(date -u +%Y%m%dT%H%M%SZ)
@@ -209,12 +220,25 @@ export RAG_LOAD_CONCURRENCY=5
 部署：
 
 ```bash
-docker compose --env-file .env.production build
-docker compose --env-file .env.production up -d
+./scripts/with-maintenance-lock.sh bash -euc '
+  docker compose --env-file .env.production build
+  docker compose --env-file .env.production up --wait --wait-timeout 1800
+'
 ./scripts/smoke_production.py
 ```
 
-應用回滾時切回上一個已驗證 Tag，再執行 `docker compose up -d --build`。只有向後相容的 Migration 才能直接回滾應用；破壞性 Schema 變更必須採 Expand/Contract，不能臨時執行 Alembic Downgrade。
+應用回滾時，在已完成冷備份後指定上一個已驗證 Tag；checkout 切換、建置和啟動必須由同一把鎖涵蓋：
+
+```bash
+export RAG_ROLLBACK_TAG='<verified-tag>'
+./scripts/with-maintenance-lock.sh bash -euc '
+  git switch --detach "$RAG_ROLLBACK_TAG"
+  docker compose --env-file .env.production build
+  docker compose --env-file .env.production up --wait --wait-timeout 1800
+'
+```
+
+手動執行 migration/bootstrap、容器 stop/down、Provisioning 或直接寫入資料 Volume 時也必須先使用同一個 wrapper；唯讀 `ps`、`logs`、`config` 不需要鎖。完整冷備份先獨立結束，再開始持鎖部署，不要在已持有鎖的 wrapper 裡呼叫會自行取鎖的備份腳本。只有向後相容的 Migration 才能直接回滾應用；破壞性 Schema 變更必須採 Expand/Contract，不能臨時執行 Alembic Downgrade。
 
 索引發布採不可變版本與原子切換。若新索引造成品質退化，先停止新索引工作並保留現行流量；目前尚未提供公開的「重新啟用舊索引」管理 API，正式 Production GO 前必須完成並演練這個操作，或從一致備份還原。
 

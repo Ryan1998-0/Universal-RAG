@@ -925,7 +925,10 @@ class SqlAlchemyTenantRepository:
                 if (
                     existing.knowledge_base_id != authorized.id
                     or existing.owner_user_id != authorized.user_id
+                    or existing.folder_id != folder_id
+                    or existing.target_document_id != target_document_id
                     or existing.filename != filename
+                    or existing.declared_mime_type != declared_mime_type
                     or existing.expected_size_bytes != expected_size_bytes
                     or existing.expected_sha256 != expected_sha256
                 ):

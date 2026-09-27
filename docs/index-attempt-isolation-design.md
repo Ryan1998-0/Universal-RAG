@@ -1,6 +1,6 @@
 # 索引重試的 Qdrant attempt 隔離設計
 
-狀態：設計提案，尚未實作或完成正式驗收。範圍為 production 索引建置、Qdrant 查詢與清理、索引 manifest；不變更既有建立索引 API 的公開識別值。
+狀態：phase 1 reader／資料庫遷移已在 `9f2334d` 進入 HEAD；新格式 writer 仍硬關閉，phase 2 與正式驗收尚未完成。phase 1 的 CI run `36282892775` 與 rollback dispatch guard `c81a53e` 的 CI run `36283118234` 均已通過。範圍為 production 索引建置、Qdrant 查詢與清理、索引 manifest；不變更既有建立索引 API 的公開識別值。CI 通過不代表外部競態驗收完成。
 
 ## 問題與目標
 
@@ -19,20 +19,30 @@
 
 ## 資料模型與遷移
 
-在 `rag_demo/production/database.py` 的 `IndexVersionRecord` 與新 Alembic revision 增加 `artifact_attempt INTEGER NOT NULL DEFAULT 0`，並約束值不得為負。舊資料回填為 `0`。建置中此欄記錄目前 attempt；發布後它是正式查詢使用的固定值。`IndexBuildJobRecord.attempt` 已存在，無須另增 counter；`claim()` 在鎖住 job 的同一交易中遞增 job attempt 並設定版本的 `artifact_attempt`。
+Phase 1 已在 `rag_demo/production/database.py` 的 `IndexVersionRecord` 與 Alembic revision `2b7f4a9c1d06` 增加 `artifact_attempt INTEGER NOT NULL DEFAULT 0` 與非負約束，保留資料庫端預設值供舊版 API／worker 在讀寫混合部署時建立 legacy row。舊資料是 `0`，phase 1 writer 也始終保持 `0`。Phase 2 對新格式的 `reserve_build()` 應先建立不變的公開 `index_version_id` 與 job ID，並把該版本預置 `artifact_attempt=1` 作為持久格式標記；舊 queued／retry row 的 `0` 不因環境開關而被中途改成新格式。`IndexBuildJobRecord.attempt` 已存在，無須另增 counter；新格式的 `claim()` 在鎖住 job、KB 與版本的同一交易中遞增 job attempt，並設定版本的 `artifact_attempt=job.attempt`。發布後此值固定為正式查詢使用的 attempt。
 
 `IndexBuildWorkItem.attempt` 已存在，應一路傳至 Qdrant scope、manifest 寫入、驗證和發布。`IndexVersionRecord` 的 `manifest_object_key` 繼續保存實際發布的物件 key，不需回填舊 manifest。舊 key 格式只用於 legacy 索引；新 key 包含 attempt。`index_manifest.py` 目前的 fingerprint 包含 Qdrant point ID；point ID 納入 attempt 後，既有欄位即可區分兩次建置。新 manifest body 應明載 attempt 與新的 schema version，方便稽核。
 
-若使用既有 `deletion_outbox` 管理索引 artifact GC，無須新增 GC 表。它已有 `resource_type`、物件 key、vector scopes、重試、lease 與 `next_attempt_at`。內部 GC row 以 job 的 `created_by_user_id` 填必填欄位，採唯一的內部冪等 key；公開文件刪除狀態端點只允許查 `resource_type='document'`，避免把內部 GC 工作呈現為用戶的文件刪除。若實作時發現兩種工作需要不同重試或保留政策，再以獨立 outbox 表取代，不能使用只有記憶體狀態的清理佇列。
+索引 artifact GC 應優先使用獨立的持久 `index_artifact_gc` 工作表，記錄 tenant、KB、版本、attempt、collection、manifest key、可重試狀態與下一次複查時間；同一目標須有唯一鍵。現有 `deletion_outbox` 可以作為擴充候選，但它現在是文件刪除專用，直接重用不安全，具體差異見下節。無論選擇哪種資料表，GC 不可只保留在記憶體，也不能在第一次 `count=0` 後永久忘記這個 attempt。
+
+### 為何不能直接重用文件刪除 outbox
+
+- `DeletionWorkItem` 沒有 `resource_type`；`DeletionService.process()` 一律先刪 `object_keys_json`，再把 `vector_scopes_json` 當成含 `document_version_id` 的文件範圍呼叫 `delete_document_version()`。直接放入 `index_attempt` row 會被錯誤處理，且索引 GC 應先核對並清除 Qdrant，再刪 manifest。
+- `get_status()` 目前只限制 tenant 與建立者，沒有 `resource_type='document'` 條件。若共用表，猜到內部 row ID 的建立者可能從公開 `/v1/deletion-jobs/{outbox_id}` 看到系統清理工作。
+- `completed`／`dead` row 不再由 `dispatchable_ids()` 與 `claim()` 處理；`max_attempts` 預設為 20。索引 GC 需要長期定期複查遲到的 Qdrant upsert／manifest put，不能把一次完成或達到重試上限視為永久收斂。
+- 唯一的 `(tenant_id, idempotency_key)` 與公開文件刪除共用。公開驗證規則接受冒號與底線；若用可預測的內部 key，使用者可先占用它，使 GC row 無法建立。重用前必須保留並拒絕公開使用內部 key 前綴，且盤點既有碰撞。
+- `created_by_user_id` 是必填 FK，`resource_id` 只有 36 字元；不能把複合 attempt 目標塞進 `resource_id`。若共用，需以版本 ID、可信 user ID 和有型別的 scope 欄位承載，並對每種工作做獨立的授權與範圍驗證。
+
+若堅持共用 `deletion_outbox`，上述 typed work item、公開狀態隔離、內部 key 空間、持久定期複查與 dead-row 告警必須先完成，才能啟用新 writer；這已不是單純新增一個 `resource_type`。獨立 GC 表則讓文件刪除的公開契約與重試政策保持原樣。
 
 ## 寫入、讀取與驗證修改點
 
 ### Scope 與 Qdrant adapter
 
-在 `rag_demo/retrieval_scope.py` 為 `RetrievalScope` 增加非負的 `artifact_attempt`，預設 `0` 供既有呼叫者使用；`matches()` 在新格式時也驗證 attempt。`rag_demo/production/vector_repository.py` 應：
+Phase 1 已在 `rag_demo/retrieval_scope.py` 為 `RetrievalScope` 增加非負的 `artifact_attempt`，預設 `0` 供既有呼叫者使用；`matches()` 會驗證 attempt。`rag_demo/production/vector_repository.py` 已具備 attempt-aware 讀取、legacy payload 嚴格檢查與新 writer 硬關閉。Phase 2 尚須完成：
 
 - 在新建置 payload 寫入整數 `artifact_attempt`，並於 `ensure_collection()` 建立相容的整數 payload index。`_chunk_payload()` 拒絕與可信 scope 不符的 supplied attempt。
-- 新格式的 dense、sparse、count、scroll、fingerprint、候選刪除一律用 tenant + KB + index version + **精確 attempt** 篩選。legacy `0` 讀取應明確限定缺少 attempt 的舊點；若安裝的 Qdrant client 無法可靠表達此條件，必須先完成 legacy 索引遷移或 fail closed，不能在混合資料下退回只看版本的篩選。
+- 新格式的 dense、sparse、count、scroll、fingerprint、候選刪除一律用 tenant + KB + index version + **精確 attempt** 篩選。Phase 1 使用 `qdrant-client==1.18.0` 的 `IsEmptyCondition` 選取 legacy `0` 候選，再檢查回傳 payload 的 attempt key 確實缺失；[Qdrant 官方文件](https://qdrant.tech/documentation/search/filtering/)說明 `IsEmpty` 同時會選取 `null` 與 `[]`，不能只靠 Qdrant filter 證明 key 缺失。`count_index()` 也改用逐點 scroll 以執行同一個嚴格檢查；fingerprint 仍會再次驗證 payload。新格式 `>0` 使用整數精確 match 並驗證回傳 payload 型別。
 - `_point_id()` 對新格式把 attempt 納入 UUID 名稱。legacy `0` 保留原 point ID 規則。`upsert_chunks()` 必須使用目前 worker 的 scope；不可信 chunk 不能覆寫 attempt。
 - 將建置開始時的刪除命名並限制為 `delete_attempt(scope)`，要求 attempt 大於 `0`。全版本刪除僅供已證明不再 active 的版本 GC；文件刪除使用 tenant + KB + version + document version 的篩選，故意涵蓋所有 attempts。
 
@@ -52,11 +62,23 @@
 
 ## 持久回收與失敗候選
 
-重試覆蓋 attempt、worker 回報失敗或建置取消時，於相關 PostgreSQL 交易內建立／保留 `deletion_outbox` 的內部 `index_attempt` 工作，冪等 key 由 tenant、版本及 attempt 決定。內容包含精確 Qdrant scope、可推導的 per-attempt manifest key，`next_attempt_at` 設在 lease／外部請求可能完成的隔離期之後。清理 worker 先重新查 job、版本與 KB active 指標：不得刪除 active 版本的已發布 attempt，也不得刪除仍由有效 lease 建置的當前 attempt；其餘 attempt 用精確 filter 刪除，確認 count 為零後刪 manifest。
+重試覆蓋 attempt、worker 回報失敗或建置取消時，於相關 PostgreSQL 交易內建立／保留持久的 `index_attempt` GC 工作，唯一目標由 tenant、版本及 attempt 決定。內容包含精確 Qdrant scope、collection、可推導的 per-attempt manifest key，`next_attempt_at` 設在 lease／外部請求可能完成的隔離期之後。清理 worker 先重新查 job、版本與 KB active 指標：不得刪除 active 版本的已發布 attempt，也不得刪除仍由有效 lease 建置的當前 attempt；其餘 attempt 用精確 filter 刪除，確認 count 為零後刪 manifest。
 
 最終 `dead`／`cancelled` 且從未發布的版本使用既有 `gc_after` 安排 `index_version` 工作，清除此版本的 legacy 點、所有 attempts 與 manifest；保留 job 與版本中繼資料供狀態、冪等及稽核。已退役 active 版本的全版本 GC 也必須先核對 grace period、目前 active 指標與答案歷史的保留政策。清理順序應先清外部 artifact，再移除會提供文件版本清單的資料庫 membership；部分失敗可重試，不可先刪掉唯一的回收線索。
 
-一次 `count=0` 無法證明不會再有已送出的舊 Qdrant upsert 落地。完成狀態需保留可定期複查的 cleanup row；若出現新 orphan point，重新排入清理並告警。這提供最終收斂，不能宣稱文件 tombstone 當下已完成物理清除。
+一次 `count=0` 無法證明不會再有已送出的舊 Qdrant upsert 落地；同理，第一次刪除後也可能有遲到的 manifest put。完成狀態需保留可定期複查的 cleanup row；若出現新 orphan point 或 manifest，重新排入清理並告警。這提供最終收斂，不能宣稱文件 tombstone 當下已完成物理清除。`reset_candidate()` 目前未清空全部 manifest entries／PG／Qdrant fingerprint 欄位，phase 2 也必須在新 attempt 的同一交易中清掉舊驗證證據。
+
+## Phase 2 的小提交順序
+
+下列提交均維持 `RAG_INDEX_ATTEMPT_WRITES_ENABLED` 硬關閉；直到最後一項完成並通過隔離 staging 前，不得產生新格式 point。每項都應保留 legacy 路徑及既有公開 `index_version_id`。
+
+1. **Qdrant 與 manifest adapter**：在 `vector_repository.py` 實作新 payload 型別 guard、`artifact_attempt>0` 的 UUID5 名稱空間、精確 `delete_attempt()` 與整數 payload index；`artifact_attempt=0` 的 point ID／payload 保持原樣。在 `object_storage.py` 加 per-attempt manifest key 與新 schema；legacy key 保持原樣。索引建立應先於新格式資料寫入，在 staging 檢查集合 schema 與建索引成本。此時服務尚不會走新 writer。
+2. **持久 GC 狀態與清理器**：以新 migration、資料模型與獨立清理 module 建立 `index_artifact_gc`（或在明確解決上列問題後才擴充 `deletion_outbox`）。清理器檢查 active pointer、job lease 與 attempt 世代，先精確刪 Qdrant 並確認，再刪 manifest；completed 目標仍定期複查，dead row 告警。文件 tombstone 的 Qdrant 刪除維持跨 attempts 的版本範圍。Writer gate 仍關閉。
+3. **持久格式與資料庫 fencing**：在 `indexing.py` 的 reservation 預置新格式版本的 `artifact_attempt=1`，job 與版本公開 ID 一次建立且重播不變；舊版本 `0` 保持 legacy。`claim()` 在既有鎖順序下設定 `artifact_attempt=job.attempt`，並於 retry／fail／cancel 安排上項 GC。`repository.py` 的 validation 先鎖 job、再鎖 version，核對 owner、有效 lease 與 attempt；發布時重查相同條件。`reset_candidate()` 清掉所有舊驗證證據。Writer gate 仍關閉。
+4. **建置流程串接**：`IndexingService.process()` 依持久格式選擇 legacy 或新流程。新流程只清本次 attempt namespace，scope、Qdrant point、manifest body/key、count、scroll、fingerprint 全用 `work.attempt`；legacy 工作不可因開關變更而中途轉格式。失敗候選、文件取消與退役版本都應有 durable GC 線索。Writer gate 仍關閉。
+5. **最後才開 staging gate**：`ProductionSettings` 僅允許隔離 staging／test 設定新 writer；worker 在 `claim()` 前拒絕設定與版本持久格式不符的工作，API reservation 也只在 gate 開啟時建立新格式候選。更新 worker／beat 與 staging 部署設定，但 production 繼續拒絕。`compose.yaml` 現把 `RAG_ENV` 固定為 `production`，不可僅改 `.env` 就宣稱 staging 已啟用。正式上線開關與退版演練應在 staging 驗收後另行處理。
+
+切換前先停止新的建立索引 API 請求與 beat 的 index sweep，讓已派送的 Celery index task 完成，核對 active／reserved／scheduled／broker 佇列與資料庫 running lease，再停止所有舊 writer 進程。現有 Celery 工作共用佇列、beat 每 30 秒重派，僅停 API 或只看 DB lease 都不足以排空。必須確認舊版已發出的版本範圍 Qdrant delete 不再在途；若沒有可信的操作完成證據，就保持 gate 關閉。尚未完成的 legacy queued／retry job 需由新 binary 依其 `artifact_attempt=0` 繼續 legacy 格式，不能改成新格式重試。所有 API 讀取進程也須先升級到 phase 1 reader。
 
 ## 分階段升級與退版下限
 

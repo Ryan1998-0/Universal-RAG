@@ -357,7 +357,8 @@ class SqlAlchemyIndexingRepository:
                 .where(
                     or_(
                         IndexVersionRecord.id.is_(None),
-                        IndexVersionRecord.artifact_attempt == 0,
+                        IndexVersionRecord.artifact_attempt.is_(None),
+                        IndexVersionRecord.artifact_attempt <= 0,
                     ),
                     or_(
                         and_(

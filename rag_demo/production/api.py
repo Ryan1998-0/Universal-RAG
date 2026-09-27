@@ -71,7 +71,7 @@ from rag_demo.retrieval_scope import RetrievalScope
 
 
 LOGGER = logging.getLogger("rag_demo.production.api")
-PIPELINE_VERSION = "canonical-v1"
+PIPELINE_VERSION = "canonical-v2"
 _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 
 
@@ -1466,6 +1466,8 @@ def create_app(
                     )
 
         metrics.observe_pipeline_timings(result.get("timings") or {})
+        if not history and "_history_dependency_v1" not in result:
+            result["_history_dependency_v1"] = {"run_ids": [], "complete": True}
 
         if not conversation_id:
             try:

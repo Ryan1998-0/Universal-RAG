@@ -225,6 +225,7 @@ class RagPipeline:
         # generation for this model provider.
         model_history = [] if isolated_subagent else history
         model_memories = [] if isolated_subagent else memories
+        history_dependency = {"run_ids": [], "complete": True}
 
         contexts: List[dict] = []
         raw_contexts: List[dict] = []
@@ -257,6 +258,7 @@ class RagPipeline:
             trace.record("retrieval", 0.0, status="skipped", reason="direct_answer")
             trace.record("generation", 0.0, status="completed", reason="direct_answer")
         else:
+            history_dependency = _history_dependency_manifest(model_history)
             route_started = perf_counter()
             route_model = self._resolve_model("query_rewrite", request.model)
             route_model_started = perf_counter()
@@ -538,6 +540,7 @@ class RagPipeline:
             "schema_version": AGENT_RESPONSE_SCHEMA,
             "run_id": run_id,
             "request_id": str(request.request_id or ""),
+            "_history_dependency_v1": history_dependency,
             "profile": request.profile,
             "conversation_id": conversation_id,
             "answer": answer,
@@ -787,6 +790,24 @@ def enforce_grounded_answer_contract(answer: str, contexts: Sequence[dict]) -> s
         "根據目前檢索資料無法確認。模型產生的答案沒有通過來源約束檢查，"
         "因此系統未顯示未受證據支持的內容。"
     )
+
+
+def _history_dependency_manifest(history: Sequence[dict]) -> dict:
+    run_ids = []
+    complete = True
+    for message in history[-10:]:
+        if not str(message.get("content") or "").strip():
+            continue
+        run_id = message.get("run_id")
+        if (
+            not isinstance(run_id, str)
+            or not run_id
+            or run_id != run_id.strip()
+        ):
+            complete = False
+        elif run_id not in run_ids:
+            run_ids.append(run_id)
+    return {"run_ids": run_ids, "complete": complete}
 
 
 def prompt_with_history(prompt: str, history: Sequence[dict]) -> str:

@@ -52,6 +52,20 @@ class FakePipeline:
         return {
             "schema_version": "rag-agent-response-v1",
             "run_id": f"run-{len(self.calls)}",
+            "_history_dependency_v1": {
+                "run_ids": list(dict.fromkeys(
+                    str(message.get("run_id") or "")
+                    for message in (request.history or [])
+                    if isinstance(message, dict)
+                    if str(message.get("run_id") or "")
+                )),
+                "complete": all(
+                    not str(message.get("content") or "").strip()
+                    or bool(str(message.get("run_id") or "").strip())
+                    for message in (request.history or [])
+                    if isinstance(message, dict)
+                ),
+            },
             "answer": "這是經過伺服器檢索後產生的回答。來源：[1]",
             "confidence": "high",
             "citations": [

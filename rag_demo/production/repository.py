@@ -1,4 +1,5 @@
 from contextlib import nullcontext
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
@@ -54,6 +55,7 @@ class ConcurrentPublishError(RuntimeError):
 _WITHDRAWN_ANSWER_TEXT = "此歷史回答的來源無法確認或已失效，因此不再顯示。"
 _CITATION_LINEAGE_KEY = "citation_lineage_v1"
 _CONTEXT_LINEAGE_KEY = "context_lineage_v1"
+_HISTORY_DEPENDENCY_KEY = "history_dependency_v1"
 LOGGER = logging.getLogger("rag_demo.production.repository")
 
 
@@ -519,23 +521,13 @@ class SqlAlchemyTenantRepository:
                 .order_by(MessageRecord.created_at.desc(), MessageRecord.id.desc())
                 .limit(max(1, min(int(limit), 50)))
             ))
-            run_ids = {
-                str((row.metadata_json or {}).get("run_id") or "")
-                for row in rows
-            }
-            run_ids.discard("")
-            answer_runs = {
-                run.id: run
-                for run in session.scalars(
-                    select(AnswerRunRecord).where(
-                        AnswerRunRecord.id.in_(run_ids),
-                        AnswerRunRecord.tenant_id == principal.tenant_id,
-                        AnswerRunRecord.user_id == user.id,
-                        AnswerRunRecord.knowledge_base_id == authorized.id,
-                        AnswerRunRecord.conversation_id == conversation_id,
-                    )
-                )
-            } if run_ids else {}
+            answer_runs = self._conversation_answer_runs(
+                session,
+                tenant_id=principal.tenant_id,
+                user_id=user.id,
+                knowledge_base_id=authorized.id,
+                conversation_id=conversation_id,
+            )
             withdrawn_run_ids = self._withdrawn_answer_run_ids(
                 session,
                 tenant_id=principal.tenant_id,
@@ -551,7 +543,11 @@ class SqlAlchemyTenantRepository:
                     or run_id in withdrawn_run_ids
                 ):
                     continue
-                history.append({"role": row.role, "content": row.content})
+                history.append({
+                    "role": row.role,
+                    "content": row.content,
+                    "run_id": run_id,
+                })
             return history
 
     def list_conversations(self, *, principal: Principal) -> list[dict]:
@@ -621,24 +617,13 @@ class SqlAlchemyTenantRepository:
                 )
                 .order_by(MessageRecord.created_at, MessageRecord.id)
             ))
-            run_ids = {
-                str((message.metadata_json or {}).get("run_id") or "")
-                for message in messages
-                if message.role == "assistant"
-            }
-            run_ids.discard("")
-            answer_runs = {
-                answer_run.id: answer_run
-                for answer_run in session.scalars(
-                    select(AnswerRunRecord).where(
-                        AnswerRunRecord.id.in_(run_ids),
-                        AnswerRunRecord.tenant_id == principal.tenant_id,
-                        AnswerRunRecord.user_id == user.id,
-                        AnswerRunRecord.knowledge_base_id == row.knowledge_base_id,
-                        AnswerRunRecord.conversation_id == row.id,
-                    )
-                )
-            } if run_ids else {}
+            answer_runs = self._conversation_answer_runs(
+                session,
+                tenant_id=principal.tenant_id,
+                user_id=user.id,
+                knowledge_base_id=row.knowledge_base_id,
+                conversation_id=row.id,
+            )
             withdrawn_run_ids = self._withdrawn_answer_run_ids(
                 session,
                 tenant_id=principal.tenant_id,
@@ -696,6 +681,27 @@ class SqlAlchemyTenantRepository:
         return payload
 
     @staticmethod
+    def _conversation_answer_runs(
+        session,
+        *,
+        tenant_id: str,
+        user_id: str,
+        knowledge_base_id: str,
+        conversation_id: str,
+    ) -> dict[str, AnswerRunRecord]:
+        return {
+            run.id: run
+            for run in session.scalars(
+                select(AnswerRunRecord).where(
+                    AnswerRunRecord.tenant_id == tenant_id,
+                    AnswerRunRecord.user_id == user_id,
+                    AnswerRunRecord.knowledge_base_id == knowledge_base_id,
+                    AnswerRunRecord.conversation_id == conversation_id,
+                )
+            )
+        }
+
+    @staticmethod
     def _withdrawn_answer_run_ids(
         session,
         *,
@@ -751,13 +757,15 @@ class SqlAlchemyTenantRepository:
         for run_id, run in answer_runs.items():
             citations = citations_by_run[run_id]
             context_lineage_intact, context_versions = _context_lineage_status(
-                run.retrieval_json, run.retrieval_needed,
+                run.retrieval_json, run.retrieval_needed, run.pipeline_version,
             )
             context_versions_by_run[run_id] = context_versions
             all_context_versions.update(context_versions)
             if (
                 (run.retrieval_needed and not citations)
-                or not _citation_lineage_intact(run.retrieval_json, citations)
+                or not _citation_lineage_intact(
+                    run.retrieval_json, citations, run.pipeline_version,
+                )
                 or not context_lineage_intact
             ):
                 withdrawn.add(run_id)
@@ -770,6 +778,41 @@ class SqlAlchemyTenantRepository:
         for run_id, version_ids in context_versions_by_run.items():
             if not version_ids.issubset(available_context_versions):
                 withdrawn.add(run_id)
+
+        dependencies: dict[str, tuple[str, ...]] = {}
+        dependents: dict[str, list[str]] = {run_id: [] for run_id in answer_runs}
+        remaining: dict[str, int] = {}
+        for run_id, run in answer_runs.items():
+            intact, run_dependencies = _history_dependency_status(
+                run.retrieval_json, run.pipeline_version, run_id,
+            )
+            if not intact or (run_dependencies and not run.conversation_id):
+                withdrawn.add(run_id)
+            if any(dependency_id not in answer_runs for dependency_id in run_dependencies):
+                withdrawn.add(run_id)
+            known_dependencies = tuple(
+                dependency_id
+                for dependency_id in run_dependencies
+                if dependency_id in answer_runs
+            )
+            dependencies[run_id] = known_dependencies
+            remaining[run_id] = len(known_dependencies)
+            for dependency_id in known_dependencies:
+                dependents[dependency_id].append(run_id)
+
+        ready = deque(run_id for run_id, count in remaining.items() if count == 0)
+        processed = set()
+        while ready:
+            run_id = ready.popleft()
+            processed.add(run_id)
+            if any(dependency_id in withdrawn for dependency_id in dependencies[run_id]):
+                withdrawn.add(run_id)
+            for dependent_id in dependents[run_id]:
+                remaining[dependent_id] -= 1
+                if remaining[dependent_id] == 0:
+                    ready.append(dependent_id)
+        # An unprocessed run is in, or downstream from, a dependency cycle.
+        withdrawn.update(answer_runs.keys() - processed)
         return withdrawn
 
     def delete_conversation(
@@ -815,6 +858,23 @@ class SqlAlchemyTenantRepository:
                 membership=membership,
                 knowledge_base_id=run.knowledge_base_id,
             )
+            answer_runs = (
+                self._conversation_answer_runs(
+                    session,
+                    tenant_id=principal.tenant_id,
+                    user_id=user.id,
+                    knowledge_base_id=run.knowledge_base_id,
+                    conversation_id=run.conversation_id,
+                )
+                if run.conversation_id else {run.id: run}
+            )
+            answer_runs.setdefault(run.id, run)
+            withdrawn_run_ids = self._withdrawn_answer_run_ids(
+                session,
+                tenant_id=principal.tenant_id,
+                knowledge_base_id=run.knowledge_base_id,
+                answer_runs=answer_runs,
+            )
             citations = list(session.scalars(
                 select(CitationRecord)
                 .where(
@@ -823,26 +883,10 @@ class SqlAlchemyTenantRepository:
                 )
                 .order_by(CitationRecord.rank, CitationRecord.id)
             ))
-            context_lineage_intact, context_versions = _context_lineage_status(
-                run.retrieval_json, run.retrieval_needed,
-            )
-            available_context_versions = _available_context_version_ids(
-                session,
-                tenant_id=principal.tenant_id,
-                knowledge_base_id=run.knowledge_base_id,
-                version_ids=context_versions,
-            )
-            lineage_intact = (
-                _citation_lineage_intact(run.retrieval_json, citations)
-                and context_lineage_intact
-                and context_versions.issubset(available_context_versions)
-            )
             evidence = []
-            answer_withdrawn = bool(
-                not lineage_intact or (run.retrieval_needed and not citations)
-            )
+            answer_withdrawn = run.id in withdrawn_run_ids
             for citation in citations:
-                if not lineage_intact:
+                if answer_withdrawn:
                     evidence.append({"rank": citation.rank, "available": False})
                     continue
                 version = (
@@ -908,6 +952,11 @@ class SqlAlchemyTenantRepository:
                     "title": chunk.title if snippet_available else "",
                     "content": chunk.content if snippet_available else "",
                 })
+            if answer_withdrawn:
+                evidence = [
+                    {"rank": citation.rank, "available": False}
+                    for citation in citations
+                ]
             return {
                 "id": run.id,
                 "knowledge_base_id": run.knowledge_base_id,
@@ -1782,6 +1831,32 @@ class SqlAlchemyTenantRepository:
                 )
                 if conversation is None:
                     raise ResourceNotFoundError("conversation was not found")
+            history_manifest = result.get("_history_dependency_v1")
+            history_intact, history_run_ids = _history_dependency_status(
+                {_HISTORY_DEPENDENCY_KEY: history_manifest},
+                pipeline_version,
+                str(result["run_id"]),
+            )
+            if not history_intact or (history_run_ids and conversation is None):
+                raise InvalidServiceStateError("answer history dependency is incomplete")
+            if history_run_ids:
+                prior_runs = self._conversation_answer_runs(
+                    session,
+                    tenant_id=principal.tenant_id,
+                    user_id=authorized.user_id,
+                    knowledge_base_id=authorized.id,
+                    conversation_id=conversation.id,
+                )
+                if (
+                    not set(history_run_ids).issubset(prior_runs)
+                    or set(history_run_ids) & self._withdrawn_answer_run_ids(
+                        session,
+                        tenant_id=principal.tenant_id,
+                        knowledge_base_id=authorized.id,
+                        answer_runs=prior_runs,
+                    )
+                ):
+                    raise InvalidServiceStateError("answer history dependency is unavailable")
             citation_records = [
                 CitationRecord(
                     tenant_id=principal.tenant_id,
@@ -1833,6 +1908,10 @@ class SqlAlchemyTenantRepository:
                 )
                 raise
             retrieval_record[_CONTEXT_LINEAGE_KEY] = context_lineage
+            retrieval_record[_HISTORY_DEPENDENCY_KEY] = {
+                "run_ids": list(history_run_ids),
+                "complete": True,
+            }
             run = AnswerRunRecord(
                 id=str(result["run_id"]),
                 tenant_id=principal.tenant_id,
@@ -1939,10 +2018,41 @@ def _citation_lineage(citations: Iterable[CitationRecord]) -> list[dict]:
 def _citation_lineage_intact(
     retrieval_json: dict,
     citations: Iterable[CitationRecord],
+    pipeline_version: str = "",
 ) -> bool:
     if not isinstance(retrieval_json, dict) or _CITATION_LINEAGE_KEY not in retrieval_json:
-        return True  # Runs created before lineage persistence use the older checks.
+        return not _lineage_required(pipeline_version)
     return retrieval_json[_CITATION_LINEAGE_KEY] == _citation_lineage(citations)
+
+
+def _lineage_required(pipeline_version: str) -> bool:
+    version = re.fullmatch(r"canonical-v(\d+)", str(pipeline_version or ""))
+    return bool(version and int(version.group(1)) >= 2)
+
+
+def _history_dependency_status(
+    retrieval_json: dict,
+    pipeline_version: str,
+    run_id: str,
+) -> tuple[bool, tuple[str, ...]]:
+    required = _lineage_required(pipeline_version)
+    if not isinstance(retrieval_json, dict) or _HISTORY_DEPENDENCY_KEY not in retrieval_json:
+        return not required, ()  # Older runs cannot prove their history dependencies.
+    manifest = retrieval_json[_HISTORY_DEPENDENCY_KEY]
+    if not isinstance(manifest, dict) or manifest.get("complete") is not True:
+        return False, ()
+    run_ids = manifest.get("run_ids")
+    if not isinstance(run_ids, list) or len(run_ids) > 10:
+        return False, ()
+    if any(
+        not isinstance(dependency_id, str)
+        or not dependency_id
+        or dependency_id != dependency_id.strip()
+        or dependency_id == run_id
+        for dependency_id in run_ids
+    ) or len(set(run_ids)) != len(run_ids):
+        return False, ()
+    return True, tuple(run_ids)
 
 
 def _context_lineage_for_result(raw_retrieval) -> dict:
@@ -2000,9 +2110,10 @@ def _context_lineage_for_result(raw_retrieval) -> dict:
 def _context_lineage_status(
     retrieval_json: dict,
     retrieval_needed: bool,
+    pipeline_version: str = "",
 ) -> tuple[bool, set[str]]:
     if not isinstance(retrieval_json, dict) or _CONTEXT_LINEAGE_KEY not in retrieval_json:
-        return True, set()  # Older runs retain citation-only checks.
+        return not _lineage_required(pipeline_version), set()
     lineage = retrieval_json[_CONTEXT_LINEAGE_KEY]
     if not isinstance(lineage, dict) or not isinstance(lineage.get("contexts"), list):
         return False, set()

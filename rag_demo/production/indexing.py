@@ -345,27 +345,42 @@ class SqlAlchemyIndexingRepository:
         with self.session_factory() as session:
             return list(session.scalars(
                 select(IndexBuildJobRecord.id)
-                .where(or_(
+                .outerjoin(
+                    IndexVersionRecord,
                     and_(
-                        IndexBuildJobRecord.status == "queued",
-                        or_(
-                            IndexBuildJobRecord.last_dispatched_at.is_(None),
-                            IndexBuildJobRecord.last_dispatched_at <= stale,
+                        IndexVersionRecord.id == IndexBuildJobRecord.index_version_id,
+                        IndexVersionRecord.tenant_id == IndexBuildJobRecord.tenant_id,
+                        IndexVersionRecord.knowledge_base_id
+                        == IndexBuildJobRecord.knowledge_base_id,
+                    ),
+                )
+                .where(
+                    or_(
+                        IndexVersionRecord.id.is_(None),
+                        IndexVersionRecord.artifact_attempt == 0,
+                    ),
+                    or_(
+                        and_(
+                            IndexBuildJobRecord.status == "queued",
+                            or_(
+                                IndexBuildJobRecord.last_dispatched_at.is_(None),
+                                IndexBuildJobRecord.last_dispatched_at <= stale,
+                            ),
+                        ),
+                        and_(
+                            IndexBuildJobRecord.status == "retry_wait",
+                            or_(
+                                IndexBuildJobRecord.next_attempt_at.is_(None),
+                                IndexBuildJobRecord.next_attempt_at <= now,
+                            ),
+                        ),
+                        and_(
+                            IndexBuildJobRecord.status == "running",
+                            IndexBuildJobRecord.lease_expires_at.is_not(None),
+                            IndexBuildJobRecord.lease_expires_at <= now,
                         ),
                     ),
-                    and_(
-                        IndexBuildJobRecord.status == "retry_wait",
-                        or_(
-                            IndexBuildJobRecord.next_attempt_at.is_(None),
-                            IndexBuildJobRecord.next_attempt_at <= now,
-                        ),
-                    ),
-                    and_(
-                        IndexBuildJobRecord.status == "running",
-                        IndexBuildJobRecord.lease_expires_at.is_not(None),
-                        IndexBuildJobRecord.lease_expires_at <= now,
-                    ),
-                ))
+                )
                 .order_by(IndexBuildJobRecord.created_at, IndexBuildJobRecord.id)
                 .limit(max(1, min(int(limit), 500)))
             ))

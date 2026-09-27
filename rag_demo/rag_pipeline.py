@@ -652,6 +652,7 @@ def normalize_contexts(raw_contexts: object, max_contexts: Optional[int] = None)
             "matchedTerms": list(raw.get("matchedTerms") or [])[:20],
             "documentVersionId": str(raw.get("documentVersionId") or ""),
             "chunkRecordId": str(raw.get("chunkRecordId") or ""),
+            "contentSha256": str(raw.get("contentSha256") or ""),
             "indexVersionId": str(raw.get("indexVersionId") or ""),
         })
     return contexts
@@ -886,7 +887,10 @@ def citations_from_answer(
             "page": context["page"],
             "source": context.get("source", ""),
             "run_id": run_id,
-            "content_sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
+            "content_sha256": (
+                str(context.get("contentSha256") or "").lower()
+                or hashlib.sha256(content.encode("utf-8")).hexdigest()
+            ),
             "document_version_id": str(context.get("documentVersionId") or ""),
             "chunk_record_id": str(context.get("chunkRecordId") or ""),
             "verified": True,

@@ -77,8 +77,11 @@ class FakePipeline:
                     "page": "1",
                     "source": "a-ready",
                     "run_id": f"run-{len(self.calls)}",
-                    "content_sha256": "a" * 64,
+                    "content_sha256": hashlib.sha256(
+                        "不得公開的完整內部內容".encode("utf-8")
+                    ).hexdigest(),
                     "document_version_id": "version-a",
+                    "chunk_record_id": "chunk-record-a-1",
                 }
             ],
             "grounding_warnings": [],
@@ -98,6 +101,10 @@ class FakePipeline:
                 "contexts": [{
                     "id": "chunk-a-1",
                     "documentVersionId": "version-a",
+                    "chunkRecordId": "chunk-record-a-1",
+                    "contentSha256": hashlib.sha256(
+                        "不得公開的完整內部內容".encode("utf-8")
+                    ).hexdigest(),
                     "content": "不得公開的完整內部內容",
                 }],
                 "evidence_evaluation": {
@@ -399,6 +406,24 @@ class ProductionApiTests(unittest.TestCase):
             )
             session.add_all([version_a, version_b])
             session.flush()
+
+            context_content = "不得公開的完整內部內容"
+            session.add(ChunkRecord(
+                id="chunk-record-a-1",
+                tenant_id="tenant-a",
+                knowledge_base_id="kb-a",
+                document_id="document-a-ready",
+                document_version_id="version-a",
+                index_version_id="index-a",
+                chunk_key="version-a::0",
+                ordinal=0,
+                title="測試文件",
+                content=context_content,
+                content_sha256=hashlib.sha256(
+                    context_content.encode("utf-8")
+                ).hexdigest(),
+                qdrant_point_id="point-a-1",
+            ))
 
             document_a_ready.current_version_id = version_a.id
             document_b_ready.current_version_id = version_b.id

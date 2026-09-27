@@ -241,6 +241,7 @@ class ProductionHybridRetriever:
                 "matchedTerms": matched_terms,
                 "documentVersionId": str(evidence.get("document_version_id") or payload.get("document_version_id") or ""),
                 "chunkRecordId": str(evidence.get("chunk_record_id") or payload.get("chunk_record_id") or ""),
+                "contentSha256": str(evidence.get("content_sha256") or payload.get("content_sha256") or ""),
                 "indexVersionId": str(evidence.get("index_version_id") or payload.get("index_version_id") or ""),
             })
 

@@ -761,6 +761,15 @@ class SqlAlchemyTenantRepository:
             context_lineage_intact, context_versions = _context_lineage_status(
                 run.retrieval_json, run.retrieval_needed, run.pipeline_version,
             )
+            if not _context_lineage_chunks_intact(
+                session,
+                tenant_id=tenant_id,
+                knowledge_base_id=knowledge_base_id,
+                index_version_id=run.index_version_id or "",
+                retrieval_json=run.retrieval_json,
+                pipeline_version=run.pipeline_version,
+            ):
+                context_lineage_intact = False
             context_versions_by_run[run_id] = context_versions
             all_context_versions.update(context_versions)
             if (
@@ -1934,6 +1943,7 @@ class SqlAlchemyTenantRepository:
             )
             try:
                 context_lineage = _context_lineage_for_result(result.get("retrieval"))
+                retrieval_record[_CONTEXT_LINEAGE_KEY] = context_lineage
                 context_versions = {
                     entry["document_version_id"]
                     for entry in context_lineage["contexts"]
@@ -1946,6 +1956,17 @@ class SqlAlchemyTenantRepository:
                 )
                 if not context_versions.issubset(available_context_versions):
                     raise InvalidServiceStateError("final context document version is unavailable")
+                if not _context_lineage_chunks_intact(
+                    session,
+                    tenant_id=principal.tenant_id,
+                    knowledge_base_id=authorized.id,
+                    index_version_id=authorized.active_index_version_id or "",
+                    retrieval_json=retrieval_record,
+                    pipeline_version=pipeline_version,
+                ):
+                    raise InvalidServiceStateError(
+                        "final context chunk lineage is unavailable"
+                    )
             except InvalidServiceStateError as exc:
                 LOGGER.warning(
                     "answer_run.context_lineage_incomplete run_id=%s reason=%s",
@@ -1953,7 +1974,6 @@ class SqlAlchemyTenantRepository:
                     str(exc),
                 )
                 raise
-            retrieval_record[_CONTEXT_LINEAGE_KEY] = context_lineage
             retrieval_record[_HISTORY_DEPENDENCY_KEY] = {
                 "run_ids": list(history_run_ids),
                 "complete": True,
@@ -2111,7 +2131,7 @@ def _context_lineage_for_result(raw_retrieval) -> dict:
     if contexts and not needed:
         raise InvalidServiceStateError("non-retrieval answer has final contexts")
     raw_contexts = raw_retrieval.get("raw_contexts")
-    raw_by_id: dict[str, list[str]] = {}
+    raw_by_id: dict[str, list[dict[str, str]]] = {}
     if isinstance(raw_contexts, list):
         for raw_context in raw_contexts:
             if not isinstance(raw_context, dict):
@@ -2119,7 +2139,17 @@ def _context_lineage_for_result(raw_retrieval) -> dict:
             raw_id = str(raw_context.get("id") or "").strip()
             if raw_id:
                 raw_by_id.setdefault(raw_id, []).append(
-                    str(raw_context.get("documentVersionId") or "").strip()
+                    {
+                        "document_version_id": str(
+                            raw_context.get("documentVersionId") or ""
+                        ).strip(),
+                        "chunk_record_id": str(
+                            raw_context.get("chunkRecordId") or ""
+                        ).strip(),
+                        "content_sha256": str(
+                            raw_context.get("contentSha256") or ""
+                        ).strip().lower(),
+                    }
                 )
     entries = []
     for context in contexts:
@@ -2129,19 +2159,47 @@ def _context_lineage_for_result(raw_retrieval) -> dict:
         if not context_id:
             raise InvalidServiceStateError("final context identifier is missing")
         version_id = str(context.get("documentVersionId") or "").strip()
+        chunk_record_id = str(context.get("chunkRecordId") or "").strip()
+        content_sha256 = str(context.get("contentSha256") or "").strip().lower()
+        raw_candidates = []
+        raw_id = re.sub(r"::(?:focus|fine-evidence)-[1-9]\d*$", "", context_id)
+        raw_candidates = raw_by_id.get(raw_id, [])
         if not version_id:
-            raw_id = re.sub(
-                r"::(?:focus|fine-evidence)-[1-9]\d*$", "", context_id,
-            )
-            raw_versions = raw_by_id.get(raw_id, [])
-            if not raw_versions or "" in raw_versions or len(set(raw_versions)) != 1:
+            raw_versions = {
+                candidate["document_version_id"]
+                for candidate in raw_candidates
+                if candidate["document_version_id"]
+            }
+            if len(raw_versions) != 1:
                 raise InvalidServiceStateError(
                     "final context document version cannot be resolved uniquely"
                 )
-            version_id = raw_versions[0]
+            version_id = next(iter(raw_versions))
+        if not chunk_record_id:
+            raw_chunk_ids = {
+                candidate["chunk_record_id"]
+                for candidate in raw_candidates
+                if candidate["chunk_record_id"]
+            }
+            if len(raw_chunk_ids) == 1:
+                chunk_record_id = next(iter(raw_chunk_ids))
+        if not content_sha256:
+            raw_hashes = {
+                candidate["content_sha256"]
+                for candidate in raw_candidates
+                if candidate["content_sha256"]
+            }
+            if len(raw_hashes) == 1:
+                content_sha256 = next(iter(raw_hashes))
+        if not content_sha256:
+            content = str(context.get("content") or "")
+            if content:
+                content_sha256 = hashlib.sha256(content.encode("utf-8")).hexdigest()
         entries.append({
             "context_id": context_id,
             "document_version_id": version_id,
+            "chunk_record_id": chunk_record_id,
+            "content_sha256": content_sha256,
         })
     return {
         "state": (
@@ -2188,11 +2246,75 @@ def _context_lineage_status(
             or not isinstance(version_id, str) or not version_id.strip()
         ):
             return False, set()
+        if _lineage_required(pipeline_version):
+            chunk_record_id = entry.get("chunk_record_id")
+            content_sha256 = entry.get("content_sha256")
+            if (
+                not isinstance(chunk_record_id, str)
+                or not chunk_record_id.strip()
+                or not isinstance(content_sha256, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", content_sha256.lower())
+            ):
+                return False, set()
         context_ids.append(context_id)
         version_ids.add(version_id)
     if retrieval_json["context_ids"] != context_ids:
         return False, set()
     return True, version_ids
+
+
+def _context_lineage_chunks_intact(
+    session,
+    *,
+    tenant_id: str,
+    knowledge_base_id: str,
+    index_version_id: str,
+    retrieval_json: dict,
+    pipeline_version: str,
+) -> bool:
+    """Verify the chunks that supplied new answer Contexts still exist unchanged."""
+    if not _lineage_required(pipeline_version):
+        return True
+    if not isinstance(retrieval_json, dict):
+        return False
+    lineage = retrieval_json.get(_CONTEXT_LINEAGE_KEY)
+    if not isinstance(lineage, dict):
+        return False
+    entries = lineage.get("contexts")
+    if not isinstance(entries, list):
+        return False
+    if not entries:
+        return True
+    clean_ids = {
+        str(entry.get("chunk_record_id") or "").strip()
+        for entry in entries
+        if isinstance(entry, dict)
+    }
+    if not index_version_id or not clean_ids or "" in clean_ids:
+        return False
+    rows = list(session.scalars(
+        select(ChunkRecord).where(
+            ChunkRecord.id.in_(clean_ids),
+            ChunkRecord.tenant_id == tenant_id,
+            ChunkRecord.knowledge_base_id == knowledge_base_id,
+            ChunkRecord.index_version_id == index_version_id,
+        )
+    ))
+    chunks_by_id = {row.id: row for row in rows}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            return False
+        chunk_id = str(entry.get("chunk_record_id") or "").strip()
+        version_id = str(entry.get("document_version_id") or "").strip()
+        content_sha256 = str(entry.get("content_sha256") or "").strip().lower()
+        chunk = chunks_by_id.get(chunk_id)
+        if (
+            chunk is None
+            or chunk.document_version_id != version_id
+            or str(chunk.content_sha256 or "").strip().lower() != content_sha256
+        ):
+            return False
+    return True
 
 
 def _available_context_version_ids(

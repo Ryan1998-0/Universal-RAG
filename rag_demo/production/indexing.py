@@ -452,6 +452,12 @@ class SqlAlchemyIndexingRepository:
             target.validated_at = None
             target.manifest_sha256 = ""
             target.manifest_object_key = ""
+            # A retry rebuilds the candidate from scratch.  Do not retain
+            # entry-level validation evidence produced by a previous
+            # manifest or artifact attempt.
+            target.manifest_entries_sha256 = ""
+            target.validated_pg_entries_sha256 = ""
+            target.validated_qdrant_entries_sha256 = ""
 
     def persist_chunk_batch(
         self,

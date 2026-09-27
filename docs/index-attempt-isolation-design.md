@@ -78,6 +78,28 @@ Phase 1 已在 `rag_demo/retrieval_scope.py` 為 `RetrievalScope` 增加非負�
 4. **建置流程串接**：`IndexingService.process()` 依持久格式選擇 legacy 或新流程。新流程只清本次 attempt namespace，scope、Qdrant point、manifest body/key、count、scroll、fingerprint 全用 `work.attempt`；legacy 工作不可因開關變更而中途轉格式。失敗候選、文件取消與退役版本都應有 durable GC 線索。Writer gate 仍關閉。
 5. **最後才開 staging gate**：`ProductionSettings` 僅允許隔離 staging／test 設定新 writer；worker 在 `claim()` 前拒絕設定與版本持久格式不符的工作，API reservation 也只在 gate 開啟時建立新格式候選。更新 worker／beat 與 staging 部署設定，但 production 繼續拒絕。`compose.yaml` 現把 `RAG_ENV` 固定為 `production`，不可僅改 `.env` 就宣稱 staging 已啟用。正式上線開關與退版演練應在 staging 驗收後另行處理。
 
+### 2026-09-27 implementation note
+
+The durable cleanup slice is now staged in migration `3c8d9e0f1a2b` and
+`rag_demo/production/index_artifact_gc.py`. It uses a separate
+`index_artifact_gc` table with a typed positive attempt, exact Qdrant
+collection and manifest key, leases, retry state, and a future recheck time.
+The worker first checks the active pointer and a valid build lease, deletes
+the exact attempt namespace, verifies that its count is zero, then deletes the
+manifest. A successful row remains dispatchable for periodic rechecks so a
+late Qdrant upsert or manifest put can converge later; a dead row remains
+visible for alerting. Positive-attempt cleanup is scheduled when a future
+format candidate fails or an old positive-attempt index is retired. The new
+writer remains disabled, and legacy attempt `0` is never sent to this cleaner.
+
+The same rollout also fences validation with the durable job row and worker
+lease (`2afe1db`): validation locks the job before the index version and
+rejects an expired lease or mismatched job attempt. Existing legacy candidates
+continue to use `artifact_attempt=0`; a future writer must persist a positive
+attempt before the positive-attempt check can pass. The cleanup worker and
+lease fencing still need automatic CI and real PostgreSQL/Qdrant concurrency
+evidence before they count as production-ready.
+
 切換前先停止新的建立索引 API 請求與 beat 的 index sweep，讓已派送的 Celery index task 完成，核對 active／reserved／scheduled／broker 佇列與資料庫 running lease，再停止所有舊 writer 進程。現有 Celery 工作共用佇列、beat 每 30 秒重派，僅停 API 或只看 DB lease 都不足以排空。必須確認舊版已發出的版本範圍 Qdrant delete 不再在途；若沒有可信的操作完成證據，就保持 gate 關閉。尚未完成的 legacy queued／retry job 需由新 binary 依其 `artifact_attempt=0` 繼續 legacy 格式，不能改成新格式重試。所有 API 讀取進程也須先升級到 phase 1 reader。
 
 ## 分階段升級與退版下限

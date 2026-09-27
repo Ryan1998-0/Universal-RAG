@@ -152,6 +152,10 @@ class ProductionSettings(BaseSettings):
         le=512,
         alias="RAG_INDEX_BATCH_SIZE",
     )
+    index_attempt_writes_enabled: bool = Field(
+        default=False,
+        alias="RAG_INDEX_ATTEMPT_WRITES_ENABLED",
+    )
     ocr_languages: str = Field(default="chi_tra+eng", alias="RAG_OCR_LANGUAGES")
     ingestion_lease_seconds: int = Field(
         default=600,
@@ -190,6 +194,8 @@ class ProductionSettings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_environment_security(self):
+        if self.index_attempt_writes_enabled:
+            raise ValueError("RAG_INDEX_ATTEMPT_WRITES_ENABLED is not available yet")
         if self.environment == "production" and self.prompt_injection_policy == "flag":
             raise ValueError("production requires RAG_PROMPT_INJECTION_POLICY=quarantine")
         if self.environment in {"staging", "production"}:

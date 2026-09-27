@@ -275,6 +275,10 @@ class SqlAlchemyIndexingRepository:
             ))
             if target is None:
                 raise RuntimeError("index build target disappeared")
+            if target.artifact_attempt != 0:
+                raise InvalidServiceStateError(
+                    "attempt-aware index build requires a newer writer"
+                )
             rows = session.execute(
                 select(IndexDocumentRecord, DocumentRecord, DocumentVersionRecord)
                 .join(DocumentRecord, DocumentRecord.id == IndexDocumentRecord.document_id)

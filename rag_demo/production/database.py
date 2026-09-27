@@ -140,6 +140,7 @@ class IndexVersionRecord(Base):
             "status IN ('building', 'validating', 'ready', 'active', 'failed', 'retired')",
             name="ck_index_versions_status",
         ),
+        CheckConstraint("artifact_attempt >= 0", name="ck_index_versions_artifact_attempt"),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
@@ -156,6 +157,9 @@ class IndexVersionRecord(Base):
         nullable=False,
     )
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    artifact_attempt: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="building")
     embedding_model: Mapped[str] = mapped_column(String(255), nullable=False)
     sparse_embedding_model: Mapped[str] = mapped_column(

@@ -1391,6 +1391,7 @@ def create_app(
                 tenant_id=principal.tenant_id,
                 knowledge_base_id=authorized.id,
                 index_version_id=authorized.active_index_version_id or "",
+                artifact_attempt=authorized.artifact_attempt,
             ),
         )
         try:

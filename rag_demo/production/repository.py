@@ -71,6 +71,7 @@ class AuthorizedKnowledgeBase:
     embedding_dimensions: Optional[int] = None
     chunk_schema_version: Optional[str] = None
     qdrant_collection: Optional[str] = None
+    artifact_attempt: int = 0
 
 
 @dataclass(frozen=True)
@@ -1098,6 +1099,10 @@ class SqlAlchemyTenantRepository:
                 embedding_dimensions=active_index.embedding_dimensions if knowledge_base.active_index_version_id else None,
                 chunk_schema_version=active_index.chunk_schema_version if knowledge_base.active_index_version_id else None,
                 qdrant_collection=active_index.qdrant_collection if knowledge_base.active_index_version_id else None,
+                artifact_attempt=(
+                    active_index.artifact_attempt
+                    if knowledge_base.active_index_version_id else 0
+                ),
             )
 
     def reserve_upload(

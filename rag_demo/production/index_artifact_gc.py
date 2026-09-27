@@ -52,16 +52,15 @@ def ensure_index_artifact_gc(
     clean_collection = str(qdrant_collection or "").strip()
     if not clean_collection:
         raise ValueError("qdrant_collection is required for index artifact GC")
-    clean_key = str(manifest_object_key or "").strip()
-    if not clean_key:
-        clean_key = index_manifest_object_key(
-            tenant_id=tenant_id,
-            knowledge_base_id=knowledge_base_id,
-            index_version_id=index_version_id,
-            artifact_attempt=artifact_attempt,
-        )
-    if not clean_key.startswith("tenants/"):
-        raise ValueError("manifest_object_key must be tenant-scoped")
+    expected_key = index_manifest_object_key(
+        tenant_id=tenant_id,
+        knowledge_base_id=knowledge_base_id,
+        index_version_id=index_version_id,
+        artifact_attempt=artifact_attempt,
+    )
+    clean_key = str(manifest_object_key or "").strip() or expected_key
+    if clean_key != expected_key:
+        raise ValueError("manifest_object_key does not match the artifact attempt")
     scheduled_at = next_attempt_at or utc_now()
     existing = session.scalar(
         select(IndexArtifactGcRecord)

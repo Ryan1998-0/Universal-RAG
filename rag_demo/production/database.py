@@ -601,6 +601,86 @@ class IndexBuildJobRecord(Base):
     )
 
 
+class IndexArtifactGcRecord(Base):
+    __tablename__ = "index_artifact_gc"
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id",
+            "knowledge_base_id",
+            "index_version_id",
+            "artifact_attempt",
+            name="uq_index_artifact_gc_target",
+        ),
+        Index("ix_index_artifact_gc_state_next", "state", "next_attempt_at"),
+        CheckConstraint(
+            "state IN ('pending', 'running', 'retry_wait', 'completed', 'dead')",
+            name="ck_index_artifact_gc_state",
+        ),
+        CheckConstraint(
+            "artifact_attempt > 0",
+            name="ck_index_artifact_gc_attempt",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "knowledge_base_id", "index_version_id"],
+            [
+                "index_versions.tenant_id",
+                "index_versions.knowledge_base_id",
+                "index_versions.id",
+            ],
+            name="fk_index_artifact_gc_scoped_index",
+            ondelete="RESTRICT",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    tenant_id: Mapped[str] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    knowledge_base_id: Mapped[str] = mapped_column(
+        ForeignKey("knowledge_bases.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    index_version_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    artifact_attempt: Mapped[int] = mapped_column(Integer, nullable=False)
+    qdrant_collection: Mapped[str] = mapped_column(String(255), nullable=False)
+    manifest_object_key: Mapped[str] = mapped_column(String(1024), nullable=False)
+    state: Mapped[str] = mapped_column(String(30), nullable=False, default="pending")
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    worker_task_id: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    dispatch_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_dispatched_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    lease_owner: Mapped[str] = mapped_column(String(160), nullable=False, default="")
+    lease_expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    next_attempt_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    last_checked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    error_code: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    error_detail: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        onupdate=utc_now,
+    )
+
+
 class ChunkRecord(Base):
     __tablename__ = "chunks"
     __table_args__ = (

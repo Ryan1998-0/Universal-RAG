@@ -8,6 +8,10 @@ from rag_demo.production.config import get_production_settings
 from rag_demo.production.background_health import RedisBackgroundHealth
 from rag_demo.production.database import create_database_engine, create_session_factory
 from rag_demo.production.deletion import DeletionService, SqlAlchemyDeletionRepository
+from rag_demo.production.index_artifact_gc import (
+    IndexArtifactGcService,
+    SqlAlchemyIndexArtifactGcRepository,
+)
 from rag_demo.production.file_security import ClamAvScanner
 from rag_demo.production.ingestion import IngestionService, SqlAlchemyIngestionRepository
 from rag_demo.production.embedding_runtime import FastEmbedRuntime
@@ -29,6 +33,8 @@ class WorkerRuntime:
     indexing_service: IndexingService
     deletion_repository: SqlAlchemyDeletionRepository
     deletion_service: DeletionService
+    index_artifact_gc_repository: SqlAlchemyIndexArtifactGcRepository
+    index_artifact_gc_service: IndexArtifactGcService
     dispatcher: CeleryTaskDispatcher
     upload_cleanup_service: UploadCleanupService
 
@@ -43,6 +49,7 @@ def worker_runtime() -> WorkerRuntime:
     tenant_repository = SqlAlchemyTenantRepository(session_factory)
     indexing_repository = SqlAlchemyIndexingRepository(session_factory)
     deletion_repository = SqlAlchemyDeletionRepository(session_factory)
+    index_artifact_gc_repository = SqlAlchemyIndexArtifactGcRepository(session_factory)
     vector_repository = QdrantChunkRepository.from_settings(settings)
     embedding_runtime = FastEmbedRuntime.from_settings(settings)
     return WorkerRuntime(
@@ -75,6 +82,12 @@ def worker_runtime() -> WorkerRuntime:
         deletion_repository=deletion_repository,
         deletion_service=DeletionService(
             repository=deletion_repository,
+            object_storage=storage,
+            vector_repository=vector_repository,
+        ),
+        index_artifact_gc_repository=index_artifact_gc_repository,
+        index_artifact_gc_service=IndexArtifactGcService(
+            repository=index_artifact_gc_repository,
             object_storage=storage,
             vector_repository=vector_repository,
         ),
@@ -145,6 +158,20 @@ def process_deletion_outbox(self, outbox_id: str) -> dict:
     )
 
 
+@celery_app.task(
+    bind=True,
+    name="rag_demo.process_index_artifact_gc",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def process_index_artifact_gc(self, gc_id: str) -> dict:
+    worker_id = f"{socket.gethostname()}:{self.request.id}"
+    return worker_runtime().index_artifact_gc_service.process(
+        gc_id=str(gc_id),
+        worker_id=worker_id,
+    )
+
+
 @celery_app.task(name="rag_demo.sweep_ingestion_jobs")
 def sweep_ingestion_jobs(limit: int = 100) -> dict:
     runtime = worker_runtime()
@@ -196,4 +223,22 @@ def sweep_deletion_outbox(limit: int = 100) -> dict:
             dispatched.append(outbox_id)
         except Exception as exc:
             failed.append({"outbox_id": outbox_id, "error_class": exc.__class__.__name__})
+    return {"dispatched": dispatched, "failed": failed}
+
+
+@celery_app.task(name="rag_demo.sweep_index_artifact_gc")
+def sweep_index_artifact_gc(limit: int = 100) -> dict:
+    runtime = worker_runtime()
+    dispatched = []
+    failed = []
+    for gc_id in runtime.index_artifact_gc_repository.dispatchable_ids(limit=limit):
+        try:
+            task_id = runtime.dispatcher.dispatch_index_artifact_gc(gc_id)
+            runtime.index_artifact_gc_repository.record_dispatch(
+                gc_id=gc_id,
+                task_id=task_id,
+            )
+            dispatched.append(gc_id)
+        except Exception as exc:
+            failed.append({"gc_id": gc_id, "error_class": exc.__class__.__name__})
     return {"dispatched": dispatched, "failed": failed}

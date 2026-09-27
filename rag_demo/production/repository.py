@@ -35,6 +35,7 @@ from rag_demo.production.database import (
     utc_now,
 )
 from rag_demo.production.index_manifest import index_entries_sha256
+from rag_demo.production.index_artifact_gc import ensure_index_artifact_gc
 
 
 class AccessDeniedError(PermissionError):
@@ -1787,6 +1788,17 @@ class SqlAlchemyTenantRepository:
                     old_index.gc_after = utc_now() + timedelta(
                         seconds=max(60, int(grace_period_seconds))
                     )
+                    if int(old_index.artifact_attempt or 0) > 0:
+                        ensure_index_artifact_gc(
+                            session,
+                            tenant_id=old_index.tenant_id,
+                            knowledge_base_id=old_index.knowledge_base_id,
+                            index_version_id=old_index.id,
+                            artifact_attempt=int(old_index.artifact_attempt),
+                            qdrant_collection=old_index.qdrant_collection,
+                            manifest_object_key=old_index.manifest_object_key,
+                            next_attempt_at=old_index.gc_after,
+                        )
 
             now = utc_now()
             memberships = list(session.scalars(

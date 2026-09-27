@@ -34,6 +34,10 @@ def build_celery_app(settings=None) -> Celery:
                 "task": "rag_demo.sweep_deletion_outbox",
                 "schedule": 30.0,
             },
+            "sweep-durable-index-artifact-gc": {
+                "task": "rag_demo.sweep_index_artifact_gc",
+                "schedule": 60.0,
+            },
             "sweep-durable-index-build-jobs": {
                 "task": "rag_demo.sweep_index_build_jobs",
                 "schedule": 30.0,

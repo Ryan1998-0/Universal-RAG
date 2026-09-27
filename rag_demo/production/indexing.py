@@ -24,6 +24,7 @@ from rag_demo.production.database import (
     utc_now,
 )
 from rag_demo.production.index_manifest import index_entries_sha256
+from rag_demo.production.index_artifact_gc import ensure_index_artifact_gc
 from rag_demo.production.lease_heartbeat import LeaseHeartbeat
 from rag_demo.production.repository import (
     AccessDeniedError,
@@ -628,6 +629,17 @@ class SqlAlchemyIndexingRepository:
                 job.next_attempt_at = now + timedelta(seconds=delay)
                 if target is not None:
                     target.status = "building"
+            if target is not None and int(target.artifact_attempt or 0) > 0:
+                ensure_index_artifact_gc(
+                    session,
+                    tenant_id=target.tenant_id,
+                    knowledge_base_id=target.knowledge_base_id,
+                    index_version_id=target.id,
+                    artifact_attempt=int(target.artifact_attempt),
+                    qdrant_collection=target.qdrant_collection,
+                    manifest_object_key=target.manifest_object_key,
+                    next_attempt_at=now + timedelta(seconds=120),
+                )
             return job.status
 
     def get_status(self, *, principal, job_id: str) -> dict:

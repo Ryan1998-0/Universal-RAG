@@ -255,6 +255,17 @@ class QdrantChunkRepository:
             wait=True,
         )
 
+    def delete_attempt(self, scope: RetrievalScope) -> None:
+        _require_versioned_scope(scope)
+        if scope.artifact_attempt <= 0:
+            raise ValueError("delete_attempt requires a positive artifact attempt")
+        models = _models()
+        self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=models.FilterSelector(filter=_read_filter(scope)),
+            wait=True,
+        )
+
     def count_index(self, scope: RetrievalScope) -> int:
         _require_versioned_scope(scope)
         # IsEmpty also matches null and [], so Qdrant's count alone cannot
@@ -442,6 +453,14 @@ def _chunk_payload(scope: RetrievalScope, chunk: dict, ordinal: int) -> dict:
         "content": content,
         "content_sha256": computed_digest,
     }
+    supplied_attempt = chunk.get("artifact_attempt")
+    if supplied_attempt is not None and (
+        type(supplied_attempt) is not int
+        or supplied_attempt != scope.artifact_attempt
+    ):
+        raise ValueError("chunk artifact_attempt is outside the retrieval scope")
+    if scope.artifact_attempt > 0:
+        payload["artifact_attempt"] = scope.artifact_attempt
     # Parent-child metadata stays alongside the child point so retrieval can
     # expand a hit without a second database round trip.
     for field_name in (
@@ -461,12 +480,15 @@ def _chunk_payload(scope: RetrievalScope, chunk: dict, ordinal: int) -> dict:
 
 
 def _point_id(scope: RetrievalScope, chunk_id: str) -> str:
-    stable_name = "/".join((
+    name_parts = [
         scope.tenant_id,
         scope.knowledge_base_id,
         scope.index_version_id,
-        chunk_id,
-    ))
+    ]
+    if scope.artifact_attempt > 0:
+        name_parts.append(f"attempt-{scope.artifact_attempt}")
+    name_parts.append(chunk_id)
+    stable_name = "/".join(name_parts)
     return str(uuid5(NAMESPACE_URL, stable_name))
 
 

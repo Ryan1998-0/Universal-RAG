@@ -39,7 +39,7 @@ Phase 1 已在 `rag_demo/production/database.py` 的 `IndexVersionRecord` 與 Al
 
 ### Scope 與 Qdrant adapter
 
-Phase 1 已在 `rag_demo/retrieval_scope.py` 為 `RetrievalScope` 增加非負的 `artifact_attempt`，預設 `0` 供既有呼叫者使用；`matches()` 會驗證 attempt。`rag_demo/production/vector_repository.py` 已具備 attempt-aware 讀取、legacy payload 嚴格檢查與新 writer 硬關閉。Phase 2 尚須完成：
+Phase 1 已在 `rag_demo/retrieval_scope.py` 為 `RetrievalScope` 增加非負的 `artifact_attempt`，預設 `0` 供既有呼叫者使用；`matches()` 會驗證 attempt。`rag_demo/production/vector_repository.py` 已具備 attempt-aware 讀取、legacy payload 嚴格檢查、正值 attempt 的精確刪除原語、attempt-specific point ID／payload 原語與新 writer 硬關閉；`object_storage.py` 已提供 per-attempt manifest key 原語，legacy key 保持不變。這些原語尚未接到 writer，不能視為新格式已啟用。Phase 2 尚須完成：
 
 - 在新建置 payload 寫入整數 `artifact_attempt`，並於 `ensure_collection()` 建立相容的整數 payload index。`_chunk_payload()` 拒絕與可信 scope 不符的 supplied attempt。
 - 新格式的 dense、sparse、count、scroll、fingerprint、候選刪除一律用 tenant + KB + index version + **精確 attempt** 篩選。Phase 1 使用 `qdrant-client==1.18.0` 的 `IsEmptyCondition` 選取 legacy `0` 候選，再檢查回傳 payload 的 attempt key 確實缺失；[Qdrant 官方文件](https://qdrant.tech/documentation/search/filtering/)說明 `IsEmpty` 同時會選取 `null` 與 `[]`，不能只靠 Qdrant filter 證明 key 缺失。`count_index()` 也改用逐點 scroll 以執行同一個嚴格檢查；fingerprint 仍會再次驗證 payload。新格式 `>0` 使用整數精確 match 並驗證回傳 payload 型別。

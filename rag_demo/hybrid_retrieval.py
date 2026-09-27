@@ -565,6 +565,8 @@ class HybridRetriever:
                     "rerankScore": round(float(candidate.get("rerank_score", candidate.get("fusion_score", 0.0))), 6),
                     "matchedTerms": list(candidate.get("matched_terms") or []),
                     "documentVersionId": str(chunk.get("document_version_id") or ""),
+                    "chunkRecordId": str(chunk.get("chunk_record_id") or ""),
+                    "contentSha256": str(chunk.get("content_sha256") or ""),
                     "indexVersionId": str(chunk.get("index_version_id") or ""),
                 }
             )

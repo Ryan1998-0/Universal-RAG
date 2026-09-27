@@ -36,6 +36,15 @@ class CeleryTaskDispatcher:
         )
         return task_id
 
+    def dispatch_index_artifact_gc(self, gc_id: str) -> str:
+        task_id = f"index-artifact-gc-{gc_id}-{uuid4().hex[:12]}"
+        self.celery_app.send_task(
+            "rag_demo.process_index_artifact_gc",
+            args=[gc_id],
+            task_id=task_id,
+        )
+        return task_id
+
     def dispatch_index_build(self, job_id: str) -> str:
         task_id = f"index-build-{job_id}-{uuid4().hex[:12]}"
         self.celery_app.send_task(

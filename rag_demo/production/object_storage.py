@@ -251,21 +251,27 @@ class S3ObjectStorage:
         knowledge_base_id: str,
         index_version_id: str,
         body: bytes,
+        artifact_attempt: int = 0,
     ) -> StoredObject:
+        attempt = _required_attempt(artifact_attempt)
         key = index_manifest_object_key(
             tenant_id=tenant_id,
             knowledge_base_id=knowledge_base_id,
             index_version_id=index_version_id,
+            artifact_attempt=attempt,
         )
         payload = bytes(body)
         digest = hashlib.sha256(payload).hexdigest()
+        metadata = {"sha256": digest, "immutable": "true"}
+        if attempt > 0:
+            metadata["artifact_attempt"] = str(attempt)
         self.client.put_object(
             Bucket=self.bucket,
             Key=key,
             Body=BytesIO(payload),
             ContentLength=len(payload),
             ContentType="application/json",
-            Metadata={"sha256": digest, "immutable": "true"},
+            Metadata=metadata,
         )
         return StoredObject(key=key, size_bytes=len(payload), sha256=digest)
 
@@ -354,12 +360,19 @@ def index_manifest_object_key(
     tenant_id: str,
     knowledge_base_id: str,
     index_version_id: str,
+    artifact_attempt: int = 0,
 ) -> str:
+    attempt = _required_attempt(artifact_attempt)
+    suffix = (
+        f"/attempts/{attempt}/manifest.json"
+        if attempt > 0
+        else "/manifest.json"
+    )
     return (
         f"tenants/{_required_component(tenant_id, 'tenant_id')}"
         f"/knowledge-bases/{_required_component(knowledge_base_id, 'knowledge_base_id')}"
         f"/indexes/{_required_component(index_version_id, 'index_version_id')}"
-        "/manifest.json"
+        f"{suffix}"
     )
 
 
@@ -388,6 +401,12 @@ def _required_component(value: str, name: str, max_length: int = 128) -> str:
     if len(clean) > max_length or not _ID_PATTERN.fullmatch(clean):
         raise ValueError(f"{name} contains invalid characters")
     return clean
+
+
+def _required_attempt(value: int) -> int:
+    if type(value) is not int or value < 0:
+        raise ValueError("artifact_attempt must be a non-negative integer")
+    return value
 
 
 def _required_object_key(value: str) -> str:

@@ -63,7 +63,30 @@ class QdrantChunkRepository:
         if vector_size <= 0:
             raise ValueError("vector_size must be positive")
         models = _models()
-        if not self.client.collection_exists(self.collection_name):
+        if self.client.collection_exists(self.collection_name):
+            collection = self.client.get_collection(collection_name=self.collection_name)
+            params = collection.config.params
+            vectors = params.vectors
+            dense = vectors.get("dense") if isinstance(vectors, dict) else None
+            if dense is None or int(dense.size) != int(vector_size):
+                raise VectorRepositoryError(
+                    "existing Qdrant collection has an incompatible dense vector size"
+                )
+            if dense.distance != models.Distance.COSINE:
+                raise VectorRepositoryError(
+                    "existing Qdrant collection must use Cosine distance for dense vectors"
+                )
+            sparse_vectors = params.sparse_vectors
+            bm25 = (
+                sparse_vectors.get("bm25")
+                if isinstance(sparse_vectors, dict)
+                else None
+            )
+            if bm25 is None or bm25.modifier != models.Modifier.IDF:
+                raise VectorRepositoryError(
+                    "existing Qdrant collection requires a bm25 sparse vector with IDF"
+                )
+        else:
             self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config={
@@ -89,6 +112,12 @@ class QdrantChunkRepository:
                 field_schema=models.PayloadSchemaType.KEYWORD,
                 wait=True,
             )
+        self.client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="artifact_attempt",
+            field_schema=models.PayloadSchemaType.INTEGER,
+            wait=True,
+        )
 
     def upsert_chunks(
         self,
@@ -99,6 +128,8 @@ class QdrantChunkRepository:
         sparse_vectors: Optional[Sequence[object]] = None,
     ) -> list[str]:
         _require_versioned_scope(scope)
+        if scope.artifact_attempt != 0:
+            raise VectorRepositoryError("attempt-aware Qdrant writes are disabled")
         if len(chunks) != len(vectors):
             raise ValueError("chunk and vector counts must match")
         if sparse_vectors is not None and len(chunks) != len(sparse_vectors):
@@ -159,7 +190,7 @@ class QdrantChunkRepository:
         limit = max(1, min(int(top_k), 200))
         if source_ids is not None and not list(source_ids):
             return []
-        query_filter = _scope_filter(scope, source_ids=source_ids)
+        query_filter = _read_filter(scope, source_ids=source_ids)
         response = self.client.query_points(
             collection_name=self.collection_name,
             query=clean_vector,
@@ -168,14 +199,18 @@ class QdrantChunkRepository:
             with_payload=True,
             limit=limit,
         )
-        return [
-            DenseSearchHit(
-                point_id=str(point.id),
-                score=float(point.score),
-                payload=dict(point.payload or {}),
+        hits = []
+        for point in response.points:
+            payload = dict(point.payload or {})
+            _require_payload_attempt(scope, payload)
+            hits.append(
+                DenseSearchHit(
+                    point_id=str(point.id),
+                    score=float(point.score),
+                    payload=payload,
+                )
             )
-            for point in response.points
-        ]
+        return hits
 
     def search_sparse(
         self,
@@ -192,21 +227,27 @@ class QdrantChunkRepository:
             collection_name=self.collection_name,
             query=_as_sparse_vector(query_sparse_vector),
             using="bm25",
-            query_filter=_scope_filter(scope, source_ids=source_ids),
+            query_filter=_read_filter(scope, source_ids=source_ids),
             with_payload=True,
             limit=max(1, min(int(top_k), 200)),
         )
-        return [
-            DenseSearchHit(
-                point_id=str(point.id),
-                score=float(point.score),
-                payload=dict(point.payload or {}),
+        hits = []
+        for point in response.points:
+            payload = dict(point.payload or {})
+            _require_payload_attempt(scope, payload)
+            hits.append(
+                DenseSearchHit(
+                    point_id=str(point.id),
+                    score=float(point.score),
+                    payload=payload,
+                )
             )
-            for point in response.points
-        ]
+        return hits
 
     def delete_index(self, scope: RetrievalScope) -> None:
         _require_versioned_scope(scope)
+        if scope.artifact_attempt != 0:
+            raise VectorRepositoryError("attempt-aware Qdrant deletes are disabled")
         models = _models()
         self.client.delete(
             collection_name=self.collection_name,
@@ -214,14 +255,37 @@ class QdrantChunkRepository:
             wait=True,
         )
 
+    def delete_attempt(self, scope: RetrievalScope) -> None:
+        _require_versioned_scope(scope)
+        if scope.artifact_attempt <= 0:
+            raise ValueError("delete_attempt requires a positive artifact attempt")
+        models = _models()
+        self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=models.FilterSelector(filter=_read_filter(scope)),
+            wait=True,
+        )
+
     def count_index(self, scope: RetrievalScope) -> int:
         _require_versioned_scope(scope)
-        result = self.client.count(
-            collection_name=self.collection_name,
-            count_filter=_scope_filter(scope),
-            exact=True,
-        )
-        return int(result.count)
+        # IsEmpty also matches null and [], so Qdrant's count alone cannot
+        # prove that legacy points genuinely lack the attempt field.
+        count = 0
+        offset = None
+        while True:
+            points, offset = self.client.scroll(
+                collection_name=self.collection_name,
+                scroll_filter=_read_filter(scope),
+                limit=256,
+                offset=offset,
+                with_payload=["artifact_attempt"],
+                with_vectors=False,
+            )
+            for point in points:
+                _require_payload_attempt(scope, dict(point.payload or {}))
+            count += len(points)
+            if offset is None:
+                return count
 
     def index_entries_sha256(self, scope: RetrievalScope) -> str:
         _require_versioned_scope(scope)
@@ -234,11 +298,12 @@ class QdrantChunkRepository:
             "document_version_id",
             "content",
             "content_sha256",
+            "artifact_attempt",
         ]
         while True:
             points, offset = self.client.scroll(
                 collection_name=self.collection_name,
-                scroll_filter=_scope_filter(scope),
+                scroll_filter=_read_filter(scope),
                 limit=256,
                 offset=offset,
                 with_payload=payload_fields,
@@ -246,6 +311,7 @@ class QdrantChunkRepository:
             )
             for point in points:
                 payload = dict(point.payload or {})
+                _require_payload_attempt(scope, payload)
                 entries.append({
                     "qdrant_point_id": str(point.id),
                     "chunk_id": payload.get("chunk_id"),
@@ -314,6 +380,40 @@ def _scope_filter(
     return models.Filter(must=must)
 
 
+def _read_filter(
+    scope: RetrievalScope,
+    source_ids: Optional[Sequence[str]] = None,
+):
+    models = _models()
+    query_filter = _scope_filter(scope, source_ids=source_ids)
+    if scope.artifact_attempt == 0:
+        attempt_condition = models.IsEmptyCondition(
+            is_empty=models.PayloadField(key="artifact_attempt"),
+        )
+    else:
+        attempt_condition = models.FieldCondition(
+            key="artifact_attempt",
+            match=models.MatchValue(value=scope.artifact_attempt),
+        )
+    # Qdrant combines outer clauses with AND; one should item is mandatory.
+    # Keep the base must clauses available for version-wide document deletion.
+    query_filter.should = [attempt_condition]
+    return query_filter
+
+
+def _require_payload_attempt(scope: RetrievalScope, payload: dict) -> None:
+    # Qdrant's IsEmpty also selects null and []; only a missing key is legacy.
+    if scope.artifact_attempt == 0:
+        valid = "artifact_attempt" not in payload
+    else:
+        value = payload.get("artifact_attempt")
+        valid = type(value) is int and value == scope.artifact_attempt
+    if not valid:
+        raise VectorRepositoryError(
+            "Qdrant point does not match the requested index attempt"
+        )
+
+
 def _chunk_payload(scope: RetrievalScope, chunk: dict, ordinal: int) -> dict:
     for field_name, expected in (
         ("tenant_id", scope.tenant_id),
@@ -353,6 +453,14 @@ def _chunk_payload(scope: RetrievalScope, chunk: dict, ordinal: int) -> dict:
         "content": content,
         "content_sha256": computed_digest,
     }
+    supplied_attempt = chunk.get("artifact_attempt")
+    if supplied_attempt is not None and (
+        type(supplied_attempt) is not int
+        or supplied_attempt != scope.artifact_attempt
+    ):
+        raise ValueError("chunk artifact_attempt is outside the retrieval scope")
+    if scope.artifact_attempt > 0:
+        payload["artifact_attempt"] = scope.artifact_attempt
     # Parent-child metadata stays alongside the child point so retrieval can
     # expand a hit without a second database round trip.
     for field_name in (
@@ -372,12 +480,15 @@ def _chunk_payload(scope: RetrievalScope, chunk: dict, ordinal: int) -> dict:
 
 
 def _point_id(scope: RetrievalScope, chunk_id: str) -> str:
-    stable_name = "/".join((
+    name_parts = [
         scope.tenant_id,
         scope.knowledge_base_id,
         scope.index_version_id,
-        chunk_id,
-    ))
+    ]
+    if scope.artifact_attempt > 0:
+        name_parts.append(f"attempt-{scope.artifact_attempt}")
+    name_parts.append(chunk_id)
+    stable_name = "/".join(name_parts)
     return str(uuid5(NAMESPACE_URL, stable_name))
 
 

@@ -31,6 +31,8 @@ evals/graph_suitability/runs/
 evals/self_rag_timing/runs/
 evals/document_folders/runtime-state.json
 evals/document_folders/setup-results.json
+evals/production_release_gate/runs/
+evals/prompt_injection/runs/
 
 *.npy
 

@@ -1,0 +1,114 @@
+{
+  "schema_version": "production-rag-release-gate-v1",
+  "knowledge_base_id": "SET_STAGING_KNOWLEDGE_BASE_ID",
+  "declared_provenance": {
+    "deployment_image_digest": "SET_IMAGE_SHA256_DIGEST",
+    "generation_model_revision": "SET_GENERATION_MODEL_REVISION_OR_DIGEST",
+    "embedding_model_revision": "SET_EMBEDDING_MODEL_REVISION",
+    "reranker_model_revision": "SET_RERANKER_MODEL_REVISION",
+    "active_index_id": "SET_ACTIVE_INDEX_VERSION_ID",
+    "parser_version": "SET_PARSER_VERSION",
+    "chunk_schema_version": "SET_CHUNK_SCHEMA_VERSION",
+    "hardware_profile": "SET_STAGING_HARDWARE_PROFILE"
+  },
+  "fixture_sources": [
+    {"file": "policy-2024.txt", "source_id": "SET_POLICY_2024_SOURCE_ID"},
+    {"file": "policy-2026.txt", "source_id": "SET_POLICY_2026_SOURCE_ID"},
+    {"file": "workflow-request.txt", "source_id": "SET_WORKFLOW_REQUEST_SOURCE_ID"},
+    {"file": "workflow-approval.txt", "source_id": "SET_WORKFLOW_APPROVAL_SOURCE_ID"},
+    {"file": "ocr-notice.png", "source_id": "SET_OCR_NOTICE_SOURCE_ID"}
+  ],
+  "max_p95_wall_ms": 180000,
+  "max_error_rate": 0,
+  "cases": [
+    {
+      "id": "traditional-chinese",
+      "tags": ["traditional_chinese", "citation_support"],
+      "question": "依 2024 年版本，演練申請應提前幾日提出？",
+      "source_ids": ["SET_POLICY_2024_SOURCE_ID"],
+      "expect": {
+        "status": "passed",
+        "retrieval_needed": true,
+        "min_citations": 1,
+        "allowed_citation_source_ids": ["SET_POLICY_2024_SOURCE_ID"],
+        "required_fact_groups": [["三日", "3日", "三天", "3天"]]
+      }
+    },
+    {
+      "id": "version-2024",
+      "tags": ["version_conflict"],
+      "question": "2024 年版本的演練申請期限是幾日？",
+      "source_ids": ["SET_POLICY_2024_SOURCE_ID"],
+      "expect": {
+        "status": "passed",
+        "retrieval_needed": true,
+        "min_citations": 1,
+        "allowed_citation_source_ids": ["SET_POLICY_2024_SOURCE_ID"],
+        "required_fact_groups": [["三日", "3日", "三天", "3天"]],
+        "answer_excludes": ["五日", "5日"]
+      }
+    },
+    {
+      "id": "version-2026",
+      "tags": ["version_conflict"],
+      "question": "2026 年版本的演練申請期限是幾日？",
+      "source_ids": ["SET_POLICY_2026_SOURCE_ID"],
+      "expect": {
+        "status": "passed",
+        "retrieval_needed": true,
+        "min_citations": 1,
+        "allowed_citation_source_ids": ["SET_POLICY_2026_SOURCE_ID"],
+        "required_fact_groups": [["五日", "5日", "五天", "5天"]],
+        "answer_excludes": ["三日", "3日"]
+      }
+    },
+    {
+      "id": "no-answer",
+      "tags": ["no_answer"],
+      "question": "這些文件是否記載 2035 年火星站的站長姓名？",
+      "expect": {"status": "refused", "retrieval_needed": true, "answer_excludes": ["站長是"]}
+    },
+    {
+      "id": "ocr-notice",
+      "tags": ["ocr"],
+      "question": "掃描通知上的設備代碼是什麼？",
+      "source_ids": ["SET_OCR_NOTICE_SOURCE_ID"],
+      "expect": {
+        "status": "passed",
+        "retrieval_needed": true,
+        "min_citations": 1,
+        "allowed_citation_source_ids": ["SET_OCR_NOTICE_SOURCE_ID"],
+        "required_fact_groups": [["BLUE-17"]]
+      }
+    },
+    {
+      "id": "multi-hop-workflow",
+      "tags": ["multi_hop"],
+      "question": "演練申請先由誰填表，接著由誰在多久內核可？",
+      "source_ids": ["SET_WORKFLOW_REQUEST_SOURCE_ID", "SET_WORKFLOW_APPROVAL_SOURCE_ID"],
+      "expect": {
+        "status": "passed",
+        "retrieval_needed": true,
+        "min_citations": 2,
+        "allowed_citation_source_ids": ["SET_WORKFLOW_REQUEST_SOURCE_ID", "SET_WORKFLOW_APPROVAL_SOURCE_ID"],
+        "required_fact_groups": [["申請人"], ["主管"], ["兩個工作日", "2個工作日"]]
+      }
+    },
+    {
+      "id": "citation-support",
+      "tags": ["citation_support"],
+      "question": "演練環境的操作紀錄保留多久？",
+      "source_ids": ["SET_POLICY_2026_SOURCE_ID"],
+      "expect": {
+        "status": "passed",
+        "retrieval_needed": true,
+        "min_citations": 1,
+        "allowed_citation_source_ids": ["SET_POLICY_2026_SOURCE_ID"],
+        "required_fact_groups": [["七日", "7日", "七天", "7天"]]
+      }
+    }
+  ],
+  "unauthorized_checks": [
+    {"id": "cross-tenant-denial", "knowledge_base_id": "SET_OTHER_TENANT_KNOWLEDGE_BASE_ID"}
+  ]
+}

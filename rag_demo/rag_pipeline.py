@@ -1,4 +1,5 @@
 import hashlib
+import html
 import os
 import re
 from dataclasses import dataclass
@@ -9,7 +10,7 @@ from uuid import uuid4
 from rag_demo.config import RagConfig
 from rag_demo.conversation_store import ConversationStore
 from rag_demo.evidence_focus import focus_retrieved_evidence
-from rag_demo.evidence_validation import validate_answer_evidence
+from rag_demo.evidence_validation import normalized_refusal_answer, validate_answer_evidence
 from rag_demo.fine_evidence import retrieve_fine_evidence
 from rag_demo.general_answer import (
     CURRENT_DATETIME_REASON,
@@ -224,6 +225,7 @@ class RagPipeline:
         # generation for this model provider.
         model_history = [] if isolated_subagent else history
         model_memories = [] if isolated_subagent else memories
+        history_dependency = {"run_ids": [], "complete": True}
 
         contexts: List[dict] = []
         raw_contexts: List[dict] = []
@@ -256,6 +258,7 @@ class RagPipeline:
             trace.record("retrieval", 0.0, status="skipped", reason="direct_answer")
             trace.record("generation", 0.0, status="completed", reason="direct_answer")
         else:
+            history_dependency = _history_dependency_manifest(model_history)
             route_started = perf_counter()
             route_model = self._resolve_model("query_rewrite", request.model)
             route_model_started = perf_counter()
@@ -537,6 +540,7 @@ class RagPipeline:
             "schema_version": AGENT_RESPONSE_SCHEMA,
             "run_id": run_id,
             "request_id": str(request.request_id or ""),
+            "_history_dependency_v1": history_dependency,
             "profile": request.profile,
             "conversation_id": conversation_id,
             "answer": answer,
@@ -648,6 +652,7 @@ def normalize_contexts(raw_contexts: object, max_contexts: Optional[int] = None)
             "matchedTerms": list(raw.get("matchedTerms") or [])[:20],
             "documentVersionId": str(raw.get("documentVersionId") or ""),
             "chunkRecordId": str(raw.get("chunkRecordId") or ""),
+            "contentSha256": str(raw.get("contentSha256") or ""),
             "indexVersionId": str(raw.get("indexVersionId") or ""),
         })
     return contexts
@@ -681,6 +686,7 @@ def answer_from_contexts(
                 "valid_citations": [],
                 "invalid_citations": [],
                 "uncited_claims": [],
+                "unsupported_claims": [],
                 "reason": "由可驗證的門檻證據直接產生答案。",
             })
         return render_threshold_answer(threshold_evidence)
@@ -714,11 +720,11 @@ def build_grounded_answer_request(
     context_text = "\n\n".join(
         "\n".join(
             [
-                f'<evidence rank="{context["rank"]}">',
-                f'標題：{context["title"]}',
-                f'頁碼：{context["page"]}',
+                f'<evidence rank="{html.escape(str(context["rank"]), quote=True)}">',
+                f'標題：{html.escape(str(context["title"]), quote=True)}',
+                f'頁碼：{html.escape(str(context["page"]), quote=True)}',
                 "內容：",
-                context["content"],
+                html.escape(str(context["content"]), quote=True),
                 "</evidence>",
             ]
         )
@@ -777,7 +783,7 @@ def enforce_grounded_answer_contract(answer: str, contexts: Sequence[dict]) -> s
     text = str(answer or "").strip()
     validation = validate_answer_evidence(text, contexts)
     if validation["status"] == "refused":
-        return text
+        return normalized_refusal_answer(text) or "根據目前檢索資料無法確認。"
     if validation["sufficient"]:
         return text
 
@@ -785,6 +791,24 @@ def enforce_grounded_answer_contract(answer: str, contexts: Sequence[dict]) -> s
         "根據目前檢索資料無法確認。模型產生的答案沒有通過來源約束檢查，"
         "因此系統未顯示未受證據支持的內容。"
     )
+
+
+def _history_dependency_manifest(history: Sequence[dict]) -> dict:
+    run_ids = []
+    complete = True
+    for message in history[-10:]:
+        if not str(message.get("content") or "").strip():
+            continue
+        run_id = message.get("run_id")
+        if (
+            not isinstance(run_id, str)
+            or not run_id
+            or run_id != run_id.strip()
+        ):
+            complete = False
+        elif run_id not in run_ids:
+            run_ids.append(run_id)
+    return {"run_ids": run_ids, "complete": complete}
 
 
 def prompt_with_history(prompt: str, history: Sequence[dict]) -> str:
@@ -863,7 +887,10 @@ def citations_from_answer(
             "page": context["page"],
             "source": context.get("source", ""),
             "run_id": run_id,
-            "content_sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
+            "content_sha256": (
+                str(context.get("contentSha256") or "").lower()
+                or hashlib.sha256(content.encode("utf-8")).hexdigest()
+            ),
             "document_version_id": str(context.get("documentVersionId") or ""),
             "chunk_record_id": str(context.get("chunkRecordId") or ""),
             "verified": True,

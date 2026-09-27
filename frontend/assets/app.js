@@ -600,9 +600,17 @@ function renderRunDetails(run) {
     const item = document.createElement("article");
     item.className = "evidence-item";
     const title = document.createElement("h3");
+    if (citation.available === false) {
+      title.textContent = `[${citation.rank}] 來源已無法使用`;
+      item.append(title);
+      elements.ragDetailsBody.append(item);
+      continue;
+    }
     title.textContent = `[${citation.rank}] ${citation.document_name || citation.title || "來源"}${citation.page ? ` · p.${citation.page}` : ""}`;
     const content = document.createElement("p");
-    content.textContent = citation.content || "";
+    content.textContent = citation.available === true && citation.snippet_available === false
+      ? "引用片段目前無法驗證，請查看原始文件"
+      : citation.content || "";
     item.append(title, content);
     if (citation.source_url) {
       const source = document.createElement("a");

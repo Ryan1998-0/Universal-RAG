@@ -29,6 +29,7 @@ EXPECTED_PRODUCTION_TABLES = {
     "index_documents",
     "index_versions",
     "ingestion_jobs",
+    "index_artifact_gc",
     "knowledge_bases",
     "memberships",
     "messages",
@@ -71,7 +72,7 @@ class ProductionMigrationTests(unittest.TestCase):
         table_names = self._table_names()
         business_tables = table_names - {ALEMBIC_VERSION_TABLE}
 
-        self.assertEqual(len(business_tables), 21)
+        self.assertEqual(len(business_tables), 22)
         self.assertSetEqual(business_tables, EXPECTED_PRODUCTION_TABLES)
         self.assertSetEqual(
             table_names,

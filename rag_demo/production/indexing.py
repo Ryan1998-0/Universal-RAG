@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from time import perf_counter
 from typing import Optional, Sequence
-from uuid import NAMESPACE_URL, uuid5
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from sqlalchemy import and_, delete, func, or_, select
 
@@ -24,6 +24,8 @@ from rag_demo.production.database import (
     utc_now,
 )
 from rag_demo.production.index_manifest import index_entries_sha256
+from rag_demo.production.index_artifact_gc import ensure_index_artifact_gc
+from rag_demo.production.lease_heartbeat import LeaseHeartbeat
 from rag_demo.production.repository import (
     AccessDeniedError,
     ConcurrentPublishError,
@@ -177,6 +179,7 @@ class SqlAlchemyIndexingRepository:
                 version_number=next_number,
                 status="building",
                 embedding_model=settings.embedding_model,
+                sparse_embedding_model=settings.sparse_embedding_model,
                 embedding_dimensions=settings.embedding_dimensions,
                 reranker_model=settings.reranker_model,
                 chunk_schema_version=settings.chunk_schema_version,
@@ -258,7 +261,6 @@ class SqlAlchemyIndexingRepository:
                 job.status == "running"
                 and job.lease_expires_at is not None
                 and _as_utc(job.lease_expires_at) > now
-                and job.lease_owner != worker_id
             ):
                 return None
             if (
@@ -274,6 +276,10 @@ class SqlAlchemyIndexingRepository:
             ))
             if target is None:
                 raise RuntimeError("index build target disappeared")
+            if target.artifact_attempt != 0:
+                raise InvalidServiceStateError(
+                    "attempt-aware index build requires a newer writer"
+                )
             rows = session.execute(
                 select(IndexDocumentRecord, DocumentRecord, DocumentVersionRecord)
                 .join(DocumentRecord, DocumentRecord.id == IndexDocumentRecord.document_id)
@@ -340,27 +346,43 @@ class SqlAlchemyIndexingRepository:
         with self.session_factory() as session:
             return list(session.scalars(
                 select(IndexBuildJobRecord.id)
-                .where(or_(
+                .outerjoin(
+                    IndexVersionRecord,
                     and_(
-                        IndexBuildJobRecord.status == "queued",
-                        or_(
-                            IndexBuildJobRecord.last_dispatched_at.is_(None),
-                            IndexBuildJobRecord.last_dispatched_at <= stale,
+                        IndexVersionRecord.id == IndexBuildJobRecord.index_version_id,
+                        IndexVersionRecord.tenant_id == IndexBuildJobRecord.tenant_id,
+                        IndexVersionRecord.knowledge_base_id
+                        == IndexBuildJobRecord.knowledge_base_id,
+                    ),
+                )
+                .where(
+                    or_(
+                        IndexVersionRecord.id.is_(None),
+                        IndexVersionRecord.artifact_attempt.is_(None),
+                        IndexVersionRecord.artifact_attempt <= 0,
+                    ),
+                    or_(
+                        and_(
+                            IndexBuildJobRecord.status == "queued",
+                            or_(
+                                IndexBuildJobRecord.last_dispatched_at.is_(None),
+                                IndexBuildJobRecord.last_dispatched_at <= stale,
+                            ),
+                        ),
+                        and_(
+                            IndexBuildJobRecord.status == "retry_wait",
+                            or_(
+                                IndexBuildJobRecord.next_attempt_at.is_(None),
+                                IndexBuildJobRecord.next_attempt_at <= now,
+                            ),
+                        ),
+                        and_(
+                            IndexBuildJobRecord.status == "running",
+                            IndexBuildJobRecord.lease_expires_at.is_not(None),
+                            IndexBuildJobRecord.lease_expires_at <= now,
                         ),
                     ),
-                    and_(
-                        IndexBuildJobRecord.status == "retry_wait",
-                        or_(
-                            IndexBuildJobRecord.next_attempt_at.is_(None),
-                            IndexBuildJobRecord.next_attempt_at <= now,
-                        ),
-                    ),
-                    and_(
-                        IndexBuildJobRecord.status == "running",
-                        IndexBuildJobRecord.lease_expires_at.is_not(None),
-                        IndexBuildJobRecord.lease_expires_at <= now,
-                    ),
-                ))
+                )
                 .order_by(IndexBuildJobRecord.created_at, IndexBuildJobRecord.id)
                 .limit(max(1, min(int(limit), 500)))
             ))
@@ -374,8 +396,14 @@ class SqlAlchemyIndexingRepository:
             job.dispatch_count += 1
             job.last_dispatched_at = utc_now()
 
-    def heartbeat(self, *, job_id: str, worker_id: str, stage: str) -> None:
-        now = utc_now()
+    def heartbeat(
+        self,
+        *,
+        job_id: str,
+        worker_id: str,
+        stage: str,
+        lease_seconds: int = 1200,
+    ) -> None:
         with self.session_factory.begin() as session:
             job = session.scalar(
                 select(IndexBuildJobRecord)
@@ -386,15 +414,22 @@ class SqlAlchemyIndexingRepository:
                 )
                 .with_for_update()
             )
-            if job is None:
+            now = utc_now()
+            if (
+                job is None
+                or job.lease_expires_at is None
+                or _as_utc(job.lease_expires_at) <= now
+            ):
                 raise RuntimeError("index build lease was lost")
             job.stage = str(stage)[:40]
             job.heartbeat_at = now
-            job.lease_expires_at = now + timedelta(minutes=20)
+            job.lease_expires_at = now + timedelta(
+                seconds=max(300, int(lease_seconds))
+            )
 
     def reset_candidate(self, *, work: IndexBuildWorkItem, worker_id: str) -> None:
         with self.session_factory.begin() as session:
-            self._require_lease(session, work.job_id, worker_id)
+            self._require_lease(session, work.job_id, worker_id, work.attempt)
             session.execute(delete(ChunkRecord).where(
                 ChunkRecord.tenant_id == work.tenant_id,
                 ChunkRecord.knowledge_base_id == work.knowledge_base_id,
@@ -418,6 +453,12 @@ class SqlAlchemyIndexingRepository:
             target.validated_at = None
             target.manifest_sha256 = ""
             target.manifest_object_key = ""
+            # A retry rebuilds the candidate from scratch.  Do not retain
+            # entry-level validation evidence produced by a previous
+            # manifest or artifact attempt.
+            target.manifest_entries_sha256 = ""
+            target.validated_pg_entries_sha256 = ""
+            target.validated_qdrant_entries_sha256 = ""
 
     def persist_chunk_batch(
         self,
@@ -430,7 +471,7 @@ class SqlAlchemyIndexingRepository:
         if len(chunks) != len(point_ids):
             raise ValueError("chunk and point counts must match")
         with self.session_factory.begin() as session:
-            self._require_lease(session, work.job_id, worker_id)
+            self._require_lease(session, work.job_id, worker_id, work.attempt)
             for chunk, point_id in zip(chunks, point_ids):
                 content = str(chunk["content"])
                 metadata = {
@@ -468,7 +509,7 @@ class SqlAlchemyIndexingRepository:
         manifest_object_key: str,
     ) -> None:
         with self.session_factory.begin() as session:
-            self._require_lease(session, work.job_id, worker_id)
+            self._require_lease(session, work.job_id, worker_id, work.attempt)
             memberships = list(session.scalars(select(IndexDocumentRecord).where(
                 IndexDocumentRecord.tenant_id == work.tenant_id,
                 IndexDocumentRecord.knowledge_base_id == work.knowledge_base_id,
@@ -501,6 +542,35 @@ class SqlAlchemyIndexingRepository:
         now = utc_now()
         with self.session_factory.begin() as session:
             job = self._require_lease(session, job_id, worker_id)
+            job.status = "succeeded"
+            job.stage = "published"
+            job.completed_at = now
+            job.heartbeat_at = now
+            job.lease_owner = ""
+            job.lease_expires_at = None
+            job.next_attempt_at = None
+
+    def publish_and_complete(
+        self,
+        *,
+        work: IndexBuildWorkItem,
+        worker_id: str,
+        tenant_repository,
+    ) -> None:
+        # Claim takes the job lock before the knowledge-base lock. Keep that
+        # order through publication so a reclaimed worker cannot reset an
+        # index that another worker has just made active.
+        with self.session_factory.begin() as session:
+            job = self._require_lease(session, work.job_id, worker_id, work.attempt)
+            tenant_repository.publish_index_version(
+                tenant_id=work.tenant_id,
+                knowledge_base_id=work.knowledge_base_id,
+                index_version_id=work.index_version_id,
+                expected_active_index_id=work.expected_active_index_id,
+                expected_generation=work.expected_generation,
+                session=session,
+            )
+            now = utc_now()
             job.status = "succeeded"
             job.stage = "published"
             job.completed_at = now
@@ -559,6 +629,17 @@ class SqlAlchemyIndexingRepository:
                 job.next_attempt_at = now + timedelta(seconds=delay)
                 if target is not None:
                     target.status = "building"
+            if target is not None and int(target.artifact_attempt or 0) > 0:
+                ensure_index_artifact_gc(
+                    session,
+                    tenant_id=target.tenant_id,
+                    knowledge_base_id=target.knowledge_base_id,
+                    index_version_id=target.id,
+                    artifact_attempt=int(target.artifact_attempt),
+                    qdrant_collection=target.qdrant_collection,
+                    manifest_object_key=target.manifest_object_key,
+                    next_attempt_at=now + timedelta(seconds=120),
+                )
             return job.status
 
     def get_status(self, *, principal, job_id: str) -> dict:
@@ -588,7 +669,12 @@ class SqlAlchemyIndexingRepository:
             }
 
     @staticmethod
-    def _require_lease(session, job_id: str, worker_id: str):
+    def _require_lease(
+        session,
+        job_id: str,
+        worker_id: str,
+        expected_attempt: Optional[int] = None,
+    ):
         job = session.scalar(
             select(IndexBuildJobRecord)
             .where(
@@ -598,7 +684,15 @@ class SqlAlchemyIndexingRepository:
             )
             .with_for_update()
         )
-        if job is None:
+        if (
+            job is None
+            or job.lease_expires_at is None
+            or _as_utc(job.lease_expires_at) <= utc_now()
+            or (
+                expected_attempt is not None
+                and job.attempt != int(expected_attempt)
+            )
+        ):
             raise RuntimeError("index build lease was lost")
         return job
 
@@ -614,6 +708,8 @@ class IndexingService:
         embedding_runtime,
         batch_size: int = 64,
         max_canonical_bytes: int = 200 * 1024 * 1024,
+        lease_seconds: int = 1200,
+        heartbeat_interval_seconds: float = 60,
     ):
         self.repository = repository
         self.tenant_repository = tenant_repository
@@ -622,16 +718,36 @@ class IndexingService:
         self.embedding_runtime = embedding_runtime
         self.batch_size = max(1, min(int(batch_size), 512))
         self.max_canonical_bytes = int(max_canonical_bytes)
+        self.lease_seconds = max(300, int(lease_seconds))
+        self.heartbeat_interval_seconds = max(0.01, float(heartbeat_interval_seconds))
+        if self.heartbeat_interval_seconds * 3 >= self.lease_seconds:
+            raise ValueError("index heartbeat interval must be shorter than the lease")
 
     def process(self, *, job_id: str, worker_id: str) -> dict:
         configure_logging()
         started_at = perf_counter()
         trace = TimingTrace(run_id=str(job_id), component="indexing_service")
-        work = self.repository.claim(job_id=job_id, worker_id=worker_id)
+        worker_id = f"{str(worker_id)[:120]}:{uuid4().hex}"
+        work = self.repository.claim(
+            job_id=job_id,
+            worker_id=worker_id,
+            lease_seconds=self.lease_seconds,
+        )
         if work is None:
             return {"job_id": job_id, "status": "not_claimed"}
+        heartbeat = LeaseHeartbeat(
+            lambda stage: self.repository.heartbeat(
+                job_id=work.job_id,
+                worker_id=worker_id,
+                stage=stage,
+                lease_seconds=self.lease_seconds,
+            ),
+            initial_stage="preparing",
+            interval_seconds=self.heartbeat_interval_seconds,
+        )
         published = False
         try:
+            heartbeat.start()
             scope = RetrievalScope(
                 tenant_id=work.tenant_id,
                 knowledge_base_id=work.knowledge_base_id,
@@ -639,11 +755,21 @@ class IndexingService:
             )
             with trace.stage("index.prepare"):
                 self.repository.reset_candidate(work=work, worker_id=worker_id)
+                heartbeat.raise_if_failed()
+                self.repository.heartbeat(
+                    job_id=work.job_id,
+                    worker_id=worker_id,
+                    stage="preparing",
+                    lease_seconds=self.lease_seconds,
+                )
                 self.vector_repository.delete_index(scope)
+                heartbeat.raise_if_failed()
                 prepared = []
                 document_counts = {}
                 for document in work.documents:
+                    heartbeat.raise_if_failed()
                     canonical = self._load_canonical(work, document)
+                    heartbeat.raise_if_failed()
                     raw_chunks = canonical.get("chunks")
                     if not isinstance(raw_chunks, list) or not raw_chunks:
                         raise IndexBuildValidationError(
@@ -681,10 +807,12 @@ class IndexingService:
 
             if not prepared:
                 raise IndexBuildValidationError("index contains no chunks")
+            heartbeat.set_stage("embedding")
             self.repository.heartbeat(
                 job_id=work.job_id,
                 worker_id=worker_id,
                 stage="embedding",
+                lease_seconds=self.lease_seconds,
             )
             with trace.stage("index.embedding_upsert"):
                 manifest_chunks = []
@@ -693,12 +821,20 @@ class IndexingService:
                     texts = [str(chunk["content"]) for chunk in batch]
                     dense = self.embedding_runtime.embed_documents(texts)
                     sparse = self.embedding_runtime.sparse_documents(texts)
+                    heartbeat.raise_if_failed()
+                    self.repository.heartbeat(
+                        job_id=work.job_id,
+                        worker_id=worker_id,
+                        stage="embedding",
+                        lease_seconds=self.lease_seconds,
+                    )
                     point_ids = self.vector_repository.upsert_chunks(
                         scope=scope,
                         chunks=batch,
                         vectors=dense,
                         sparse_vectors=sparse,
                     )
+                    heartbeat.raise_if_failed()
                     self.repository.persist_chunk_batch(
                         work=work,
                         worker_id=worker_id,
@@ -720,8 +856,10 @@ class IndexingService:
                         job_id=work.job_id,
                         worker_id=worker_id,
                         stage="embedding",
+                        lease_seconds=self.lease_seconds,
                     )
 
+            heartbeat.set_stage("validating")
             with trace.stage("index.validate_publish"):
                 manifest = {
                 "schema_version": "immutable-index-manifest-v1",
@@ -746,12 +884,20 @@ class IndexingService:
                     separators=(",", ":"),
                 ).encode("utf-8")
                 manifest_entries_digest = index_entries_sha256(manifest_chunks)
+                heartbeat.raise_if_failed()
+                self.repository.heartbeat(
+                    job_id=work.job_id,
+                    worker_id=worker_id,
+                    stage="validating",
+                    lease_seconds=self.lease_seconds,
+                )
                 stored_manifest = self.object_storage.put_index_manifest(
                     tenant_id=work.tenant_id,
                     knowledge_base_id=work.knowledge_base_id,
                     index_version_id=work.index_version_id,
                     body=manifest_body,
                 )
+                heartbeat.raise_if_failed()
                 self.repository.finalize_candidate(
                     work=work,
                     worker_id=worker_id,
@@ -762,7 +908,17 @@ class IndexingService:
                 )
                 point_count = self.vector_repository.count_index(scope)
                 qdrant_entries_digest = self.vector_repository.index_entries_sha256(scope)
+                heartbeat.raise_if_failed()
+                self.repository.heartbeat(
+                    job_id=work.job_id,
+                    worker_id=worker_id,
+                    stage="validating",
+                    lease_seconds=self.lease_seconds,
+                )
                 self.tenant_repository.validate_index_version(
+                    job_id=work.job_id,
+                    worker_id=worker_id,
+                    attempt=work.attempt,
                     tenant_id=work.tenant_id,
                     knowledge_base_id=work.knowledge_base_id,
                     index_version_id=work.index_version_id,
@@ -772,15 +928,13 @@ class IndexingService:
                     qdrant_point_count=point_count,
                     qdrant_entries_sha256=qdrant_entries_digest,
                 )
-                self.tenant_repository.publish_index_version(
-                    tenant_id=work.tenant_id,
-                    knowledge_base_id=work.knowledge_base_id,
-                    index_version_id=work.index_version_id,
-                    expected_active_index_id=work.expected_active_index_id,
-                    expected_generation=work.expected_generation,
+                heartbeat.stop()
+                self.repository.publish_and_complete(
+                    work=work,
+                    worker_id=worker_id,
+                    tenant_repository=self.tenant_repository,
                 )
             published = True
-            self.repository.complete(job_id=work.job_id, worker_id=worker_id)
             total_ms = elapsed_ms(started_at)
             trace.record("index.total", total_ms)
             trace_payload = trace.as_dict()
@@ -794,6 +948,7 @@ class IndexingService:
                 "timing_trace": trace_payload,
             }
         except (IndexBuildValidationError, InvalidServiceStateError, ConcurrentPublishError) as exc:
+            heartbeat.cancel()
             status = self.repository.fail(
                 job_id=work.job_id,
                 worker_id=worker_id,
@@ -812,6 +967,7 @@ class IndexingService:
                 "timing_trace": trace_payload,
             }
         except Exception as exc:
+            heartbeat.cancel()
             if published:
                 total_ms = elapsed_ms(started_at)
                 trace.record("index.total", total_ms, status="failed", error_class=exc.__class__.__name__)
@@ -839,6 +995,8 @@ class IndexingService:
                 "timings": {"totalMs": total_ms, "stages": trace_payload["stages"]},
                 "timing_trace": trace_payload,
             }
+        finally:
+            heartbeat.cancel()
 
     def _load_canonical(
         self,

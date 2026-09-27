@@ -489,7 +489,7 @@ def _render_report(payload: dict[str, Any]) -> str:
         "",
         "## 主要結果",
         "",
-        "| 版本 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |",
+        "| 版本 | 加權 Gold fact recall@5 | 任一證據命中 | 平均耗時（秒／題） |",
         "| --- | ---: | ---: | ---: |",
         f"| {unoptimized['name']} | {_pct(us['weighted_gold_fact_recall'])} | {_pct(us['any_gold_fact_hit_rate'])} | {_seconds(us['average_retrieval_ms'])} |",
         f"| {optimized['name']} | {_pct(osummary['weighted_gold_fact_recall'])} | {_pct(osummary['any_gold_fact_hit_rate'])} | {_seconds(osummary['average_retrieval_ms'])} |",
@@ -498,13 +498,13 @@ def _render_report(payload: dict[str, Any]) -> str:
         "",
         "## 差異（全優化版 − 無優化版）",
         "",
-        f"- Character recall@5（加權 Gold fact recall）：`{osummary['weighted_gold_fact_recall'] - us['weighted_gold_fact_recall']:+.1%}`",
+        f"- 加權 Gold fact recall@5：`{(osummary['weighted_gold_fact_recall'] - us['weighted_gold_fact_recall']) * 100:+.1f} 個百分點`",
         f"- 任一證據命中率：`{osummary['any_gold_fact_hit_rate'] - us['any_gold_fact_hit_rate']:+.1%}`",
         f"- 平均耗時差異：`{(osummary['average_retrieval_ms'] - us['average_retrieval_ms']) / 1000:+.3f} 秒`",
         "",
         "## 題型分組",
         "",
-        "| 版本 | 題型 | 題數 | Character recall@5 | 任一證據命中 | 平均耗時（秒／題） |",
+        "| 版本 | 題型 | 題數 | 加權 Gold fact recall@5 | 任一證據命中 | 平均耗時（秒／題） |",
         "| --- | --- | ---: | ---: | ---: | ---: |",
     ]
     for version in (unoptimized, optimized):
@@ -524,7 +524,7 @@ def _render_report(payload: dict[str, Any]) -> str:
             "- 兩個版本都使用同一份 corpus、同一個 embedding 模型、同一個 top-5 證據預算與同一批 2,556 題。",
             "- 本次沒有回答模型、沒有對話記憶、沒有外部搜尋、沒有把 gold answer 或 gold evidence 注入檢索查詢。",
             "- Gold fact 命中採完整字串或 BM25 token 覆蓋率至少 45% 的 deterministic heuristic；它衡量檢索召回，不等同於回答正確率或幻覺率。",
-            "- MultiHop-RAG 題庫沒有 LegalBench 使用的字元 span 標註，因此本報告的 Character recall@5 欄位以加權 Gold fact recall 對應；LegalBench-RAG 的同名欄位則是字元覆蓋率。",
+            "- MultiHop-RAG 題庫沒有 LegalBench 使用的字元 span 標註。本報告的加權 Gold fact recall 使用字串／詞項覆蓋啟發式，不能和 LegalBench-RAG 的字元覆蓋率直接比較。",
             "",
         ]
     )

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from sqlalchemy import func, select
 
 from rag_demo.production.auth import Principal
+from rag_demo.production.config import DEFAULT_SPARSE_EMBEDDING_MODEL
 from rag_demo.production.database import (
     Base,
     ChunkRecord,
@@ -127,6 +128,7 @@ class ProductionIndexingTests(unittest.TestCase):
         )
         self.settings = SimpleNamespace(
             embedding_model="test-dense",
+            sparse_embedding_model=DEFAULT_SPARSE_EMBEDDING_MODEL,
             embedding_dimensions=2,
             reranker_model="test-reranker",
             chunk_schema_version="test-v1",

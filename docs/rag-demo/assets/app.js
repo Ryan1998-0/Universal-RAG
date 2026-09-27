@@ -1,8 +1,6 @@
 import {
   buildAgentQueryPayload,
   callAgentEndpoint,
-  callHybridRetriever,
-  callRetrievalRouter,
   createDocumentFolder,
   deleteConversation,
   deleteDocumentFolder,
@@ -19,7 +17,7 @@ import {
   saveSourceAccessPolicy,
   switchAccessSession,
   uploadDocument,
-} from "../agent-client.js?v=canonical-pipeline-3";
+} from "../agent-client.js?v=canonical-pipeline-4";
 
 let knowledgeBases = {};
 let qaModels = {};
@@ -361,7 +359,7 @@ function bindEvents() {
     renderDocumentSelector();
     renderChips();
     renderConversationHistory();
-    if (state.latestResult) runSearch();
+    if (state.latestResult) renderEvidenceResult(state.latestResult);
   });
 
   elements.fileSearch.addEventListener("input", () => {
@@ -488,7 +486,7 @@ function bindEvents() {
   });
 
   elements.askAgent.addEventListener("click", () => {
-    askLiveAgent(state.latestResult, { retrievalDecision: state.latestRouteDecision });
+    handleAdaptiveQuestion(state.query || elements.input.value);
   });
 
   elements.selectAllDocuments.addEventListener("click", () => {
@@ -1279,92 +1277,45 @@ async function handleAdaptiveQuestion(rawQuestion) {
   startSearchProgress();
   elements.input.value = "";
 
-  let decision;
-  try {
-    decision = await callRetrievalRouter("/api/route", {
-      question,
-      model: selectedModel(),
-      conversation_id: state.conversationId,
-    });
-  } catch (error) {
-    decision = {
-      needsRetrieval: true,
-      reason: `檢索判斷暫時無法使用，為避免漏掉文件證據，保守改走檢索。${error instanceof Error ? ` ${error.message}` : ""}`,
-      retrievalQuery: question,
-      timingMs: 0,
-    };
-  }
+  updateProgressStep("rewrite", "active", "由後端整理檢索查詢");
+  updateProgressStep("retrieve", "active", "由後端搜尋選定文件");
+  updateProgressStep("grade", "active", "由後端檢查證據");
+  updateProgressStep("answer", "active", "本機 Qwen 正在生成回答");
+  await nextPaint();
+  const response = await askLiveAgent();
   if (workflowId !== state.workflowRequestId) return;
-
-  state.latestRouteDecision = decision;
-  updateProgressStep(
-    "route",
-    "done",
-    decision.needsRetrieval ? "需要外部證據，嘗試檢索" : "不需要外部證據，直接回答",
-  );
-
-  if (!decision.needsRetrieval) {
-    updateProgressStep("rewrite", "skipped", "不需要建立檢索查詢");
-    updateProgressStep("retrieve", "skipped", "本次未搜尋知識庫");
-    updateProgressStep("grade", "skipped", "沒有檢索結果需要評估");
-    prepareGeneralAnswer(decision);
-    updateProgressStep("answer", "active", "本機 Qwen 正在生成回答");
-    const response = await askLiveAgent(null, { retrievalDecision: decision });
-    if (workflowId !== state.workflowRequestId) return;
-    updateProgressStep(
-      "answer",
-      response ? "done" : "error",
-      response ? qualityProgressLabel(response) : "回答失敗",
-    );
+  if (!response) {
+    for (const step of ["route", "rewrite", "retrieve", "grade"]) {
+      updateProgressStep(step, "error", "問答服務失敗");
+    }
+    updateProgressStep("answer", "error", "回答失敗");
     return;
   }
-
+  const retrieval = response.retrieval || {};
+  const needsRetrieval = retrieval.needed === true;
+  state.latestRunId = response.runId || "";
+  state.latestRouteDecision = {
+    needsRetrieval,
+    reason: retrieval.reason || "",
+    retrievalQuery: retrieval.query || question,
+    queryVariants: retrieval.queries || [],
+  };
+  updateProgressStep("route", "done", needsRetrieval ? "需要文件證據" : "直接回答");
   updateProgressStep(
     "rewrite",
-    "done",
-    decision.queryVariants?.length
-      ? `已拆解並建立 ${decision.queryVariants.length} 個檢索查詢`
-      : decision.retrievalQuery || question,
+    needsRetrieval ? "done" : "skipped",
+    needsRetrieval ? (retrieval.query || question) : "不需要建立檢索查詢",
   );
-  updateProgressStep("retrieve", "active", "BM25 與 Embedding 正在取候選，接著進行 Rerank");
-  await nextPaint();
-
-  let result = null;
-  try {
-    result = await runSearch({ retrievalQuery: decision.retrievalQuery });
-  } catch (error) {
-    updateProgressStep(
-      "retrieve",
-      "error",
-      error instanceof Error ? error.message : "混合檢索失敗",
-    );
-    updateProgressStep("grade", "skipped", "尚未取得可評估的證據");
-    updateProgressStep("answer", "skipped", "尚未取得可用證據");
-    renderAgentMessage({
-      status: "error",
-      title: "混合檢索失敗",
-      message: error instanceof Error ? error.message : String(error),
-    });
-    return;
+  if (needsRetrieval) {
+    renderCanonicalEvidence(response);
+    updateProgressStep("retrieve", "done", `同一次問答取回 ${state.latestResult.contexts.length} 個片段`);
+    updateEvidenceProgress(state.latestResult);
+  } else {
+    updateProgressStep("retrieve", "skipped", "本次未搜尋知識庫");
+    updateProgressStep("grade", "skipped", "沒有檢索結果需要評估");
+    elements.ragDetailsGuide.hidden = true;
   }
-  updateProgressStep(
-    "retrieve",
-    "done",
-    `BM25 + Embedding 已融合並 Rerank，保留 ${result?.contexts?.length || 0} 個片段`,
-  );
-  updateEvidenceProgress(result);
-
-  updateProgressStep("answer", "active", "本機 Qwen 正在根據檢索內容生成回答");
-  const response = await askLiveAgent(result, { retrievalDecision: decision });
-  if (workflowId !== state.workflowRequestId) return;
-  if (!result && response?.retrieval?.evidence_evaluation) {
-    updateEvidenceProgress({ evidenceEvaluation: response.retrieval.evidence_evaluation });
-  }
-  updateProgressStep(
-    "answer",
-    response ? "done" : "error",
-    response ? qualityProgressLabel(response) : "回答失敗",
-  );
+  updateProgressStep("answer", "done", qualityProgressLabel(response));
 }
 
 function startSearchProgress() {
@@ -1394,62 +1345,13 @@ function updateProgressStep(id, status, detail = "") {
   if (detailNode) detailNode.textContent = detail;
 }
 
-function prepareGeneralAnswer(decision, { retrievalPending = false } = {}) {
-  elements.homePanel.hidden = true;
-  elements.statusMessage.hidden = true;
-  elements.answerMessage.hidden = false;
-  elements.evidenceMessage.hidden = true;
-  elements.ragTrace.hidden = true;
-  elements.ragDetailsGuide.hidden = true;
-  elements.resultTitle.textContent = state.query;
-  elements.confidence.textContent = retrievalPending ? "後端檢索" : "未使用檢索";
-  elements.confidence.className = "confidence confidence-medium";
-  elements.answer.hidden = true;
-  elements.answer.innerHTML = `
-    <div class="answer-head">
-      <div>
-        <p class="eyebrow">自適應檢索路由</p>
-        <h3>${retrievalPending ? "需要檢索" : "直接回答"}</h3>
-      </div>
-    </div>
-    <p>${escapeHtml(decision.reason || "")}</p>
-  `;
-  elements.agentAnswer.innerHTML = "";
-}
-
 function nextPaint() {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 async function rerunCurrentRetrieval() {
-  if (!state.query || !state.latestRouteDecision?.needsRetrieval) return;
-  startSearchProgress();
-  updateProgressStep("route", "done", "沿用本次 query-only 判斷：需要外部證據");
-  updateProgressStep("rewrite", "done", state.latestRouteDecision.retrievalQuery || state.query);
-  updateProgressStep("retrieve", "active", "文件選擇已變更，正在重新搜尋");
-  await nextPaint();
-  let result;
-  try {
-    result = await runSearch({ retrievalQuery: state.latestRouteDecision.retrievalQuery });
-  } catch (error) {
-    updateProgressStep(
-      "retrieve",
-      "error",
-      error instanceof Error ? error.message : "混合檢索失敗",
-    );
-    updateProgressStep("grade", "skipped", "尚未取得可評估的證據");
-    updateProgressStep("answer", "skipped", "尚未取得可用證據");
-    return;
-  }
-  updateProgressStep("retrieve", "done", `找到 ${result?.contexts?.length || 0} 個相關片段`);
-  updateEvidenceProgress(result);
-  updateProgressStep("answer", "active", "本機 Qwen 正在重新生成回答");
-  const response = await askLiveAgent(result, { retrievalDecision: state.latestRouteDecision });
-  updateProgressStep(
-    "answer",
-    response ? "done" : "error",
-    response ? qualityProgressLabel(response) : "回答失敗",
-  );
+  if (!state.query) return;
+  await handleAdaptiveQuestion(state.query);
 }
 
 function updateEvidenceProgress(result) {
@@ -1462,58 +1364,43 @@ function updateEvidenceProgress(result) {
   updateProgressStep("grade", "done", `${prefix}：${evaluation.reason || "已完成相關性檢查"}`);
 }
 
-async function runSearch(options = {}) {
-  if (!state.data || !state.query) return;
-  revealRunPanels();
-  const retrievalQuery = String(
-    options.retrievalQuery || state.latestRouteDecision?.retrievalQuery || state.query,
-  ).trim();
-  const result = await callHybridRetriever(hybridRetrievalEndpoint(), {
-    question: state.query,
-    retrieval_query: retrievalQuery,
-    query_variants: state.latestRouteDecision?.queryVariants || [],
-    evidence_query: [
-      retrievalQuery,
-      ...(state.latestRouteDecision?.subQuestions || []),
-    ].filter(Boolean).join(" "),
-    profile: state.profile,
-    source_ids: [...state.selectedSourceIds],
-    top_k: state.topK,
-    candidate_k: state.candidateK,
-  });
-  state.latestResult = result;
-  const effectiveRetrievalQuery = result.retrievalQuery || retrievalQuery || state.query;
-  const expanded = {
-    query: effectiveRetrievalQuery,
-    matchedAliases: (result.diagnostics?.denseMatchedAliases || []).map((canonical) => ({
-      canonical,
-      aliases: [],
+function renderCanonicalEvidence(response) {
+  const retrieval = response.retrieval || {};
+  const retrievalTimings = Object.fromEntries(
+    Object.entries(retrieval.timings || {}).filter(([, value]) => typeof value === "number"),
+  );
+  const result = {
+    query: state.query,
+    retrievalQuery: retrieval.query || state.query,
+    confidence: response.confidence || "medium",
+    contexts: Array.isArray(retrieval.contexts) ? retrieval.contexts : [],
+    evidenceEvaluation: retrieval.evidence_evaluation || null,
+    translation: { addedTerms: [] },
+    queryVariantCount: Array.isArray(retrieval.queries) ? retrieval.queries.length : 0,
+    diagnostics: { available: false, matchedEntities: [], hubWarning: false },
+    variant: "canonical_pipeline",
+    comparisonGraph: null,
+    timings: { ...retrievalTimings, totalMs: Number(response.timings?.totalMs || 0) },
+    pipeline: (response.timingTrace?.stages || []).map((stage) => ({
+      name: stage.name || "node",
+      detail: `${Number(stage.durationMs || 0).toFixed(2)} ms · ${stage.status || "completed"}`,
     })),
   };
-  const graphResult = {
-    matchedEntities: (result.diagnostics?.matchedEntities || []).map((name) => ({ name })),
-    results: [],
-    hubWarning: Boolean(result.diagnostics?.hubWarning),
-  };
-  state.latestRunId = buildRunId();
-
-  renderMetrics(result, expanded);
-  renderVariantDetails(result.variant);
-  renderAgentIdle();
-  renderComparisonGraph(result.comparisonGraph);
-  renderResults(result, expanded);
-  renderGraph(graphResult);
-  renderPipeline(result);
-  renderTrace(result, expanded);
-  return result;
+  state.latestResult = result;
+  state.latestRunId = response.runId || buildRunId();
+  renderEvidenceResult(result);
 }
 
-function hybridRetrievalEndpoint() {
-  const endpoint = String(state.agentEndpoint || "/api/ask").trim();
-  if (/\/api\/ask\/?$/i.test(endpoint)) {
-    return endpoint.replace(/\/api\/ask\/?$/i, "/api/retrieve");
-  }
-  return "/api/retrieve";
+function renderEvidenceResult(result) {
+  revealRunPanels();
+  const expanded = { query: result.retrievalQuery, matchedAliases: [] };
+  renderMetrics(result, expanded);
+  renderVariantDetails(result.variant);
+  renderComparisonGraph(result.comparisonGraph);
+  renderResults(result, expanded);
+  elements.graphPanel.textContent = "本次問答未提供圖譜診斷。";
+  renderPipeline(result);
+  renderTrace(result, expanded);
 }
 
 function readConversationHistory() {
@@ -1688,8 +1575,9 @@ function shortTitle(query) {
   return text.length > 24 ? `${text.slice(0, 24)}...` : text;
 }
 
-async function askLiveAgent(result, { retrievalDecision = null } = {}) {
-  if (state.query && retrievalDecision?.needsRetrieval !== false) revealRunPanels();
+async function askLiveAgent() {
+  elements.homePanel.hidden = true;
+  elements.answerMessage.hidden = false;
   if (!state.agentEndpoint) {
     renderAgentMessage({
       status: "offline",
@@ -1709,7 +1597,7 @@ async function askLiveAgent(result, { retrievalDecision = null } = {}) {
 
   try {
     const payload = buildAgentQueryPayload({
-      question: result?.query || state.query,
+      question: state.query,
       profile: state.profile,
       model: selectedModel(),
       topK: state.topK,
@@ -1752,9 +1640,9 @@ function renderMetrics(result, expanded) {
     [t("totalTime"), `${result.timings.totalMs.toFixed(2)} ms`],
     [
       t("translation"),
-      result.translation.addedTerms?.length ? "查詢擴展" : t("direct"),
+      result.queryVariantCount > 1 ? "多查詢檢索" : "單一查詢",
     ],
-    [t("aliasHits"), expanded.matchedAliases.length],
+    [t("aliasHits"), result.diagnostics.available ? expanded.matchedAliases.length : "未提供"],
   ];
   for (const [label, value] of metrics) {
     const item = document.createElement("div");
@@ -2076,9 +1964,9 @@ function buildTraceMarkdown(result, expanded, selectedSources) {
     "## 檢索診斷",
     "",
     `- 信心：${confidenceLabel(result.confidence)}`,
-    `- 命中別名：${expanded.matchedAliases.map((item) => item.canonical).join("、") || "無"}`,
-    `- 命中圖譜實體：${result.diagnostics.matchedEntities.join("、") || "無"}`,
-    `- 中心實體警告：${result.diagnostics.hubWarning ? "是" : "否"}`,
+    `- 命中別名：${result.diagnostics.available ? (expanded.matchedAliases.map((item) => item.canonical).join("、") || "無") : "未提供"}`,
+    `- 命中圖譜實體：${result.diagnostics.available ? (result.diagnostics.matchedEntities.join("、") || "無") : "未提供"}`,
+    `- 中心實體警告：${result.diagnostics.available ? (result.diagnostics.hubWarning ? "是" : "否") : "未提供"}`,
     "",
     "## 取回片段",
     "",
@@ -2129,12 +2017,18 @@ function labelForVariant(variant) {
     bm25_dense: "BM25 + Dense",
     bm25_embedding_rerank: "BM25 + Embedding + Rerank",
     bm25_dense_graph: "BM25 + Dense + Graph",
+    canonical_pipeline: "後端問答 Pipeline",
     full: "完整檢索流程",
   }[variant] || variant;
 }
 
 function architectureForVariant(variant) {
   const architectures = {
+    canonical_pipeline: {
+      label: "後端問答 Pipeline",
+      summary: "此畫面的路由、檢索片段與回答都來自同一次 /api/ask。實際節點與耗時見執行紀錄。",
+      steps: ["問題路由", "證據檢索與評估", "生成回答", "引用檢查"],
+    },
     bm25: {
       label: "僅使用 BM25",
       summary: "以關鍵詞與問題詞彙重疊程度排序片段，作為字面檢索基準。",

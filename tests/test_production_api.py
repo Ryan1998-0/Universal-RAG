@@ -17,6 +17,7 @@ from rag_demo.production.database import (
     ChunkRecord,
     DocumentRecord,
     DocumentVersionRecord,
+    IndexBuildJobRecord,
     IndexDocumentRecord,
     IndexActivationEventRecord,
     IndexVersionRecord,
@@ -52,6 +53,20 @@ class FakePipeline:
         return {
             "schema_version": "rag-agent-response-v1",
             "run_id": f"run-{len(self.calls)}",
+            "_history_dependency_v1": {
+                "run_ids": list(dict.fromkeys(
+                    str(message.get("run_id") or "")
+                    for message in (request.history or [])
+                    if isinstance(message, dict)
+                    if str(message.get("run_id") or "")
+                )),
+                "complete": all(
+                    not str(message.get("content") or "").strip()
+                    or bool(str(message.get("run_id") or "").strip())
+                    for message in (request.history or [])
+                    if isinstance(message, dict)
+                ),
+            },
             "answer": "這是經過伺服器檢索後產生的回答。來源：[1]",
             "confidence": "high",
             "citations": [
@@ -62,8 +77,11 @@ class FakePipeline:
                     "page": "1",
                     "source": "a-ready",
                     "run_id": f"run-{len(self.calls)}",
-                    "content_sha256": "a" * 64,
+                    "content_sha256": hashlib.sha256(
+                        "不得公開的完整內部內容".encode("utf-8")
+                    ).hexdigest(),
                     "document_version_id": "version-a",
+                    "chunk_record_id": "chunk-record-a-1",
                 }
             ],
             "grounding_warnings": [],
@@ -80,7 +98,15 @@ class FakePipeline:
                 "needed": True,
                 "reason": "需要文件證據",
                 "query": request.question,
-                "contexts": [{"content": "不得公開的完整內部內容"}],
+                "contexts": [{
+                    "id": "chunk-a-1",
+                    "documentVersionId": "version-a",
+                    "chunkRecordId": "chunk-record-a-1",
+                    "contentSha256": hashlib.sha256(
+                        "不得公開的完整內部內容".encode("utf-8")
+                    ).hexdigest(),
+                    "content": "不得公開的完整內部內容",
+                }],
                 "evidence_evaluation": {
                     "sufficient": True,
                     "confidence": "high",
@@ -186,6 +212,9 @@ class ProductionApiTests(unittest.TestCase):
             RAG_DEV_JWT_SECRET=SECRET,
             RAG_MODEL="ollama:qwen2.5:7b",
             RAG_ALLOWED_MODELS="ollama:qwen2.5:7b",
+            RAG_EMBEDDING_MODEL="test-embedding",
+            RAG_EMBEDDING_DIMENSIONS=2,
+            RAG_CHUNK_SCHEMA_VERSION="test-v1",
             RAG_ENABLE_API_DOCS=True,
         )
         self.engine = create_database_engine(database_url)
@@ -378,6 +407,24 @@ class ProductionApiTests(unittest.TestCase):
             session.add_all([version_a, version_b])
             session.flush()
 
+            context_content = "不得公開的完整內部內容"
+            session.add(ChunkRecord(
+                id="chunk-record-a-1",
+                tenant_id="tenant-a",
+                knowledge_base_id="kb-a",
+                document_id="document-a-ready",
+                document_version_id="version-a",
+                index_version_id="index-a",
+                chunk_key="version-a::0",
+                ordinal=0,
+                title="測試文件",
+                content=context_content,
+                content_sha256=hashlib.sha256(
+                    context_content.encode("utf-8")
+                ).hexdigest(),
+                qdrant_point_id="point-a-1",
+            ))
+
             document_a_ready.current_version_id = version_a.id
             document_b_ready.current_version_id = version_b.id
             kb_a.active_index_version_id = index_a.id
@@ -511,6 +558,30 @@ class ProductionApiTests(unittest.TestCase):
         self.assertEqual(answer_runs[0].source_ids_json, ["a-ready"])
         self.assertEqual(len(audit_events), 1)
         self.assertEqual(audit_events[0].outcome, "success")
+
+    def test_ask_rejects_active_index_with_incompatible_retrieval_settings(self):
+        mismatches = {
+            "embedding_model": "another-embedding",
+            "embedding_dimensions": 768,
+            "chunk_schema_version": "another-chunk-schema",
+            "qdrant_collection": "another-collection",
+        }
+        for field, mismatched_value in mismatches.items():
+            with self.subTest(field=field):
+                with self.session_factory.begin() as session:
+                    index = session.get(IndexVersionRecord, "index-a")
+                    original = getattr(index, field)
+                    setattr(index, field, mismatched_value)
+                response = self.client.post(
+                    "/v1/ask",
+                    headers=self._headers(),
+                    json={"question": "什麼是 CSM？", "knowledge_base_id": "kb-a"},
+                )
+                self.assertEqual(response.status_code, 503, response.text)
+                self.assertEqual(response.json()["error"]["code"], "INDEX_CONFIGURATION_MISMATCH")
+                self.assertEqual(self.pipeline.calls, [])
+                with self.session_factory.begin() as session:
+                    setattr(session.get(IndexVersionRecord, "index-a"), field, original)
 
     def test_answer_run_and_source_content_are_protected_and_traceable(self):
         source_payload = b"%PDF-1.4\nsource\n%%EOF"
@@ -798,6 +869,22 @@ class ProductionApiTests(unittest.TestCase):
                 status="ready",
                 chunk_count=1,
             ))
+            session.add(IndexBuildJobRecord(
+                id="job-a-2",
+                tenant_id="tenant-a",
+                knowledge_base_id="kb-a",
+                index_version_id="index-a-2",
+                created_by_user_id="user-a",
+                expected_active_index_id="index-a",
+                expected_generation=0,
+                idempotency_key="index-validation-job-a-2",
+                selected_document_hash="d" * 64,
+                status="running",
+                stage="validating",
+                attempt=1,
+                lease_owner="test-index-worker",
+                lease_expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+            ))
             candidate_content = "candidate evidence"
             candidate_content_sha256 = hashlib.sha256(
                 candidate_content.encode("utf-8")
@@ -826,6 +913,9 @@ class ProductionApiTests(unittest.TestCase):
             "content_sha256": candidate_content_sha256,
         }])
         self.repository.validate_index_version(
+            job_id="job-a-2",
+            worker_id="test-index-worker",
+            attempt=1,
             tenant_id="tenant-a",
             knowledge_base_id="kb-a",
             index_version_id="index-a-2",
@@ -1262,6 +1352,14 @@ class ProductionApiTests(unittest.TestCase):
 
 
 class ProductionSettingsTests(unittest.TestCase):
+    def test_production_rejects_flag_only_prompt_injection_policy(self):
+        with self.assertRaisesRegex(ValidationError, "production requires RAG_PROMPT_INJECTION_POLICY=quarantine"):
+            ProductionSettings(
+                RAG_ENV="production",
+                RAG_DATABASE_URL="postgresql+psycopg://user:pass@db/rag",
+                RAG_PROMPT_INJECTION_POLICY="flag",
+            )
+
     def test_production_rejects_development_auth(self):
         with self.assertRaises(ValidationError):
             ProductionSettings(

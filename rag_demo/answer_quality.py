@@ -15,11 +15,6 @@ from rag_demo.evidence_validation import validate_answer_evidence
 from rag_demo.hybrid_retrieval import tokenize_bm25
 
 
-_REFUSAL_MARKERS = (
-    "根據目前檢索資料無法確認",
-    "目前檢索資料不足",
-    "資料不足",
-)
 _NUMBER_PATTERN = re.compile(
     r"[零〇一二兩三四五六七八九十百千万億\d]+\s*(?:日|天|年|月|小時|分鐘|秒|%|分之一)"
 )
@@ -68,7 +63,7 @@ def evaluate_answer_quality(
         if isinstance(context, dict) and str(context.get("content") or "").strip()
     ]
     citation_validation = validate_answer_evidence(text, evidence)
-    refusal = any(marker in text for marker in _REFUSAL_MARKERS)
+    refusal = citation_validation["status"] == "refused"
     claims = _extract_claims(text)
     support = _claim_support(claims, evidence, embedding_fn, semantic_threshold)
     expected = [str(fact).strip() for fact in expected_facts if str(fact).strip()]

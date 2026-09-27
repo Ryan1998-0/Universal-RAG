@@ -1,8 +1,13 @@
+from contextlib import nullcontext
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional, Sequence
+import hashlib
+import logging
+import re
+from typing import Iterable, List, Optional, Sequence
 
-from sqlalchemy import func, select, text
+from sqlalchemy import and_, func, select, text
 from sqlalchemy.exc import IntegrityError
 
 from rag_demo.production.auth import Principal
@@ -15,6 +20,7 @@ from rag_demo.production.database import (
     DocumentRecord,
     DocumentVersionRecord,
     FolderRecord,
+    IndexBuildJobRecord,
     IndexDocumentRecord,
     IndexActivationEventRecord,
     IndexVersionRecord,
@@ -29,6 +35,7 @@ from rag_demo.production.database import (
     utc_now,
 )
 from rag_demo.production.index_manifest import index_entries_sha256
+from rag_demo.production.index_artifact_gc import ensure_index_artifact_gc
 
 
 class AccessDeniedError(PermissionError):
@@ -47,6 +54,14 @@ class ConcurrentPublishError(RuntimeError):
     pass
 
 
+_WITHDRAWN_ANSWER_TEXT = "此歷史回答的來源無法確認或已失效，因此不再顯示。"
+_CITATION_LINEAGE_KEY = "citation_lineage_v1"
+_CONTEXT_LINEAGE_KEY = "context_lineage_v1"
+_CONTEXT_CHUNK_LINEAGE_VERSION = "chunk_record_v1"
+_HISTORY_DEPENDENCY_KEY = "history_dependency_v1"
+LOGGER = logging.getLogger("rag_demo.production.repository")
+
+
 @dataclass(frozen=True)
 class AuthorizedKnowledgeBase:
     id: str
@@ -56,6 +71,12 @@ class AuthorizedKnowledgeBase:
     active_index_version_id: Optional[str]
     activation_generation: int
     can_write: bool
+    embedding_model: Optional[str] = None
+    sparse_embedding_model: Optional[str] = None
+    embedding_dimensions: Optional[int] = None
+    chunk_schema_version: Optional[str] = None
+    qdrant_collection: Optional[str] = None
+    artifact_attempt: int = 0
 
 
 @dataclass(frozen=True)
@@ -478,14 +499,22 @@ class SqlAlchemyTenantRepository:
         limit: int = 10,
     ) -> list[dict]:
         with self.session_factory() as session:
+            user, membership = self._active_identity(session, principal)
             conversation = session.scalar(select(ConversationRecord.id).where(
                 ConversationRecord.id == conversation_id,
                 ConversationRecord.tenant_id == principal.tenant_id,
-                ConversationRecord.user_id == authorized.user_id,
+                ConversationRecord.user_id == user.id,
                 ConversationRecord.knowledge_base_id == authorized.id,
             ))
             if conversation is None:
                 raise ResourceNotFoundError("conversation was not found")
+            self._require_knowledge_base_read(
+                session,
+                principal=principal,
+                user=user,
+                membership=membership,
+                knowledge_base_id=authorized.id,
+            )
             rows = list(session.scalars(
                 select(MessageRecord)
                 .where(
@@ -495,32 +524,71 @@ class SqlAlchemyTenantRepository:
                 .order_by(MessageRecord.created_at.desc(), MessageRecord.id.desc())
                 .limit(max(1, min(int(limit), 50)))
             ))
-            return [
-                {"role": row.role, "content": row.content}
-                for row in reversed(rows)
-            ]
+            answer_runs = self._conversation_answer_runs(
+                session,
+                tenant_id=principal.tenant_id,
+                user_id=user.id,
+                knowledge_base_id=authorized.id,
+                conversation_id=conversation_id,
+            )
+            withdrawn_run_ids = self._withdrawn_answer_run_ids(
+                session,
+                tenant_id=principal.tenant_id,
+                knowledge_base_id=authorized.id,
+                answer_runs=answer_runs,
+            )
+            history = []
+            for row in reversed(rows):
+                run_id = str((row.metadata_json or {}).get("run_id") or "")
+                if (
+                    not run_id
+                    or run_id not in answer_runs
+                    or run_id in withdrawn_run_ids
+                ):
+                    continue
+                history.append({
+                    "role": row.role,
+                    "content": row.content,
+                    "run_id": run_id,
+                })
+            return history
 
     def list_conversations(self, *, principal: Principal) -> list[dict]:
         with self.session_factory() as session:
-            user, _membership = self._active_identity(session, principal)
-            rows = list(session.scalars(
-                select(ConversationRecord)
+            user, membership = self._active_identity(session, principal)
+            rows = list(session.execute(
+                select(ConversationRecord, KnowledgeBaseRecord)
+                .join(
+                    KnowledgeBaseRecord,
+                    KnowledgeBaseRecord.id == ConversationRecord.knowledge_base_id,
+                )
                 .where(
                     ConversationRecord.tenant_id == principal.tenant_id,
                     ConversationRecord.user_id == user.id,
                 )
                 .order_by(ConversationRecord.updated_at.desc(), ConversationRecord.id)
             ))
-            return [
-                {
+            items = []
+            for row, knowledge_base in rows:
+                try:
+                    self._require_knowledge_base_read(
+                        session,
+                        principal=principal,
+                        user=user,
+                        membership=membership,
+                        knowledge_base_id=row.knowledge_base_id,
+                        knowledge_base=knowledge_base,
+                    )
+                except (ResourceNotFoundError, AccessDeniedError):
+                    continue
+                items.append({
                     "id": row.id,
                     "knowledge_base_id": row.knowledge_base_id,
                     "title": row.title,
                     "created_at": row.created_at.isoformat(),
                     "updated_at": row.updated_at.isoformat(),
-                }
-                for row in rows
-            ]
+                })
+            return items
 
     def get_conversation(
         self,
@@ -529,7 +597,7 @@ class SqlAlchemyTenantRepository:
         conversation_id: str,
     ) -> dict:
         with self.session_factory() as session:
-            user, _membership = self._active_identity(session, principal)
+            user, membership = self._active_identity(session, principal)
             row = session.scalar(select(ConversationRecord).where(
                 ConversationRecord.id == conversation_id,
                 ConversationRecord.tenant_id == principal.tenant_id,
@@ -537,6 +605,13 @@ class SqlAlchemyTenantRepository:
             ))
             if row is None:
                 raise ResourceNotFoundError("conversation was not found")
+            self._require_knowledge_base_read(
+                session,
+                principal=principal,
+                user=user,
+                membership=membership,
+                knowledge_base_id=row.knowledge_base_id,
+            )
             messages = list(session.scalars(
                 select(MessageRecord)
                 .where(
@@ -545,53 +620,61 @@ class SqlAlchemyTenantRepository:
                 )
                 .order_by(MessageRecord.created_at, MessageRecord.id)
             ))
-            run_ids = {
-                str((message.metadata_json or {}).get("run_id") or "")
-                for message in messages
-                if message.role == "assistant"
-            }
-            run_ids.discard("")
-            answer_runs = {
-                answer_run.id: answer_run
-                for answer_run in session.scalars(
-                    select(AnswerRunRecord).where(
-                        AnswerRunRecord.id.in_(run_ids),
-                        AnswerRunRecord.tenant_id == principal.tenant_id,
-                        AnswerRunRecord.user_id == user.id,
-                        AnswerRunRecord.conversation_id == row.id,
-                    )
-                )
-            } if run_ids else {}
+            answer_runs = self._conversation_answer_runs(
+                session,
+                tenant_id=principal.tenant_id,
+                user_id=user.id,
+                knowledge_base_id=row.knowledge_base_id,
+                conversation_id=row.id,
+            )
+            withdrawn_run_ids = self._withdrawn_answer_run_ids(
+                session,
+                tenant_id=principal.tenant_id,
+                knowledge_base_id=row.knowledge_base_id,
+                answer_runs=answer_runs,
+            )
             return {
                 "id": row.id,
                 "knowledge_base_id": row.knowledge_base_id,
                 "title": row.title,
                 "created_at": row.created_at.isoformat(),
                 "updated_at": row.updated_at.isoformat(),
-                "messages": [self._conversation_message_payload(message, answer_runs)
-                             for message in messages],
+                "messages": [
+                    self._conversation_message_payload(
+                        message, answer_runs, withdrawn_run_ids,
+                    )
+                    for message in messages
+                ],
             }
 
     @staticmethod
     def _conversation_message_payload(
         message: MessageRecord,
         answer_runs: dict[str, AnswerRunRecord],
+        withdrawn_run_ids: set[str],
     ) -> dict:
+        run_id = str((message.metadata_json or {}).get("run_id") or "")
+        answer_run = answer_runs.get(run_id)
+        withdrawn = (
+            message.role == "assistant"
+            and (answer_run is None or run_id in withdrawn_run_ids)
+        )
         payload = {
             "id": message.id,
             "role": message.role,
-            "content": message.content,
+            "content": _WITHDRAWN_ANSWER_TEXT if withdrawn else message.content,
             "created_at": message.created_at.isoformat(),
         }
-        run_id = str((message.metadata_json or {}).get("run_id") or "")
-        answer_run = answer_runs.get(run_id)
+        if message.role == "assistant":
+            payload["answer_withdrawn"] = withdrawn
         if message.role == "assistant" and answer_run is not None:
             payload["answer_run"] = {
                 "run_id": answer_run.id,
+                "answer_withdrawn": withdrawn,
                 "retrieval": {"needed": answer_run.retrieval_needed},
                 "model": {"name": answer_run.model},
                 "timings": answer_run.timings_json,
-                "evidence_validation": (
+                "evidence_validation": None if withdrawn else (
                     dict((answer_run.retrieval_json or {}).get("evidence_validation") or {})
                     if isinstance(answer_run.retrieval_json, dict)
                     else None
@@ -599,6 +682,150 @@ class SqlAlchemyTenantRepository:
                 "citations": [],
             }
         return payload
+
+    @staticmethod
+    def _conversation_answer_runs(
+        session,
+        *,
+        tenant_id: str,
+        user_id: str,
+        knowledge_base_id: str,
+        conversation_id: str,
+    ) -> dict[str, AnswerRunRecord]:
+        return {
+            run.id: run
+            for run in session.scalars(
+                select(AnswerRunRecord).where(
+                    AnswerRunRecord.tenant_id == tenant_id,
+                    AnswerRunRecord.user_id == user_id,
+                    AnswerRunRecord.knowledge_base_id == knowledge_base_id,
+                    AnswerRunRecord.conversation_id == conversation_id,
+                )
+            )
+        }
+
+    @staticmethod
+    def _withdrawn_answer_run_ids(
+        session,
+        *,
+        tenant_id: str,
+        knowledge_base_id: str,
+        answer_runs: dict[str, AnswerRunRecord],
+    ) -> set[str]:
+        if not answer_runs:
+            return set()
+        citations_by_run: dict[str, list[CitationRecord]] = {
+            run_id: [] for run_id in answer_runs
+        }
+        withdrawn = set()
+        rows = session.execute(
+            select(
+                CitationRecord,
+                DocumentVersionRecord.id,
+                DocumentRecord.id,
+                DocumentRecord.deleted_at,
+                DocumentRecord.status,
+            )
+            .outerjoin(
+                DocumentVersionRecord,
+                and_(
+                    DocumentVersionRecord.id == CitationRecord.document_version_id,
+                    DocumentVersionRecord.tenant_id == tenant_id,
+                ),
+            )
+            .outerjoin(
+                DocumentRecord,
+                and_(
+                    DocumentRecord.id == DocumentVersionRecord.document_id,
+                    DocumentRecord.tenant_id == tenant_id,
+                    DocumentRecord.knowledge_base_id == knowledge_base_id,
+                ),
+            )
+            .where(
+                CitationRecord.tenant_id == tenant_id,
+                CitationRecord.answer_run_id.in_(answer_runs),
+            )
+        )
+        for citation, version_id, document_id, deleted_at, status in rows:
+            citations_by_run[citation.answer_run_id].append(citation)
+            if (
+                version_id is None
+                or document_id is None
+                or deleted_at is not None
+                or status == "deleted"
+            ):
+                withdrawn.add(citation.answer_run_id)
+        context_versions_by_run = {}
+        all_context_versions = set()
+        for run_id, run in answer_runs.items():
+            citations = citations_by_run[run_id]
+            context_lineage_intact, context_versions = _context_lineage_status(
+                run.retrieval_json, run.retrieval_needed, run.pipeline_version,
+            )
+            if not _context_lineage_chunks_intact(
+                session,
+                tenant_id=tenant_id,
+                knowledge_base_id=knowledge_base_id,
+                index_version_id=run.index_version_id or "",
+                retrieval_json=run.retrieval_json,
+                pipeline_version=run.pipeline_version,
+            ):
+                context_lineage_intact = False
+            context_versions_by_run[run_id] = context_versions
+            all_context_versions.update(context_versions)
+            if (
+                (run.retrieval_needed and not citations)
+                or not _citation_lineage_intact(
+                    run.retrieval_json, citations, run.pipeline_version,
+                )
+                or not context_lineage_intact
+            ):
+                withdrawn.add(run_id)
+        available_context_versions = _available_context_version_ids(
+            session,
+            tenant_id=tenant_id,
+            knowledge_base_id=knowledge_base_id,
+            version_ids=all_context_versions,
+        )
+        for run_id, version_ids in context_versions_by_run.items():
+            if not version_ids.issubset(available_context_versions):
+                withdrawn.add(run_id)
+
+        dependencies: dict[str, tuple[str, ...]] = {}
+        dependents: dict[str, list[str]] = {run_id: [] for run_id in answer_runs}
+        remaining: dict[str, int] = {}
+        for run_id, run in answer_runs.items():
+            intact, run_dependencies = _history_dependency_status(
+                run.retrieval_json, run.pipeline_version, run_id,
+            )
+            if not intact or (run_dependencies and not run.conversation_id):
+                withdrawn.add(run_id)
+            if any(dependency_id not in answer_runs for dependency_id in run_dependencies):
+                withdrawn.add(run_id)
+            known_dependencies = tuple(
+                dependency_id
+                for dependency_id in run_dependencies
+                if dependency_id in answer_runs
+            )
+            dependencies[run_id] = known_dependencies
+            remaining[run_id] = len(known_dependencies)
+            for dependency_id in known_dependencies:
+                dependents[dependency_id].append(run_id)
+
+        ready = deque(run_id for run_id, count in remaining.items() if count == 0)
+        processed = set()
+        while ready:
+            run_id = ready.popleft()
+            processed.add(run_id)
+            if any(dependency_id in withdrawn for dependency_id in dependencies[run_id]):
+                withdrawn.add(run_id)
+            for dependent_id in dependents[run_id]:
+                remaining[dependent_id] -= 1
+                if remaining[dependent_id] == 0:
+                    ready.append(dependent_id)
+        # An unprocessed run is in, or downstream from, a dependency cycle.
+        withdrawn.update(answer_runs.keys() - processed)
+        return withdrawn
 
     def delete_conversation(
         self,
@@ -628,7 +855,7 @@ class SqlAlchemyTenantRepository:
         run_id: str,
     ) -> dict:
         with self.session_factory() as session:
-            user, _membership = self._active_identity(session, principal)
+            user, membership = self._active_identity(session, principal)
             run = session.scalar(select(AnswerRunRecord).where(
                 AnswerRunRecord.id == run_id,
                 AnswerRunRecord.tenant_id == principal.tenant_id,
@@ -636,6 +863,30 @@ class SqlAlchemyTenantRepository:
             ))
             if run is None:
                 raise ResourceNotFoundError("answer run was not found")
+            self._require_knowledge_base_read(
+                session,
+                principal=principal,
+                user=user,
+                membership=membership,
+                knowledge_base_id=run.knowledge_base_id,
+            )
+            answer_runs = (
+                self._conversation_answer_runs(
+                    session,
+                    tenant_id=principal.tenant_id,
+                    user_id=user.id,
+                    knowledge_base_id=run.knowledge_base_id,
+                    conversation_id=run.conversation_id,
+                )
+                if run.conversation_id else {run.id: run}
+            )
+            answer_runs.setdefault(run.id, run)
+            withdrawn_run_ids = self._withdrawn_answer_run_ids(
+                session,
+                tenant_id=principal.tenant_id,
+                knowledge_base_id=run.knowledge_base_id,
+                answer_runs=answer_runs,
+            )
             citations = list(session.scalars(
                 select(CitationRecord)
                 .where(
@@ -645,18 +896,11 @@ class SqlAlchemyTenantRepository:
                 .order_by(CitationRecord.rank, CitationRecord.id)
             ))
             evidence = []
+            answer_withdrawn = run.id in withdrawn_run_ids
             for citation in citations:
-                chunk = (
-                    session.scalar(
-                        select(ChunkRecord).where(
-                            ChunkRecord.id == citation.chunk_record_id,
-                            ChunkRecord.tenant_id == principal.tenant_id,
-                            ChunkRecord.knowledge_base_id == run.knowledge_base_id,
-                        )
-                    )
-                    if citation.chunk_record_id
-                    else None
-                )
+                if answer_withdrawn:
+                    evidence.append({"rank": citation.rank, "available": False})
+                    continue
                 version = (
                     session.scalar(
                         select(DocumentVersionRecord).where(
@@ -674,13 +918,39 @@ class SqlAlchemyTenantRepository:
                             DocumentRecord.tenant_id == principal.tenant_id,
                             DocumentRecord.knowledge_base_id == run.knowledge_base_id,
                             DocumentRecord.deleted_at.is_(None),
+                            DocumentRecord.status != "deleted",
                         )
                     )
                     if version is not None
                     else None
                 )
+                chunk = (
+                    session.scalar(
+                        select(ChunkRecord).where(
+                            ChunkRecord.id == citation.chunk_record_id,
+                            ChunkRecord.tenant_id == principal.tenant_id,
+                            ChunkRecord.knowledge_base_id == run.knowledge_base_id,
+                            ChunkRecord.document_id == document.id,
+                            ChunkRecord.document_version_id == version.id,
+                            ChunkRecord.index_version_id == run.index_version_id,
+                        )
+                    )
+                    if document is not None and citation.chunk_record_id and run.index_version_id
+                    else None
+                )
+                if document is None:
+                    answer_withdrawn = True
+                    evidence.append({"rank": citation.rank, "available": False})
+                    continue
+                snippet_available = bool(
+                    chunk is not None
+                    and chunk.content
+                    and hashlib.sha256(chunk.content.encode("utf-8")).hexdigest()
+                    == chunk.content_sha256
+                )
                 evidence.append({
                     "rank": citation.rank,
+                    "available": True,
                     "chunk_id": citation.chunk_id,
                     "chunk_record_id": citation.chunk_record_id,
                     "document_version_id": citation.document_version_id,
@@ -690,9 +960,15 @@ class SqlAlchemyTenantRepository:
                     "page": citation.page,
                     "verified": citation.verified,
                     "content_sha256": citation.content_sha256,
-                    "title": chunk.title if chunk is not None else "",
-                    "content": chunk.content if chunk is not None else "",
+                    "snippet_available": snippet_available,
+                    "title": chunk.title if snippet_available else "",
+                    "content": chunk.content if snippet_available else "",
                 })
+            if answer_withdrawn:
+                evidence = [
+                    {"rank": citation.rank, "available": False}
+                    for citation in citations
+                ]
             return {
                 "id": run.id,
                 "knowledge_base_id": run.knowledge_base_id,
@@ -701,10 +977,11 @@ class SqlAlchemyTenantRepository:
                 "model": run.model,
                 "pipeline_version": run.pipeline_version,
                 "question": run.question,
-                "answer": run.answer,
+                "answer": _WITHDRAWN_ANSWER_TEXT if answer_withdrawn else run.answer,
+                "answer_withdrawn": answer_withdrawn,
                 "retrieval_needed": run.retrieval_needed,
                 "timings": run.timings_json,
-                "evidence_validation": (
+                "evidence_validation": None if answer_withdrawn else (
                     dict((run.retrieval_json or {}).get("evidence_validation") or {})
                     if isinstance(run.retrieval_json, dict)
                     else None
@@ -767,6 +1044,39 @@ class SqlAlchemyTenantRepository:
             raise AccessDeniedError("identity is not an active tenant member")
         return user, membership
 
+    @staticmethod
+    def _require_knowledge_base_read(
+        session,
+        *,
+        principal: Principal,
+        user: UserIdentity,
+        membership: Membership,
+        knowledge_base_id: str,
+        knowledge_base: Optional[KnowledgeBaseRecord] = None,
+    ) -> KnowledgeBaseRecord:
+        row = knowledge_base
+        if row is None:
+            row = session.scalar(select(KnowledgeBaseRecord).where(
+                KnowledgeBaseRecord.id == knowledge_base_id,
+                KnowledgeBaseRecord.tenant_id == principal.tenant_id,
+                KnowledgeBaseRecord.active.is_(True),
+            ))
+        if (
+            row is None
+            or row.id != knowledge_base_id
+            or row.tenant_id != principal.tenant_id
+            or not row.active
+        ):
+            raise ResourceNotFoundError("knowledge base was not found")
+        if not (
+            membership.role in {"owner", "admin"}
+            or principal.has_role("tenant_admin")
+            or row.owner_user_id == user.id
+            or row.visibility == "tenant"
+        ):
+            raise AccessDeniedError("knowledge base access is denied")
+        return row
+
     def authorize_knowledge_base(
         self,
         principal: Principal,
@@ -774,53 +1084,14 @@ class SqlAlchemyTenantRepository:
         requested_source_ids: Optional[Sequence[str]],
     ) -> AuthorizedKnowledgeBase:
         with self.session_factory() as session:
-            tenant = session.scalar(
-                select(Tenant).where(
-                    Tenant.id == principal.tenant_id,
-                    Tenant.active.is_(True),
-                )
+            user, membership = self._active_identity(session, principal)
+            knowledge_base = self._require_knowledge_base_read(
+                session,
+                principal=principal,
+                user=user,
+                membership=membership,
+                knowledge_base_id=knowledge_base_id,
             )
-            if tenant is None:
-                raise AccessDeniedError("tenant is not active")
-
-            user = session.scalar(
-                select(UserIdentity).where(
-                    UserIdentity.tenant_id == principal.tenant_id,
-                    UserIdentity.subject == principal.subject,
-                    UserIdentity.active.is_(True),
-                )
-            )
-            if user is None:
-                raise AccessDeniedError("identity is not an active tenant member")
-
-            membership = session.scalar(
-                select(Membership).where(
-                    Membership.tenant_id == principal.tenant_id,
-                    Membership.user_id == user.id,
-                    Membership.active.is_(True),
-                )
-            )
-            if membership is None:
-                raise AccessDeniedError("identity is not an active tenant member")
-
-            knowledge_base = session.scalar(
-                select(KnowledgeBaseRecord).where(
-                    KnowledgeBaseRecord.id == knowledge_base_id,
-                    KnowledgeBaseRecord.tenant_id == principal.tenant_id,
-                    KnowledgeBaseRecord.active.is_(True),
-                )
-            )
-            if knowledge_base is None:
-                raise ResourceNotFoundError("knowledge base was not found")
-
-            can_read = (
-                membership.role in {"owner", "admin"}
-                or principal.has_role("tenant_admin")
-                or knowledge_base.owner_user_id == user.id
-                or knowledge_base.visibility == "tenant"
-            )
-            if not can_read:
-                raise AccessDeniedError("knowledge base access is denied")
             can_write = (
                 membership.role in {"owner", "admin"}
                 or principal.has_role("tenant_admin")
@@ -841,6 +1112,9 @@ class SqlAlchemyTenantRepository:
                     raise InvalidServiceStateError(
                         "knowledge base active index is inconsistent"
                     )
+                # A replacement upload changes the document workflow status
+                # before its new index is published. The active membership and
+                # current version remain the authority for searchable sources.
                 ready_source_ids = list(session.scalars(
                     select(DocumentRecord.source_id)
                     .join(
@@ -850,7 +1124,6 @@ class SqlAlchemyTenantRepository:
                     .where(
                         DocumentRecord.tenant_id == principal.tenant_id,
                         DocumentRecord.knowledge_base_id == knowledge_base.id,
-                        DocumentRecord.status == "ready",
                         DocumentRecord.deleted_at.is_(None),
                         DocumentRecord.current_version_id
                         == IndexDocumentRecord.document_version_id,
@@ -878,6 +1151,19 @@ class SqlAlchemyTenantRepository:
                 active_index_version_id=knowledge_base.active_index_version_id,
                 activation_generation=knowledge_base.activation_generation,
                 can_write=can_write,
+                embedding_model=active_index.embedding_model if knowledge_base.active_index_version_id else None,
+                sparse_embedding_model=(
+                    active_index.sparse_embedding_model
+                    if knowledge_base.active_index_version_id
+                    else None
+                ),
+                embedding_dimensions=active_index.embedding_dimensions if knowledge_base.active_index_version_id else None,
+                chunk_schema_version=active_index.chunk_schema_version if knowledge_base.active_index_version_id else None,
+                qdrant_collection=active_index.qdrant_collection if knowledge_base.active_index_version_id else None,
+                artifact_attempt=(
+                    active_index.artifact_attempt
+                    if knowledge_base.active_index_version_id else 0
+                ),
             )
 
     def reserve_upload(
@@ -909,7 +1195,10 @@ class SqlAlchemyTenantRepository:
                 if (
                     existing.knowledge_base_id != authorized.id
                     or existing.owner_user_id != authorized.user_id
+                    or existing.folder_id != folder_id
+                    or existing.target_document_id != target_document_id
                     or existing.filename != filename
+                    or existing.declared_mime_type != declared_mime_type
                     or existing.expected_size_bytes != expected_size_bytes
                     or existing.expected_sha256 != expected_sha256
                 ):
@@ -1284,6 +1573,9 @@ class SqlAlchemyTenantRepository:
     def validate_index_version(
         self,
         *,
+        job_id: str,
+        worker_id: str,
+        attempt: int,
         tenant_id: str,
         knowledge_base_id: str,
         index_version_id: str,
@@ -1308,6 +1600,28 @@ class SqlAlchemyTenantRepository:
             "qdrant_entries_sha256",
         )
         with self.session_factory.begin() as session:
+            now = utc_now()
+            job = session.scalar(
+                select(IndexBuildJobRecord)
+                .where(
+                    IndexBuildJobRecord.id == job_id,
+                    IndexBuildJobRecord.tenant_id == tenant_id,
+                    IndexBuildJobRecord.knowledge_base_id == knowledge_base_id,
+                    IndexBuildJobRecord.index_version_id == index_version_id,
+                    IndexBuildJobRecord.status == "running",
+                    IndexBuildJobRecord.lease_owner == worker_id,
+                )
+                .with_for_update()
+            )
+            if (
+                job is None
+                or job.lease_expires_at is None
+                or _as_utc(job.lease_expires_at) <= now
+                or job.attempt != int(attempt)
+            ):
+                raise InvalidServiceStateError(
+                    "index build lease or attempt was lost before validation"
+                )
             target = session.scalar(
                 select(IndexVersionRecord)
                 .where(
@@ -1320,6 +1634,14 @@ class SqlAlchemyTenantRepository:
             )
             if target is None:
                 raise InvalidServiceStateError("index is not in a validatable state")
+            # Legacy candidates keep artifact_attempt=0 while the old writer
+            # is enabled. A phase-2 writer must persist its positive attempt
+            # and match it to the durable job attempt before this method can
+            # be used for that format.
+            if target.artifact_attempt > 0 and target.artifact_attempt != int(attempt):
+                raise InvalidServiceStateError(
+                    "index artifact attempt does not match the build attempt"
+                )
             if target.manifest_sha256 and target.manifest_sha256 != clean_manifest:
                 raise InvalidServiceStateError("index manifest digest changed before validation")
             if (
@@ -1407,9 +1729,10 @@ class SqlAlchemyTenantRepository:
         expected_active_index_id: Optional[str] = None,
         expected_generation: Optional[int] = None,
         grace_period_seconds: int = 600,
+        session=None,
     ) -> None:
         """Atomically publish one validated immutable index version."""
-        with self.session_factory.begin() as session:
+        with (nullcontext(session) if session is not None else self.session_factory.begin()) as session:
             knowledge_base = session.scalar(
                 select(KnowledgeBaseRecord)
                 .where(
@@ -1475,6 +1798,17 @@ class SqlAlchemyTenantRepository:
                     old_index.gc_after = utc_now() + timedelta(
                         seconds=max(60, int(grace_period_seconds))
                     )
+                    if int(old_index.artifact_attempt or 0) > 0:
+                        ensure_index_artifact_gc(
+                            session,
+                            tenant_id=old_index.tenant_id,
+                            knowledge_base_id=old_index.knowledge_base_id,
+                            index_version_id=old_index.id,
+                            artifact_attempt=int(old_index.artifact_attempt),
+                            qdrant_collection=old_index.qdrant_collection,
+                            manifest_object_key=old_index.manifest_object_key,
+                            next_attempt_at=old_index.gc_after,
+                        )
 
             now = utc_now()
             memberships = list(session.scalars(
@@ -1553,6 +1887,98 @@ class SqlAlchemyTenantRepository:
                 )
                 if conversation is None:
                     raise ResourceNotFoundError("conversation was not found")
+            history_manifest = result.get("_history_dependency_v1")
+            history_intact, history_run_ids = _history_dependency_status(
+                {_HISTORY_DEPENDENCY_KEY: history_manifest},
+                pipeline_version,
+                str(result["run_id"]),
+            )
+            if not history_intact or (history_run_ids and conversation is None):
+                raise InvalidServiceStateError("answer history dependency is incomplete")
+            if history_run_ids:
+                prior_runs = self._conversation_answer_runs(
+                    session,
+                    tenant_id=principal.tenant_id,
+                    user_id=authorized.user_id,
+                    knowledge_base_id=authorized.id,
+                    conversation_id=conversation.id,
+                )
+                if (
+                    not set(history_run_ids).issubset(prior_runs)
+                    or set(history_run_ids) & self._withdrawn_answer_run_ids(
+                        session,
+                        tenant_id=principal.tenant_id,
+                        knowledge_base_id=authorized.id,
+                        answer_runs=prior_runs,
+                    )
+                ):
+                    raise InvalidServiceStateError("answer history dependency is unavailable")
+            citation_records = [
+                CitationRecord(
+                    tenant_id=principal.tenant_id,
+                    answer_run_id=str(result["run_id"]),
+                    chunk_id=str(citation.get("id") or ""),
+                    rank=int(citation.get("rank") or 0),
+                    page=str(citation.get("page") or ""),
+                    content_sha256=str(citation.get("content_sha256") or ""),
+                    document_version_id=(
+                        str(citation.get("document_version_id"))
+                        if citation.get("document_version_id")
+                        else None
+                    ),
+                    chunk_record_id=(
+                        str(citation.get("chunk_record_id"))
+                        if citation.get("chunk_record_id")
+                        else None
+                    ),
+                    verified=bool(citation.get("verified", False)),
+                )
+                for citation in result.get("citations") or []
+            ]
+            retrieval_record = _safe_retrieval_record(
+                result.get("retrieval"),
+                result.get("evidence_validation"),
+            )
+            retrieval_record[_CITATION_LINEAGE_KEY] = _citation_lineage(
+                citation_records
+            )
+            try:
+                context_lineage = _context_lineage_for_result(result.get("retrieval"))
+                retrieval_record[_CONTEXT_LINEAGE_KEY] = context_lineage
+                context_versions = {
+                    entry["document_version_id"]
+                    for entry in context_lineage["contexts"]
+                }
+                available_context_versions = _available_context_version_ids(
+                    session,
+                    tenant_id=principal.tenant_id,
+                    knowledge_base_id=authorized.id,
+                    version_ids=context_versions,
+                )
+                if not context_versions.issubset(available_context_versions):
+                    raise InvalidServiceStateError("final context document version is unavailable")
+                if not _context_lineage_chunks_intact(
+                    session,
+                    tenant_id=principal.tenant_id,
+                    knowledge_base_id=authorized.id,
+                    index_version_id=authorized.active_index_version_id or "",
+                    retrieval_json=retrieval_record,
+                    pipeline_version=pipeline_version,
+                ):
+                    raise InvalidServiceStateError(
+                        "final context chunk lineage is unavailable"
+                    )
+            except InvalidServiceStateError as exc:
+                LOGGER.warning(
+                    "answer_run.context_lineage_incomplete run_id=%s reason=%s",
+                    str(result.get("run_id") or ""),
+                    str(exc),
+                )
+                raise
+            retrieval_record[_HISTORY_DEPENDENCY_KEY] = {
+                "run_ids": list(history_run_ids),
+                "complete": True,
+            }
             run = AnswerRunRecord(
                 id=str(result["run_id"]),
                 tenant_id=principal.tenant_id,
@@ -1568,10 +1994,7 @@ class SqlAlchemyTenantRepository:
                 retrieval_needed=bool(result.get("retrieval", {}).get("needed")),
                 source_ids_json=list(authorized.source_ids),
                 timings_json=dict(result.get("timings") or {}),
-                retrieval_json=_safe_retrieval_record(
-                    result.get("retrieval"),
-                    result.get("evidence_validation"),
-                ),
+                retrieval_json=retrieval_record,
             )
             session.add(run)
             if conversation is not None:
@@ -1610,26 +2033,7 @@ class SqlAlchemyTenantRepository:
                 if int(previous_user_count) == 0:
                     conversation.title = " ".join(question.split())[:80] or "新對話"
                 conversation.updated_at = utc_now()
-            for citation in result.get("citations") or []:
-                session.add(CitationRecord(
-                    tenant_id=principal.tenant_id,
-                    answer_run_id=run.id,
-                    chunk_id=str(citation.get("id") or ""),
-                    rank=int(citation.get("rank") or 0),
-                    page=str(citation.get("page") or ""),
-                    content_sha256=str(citation.get("content_sha256") or ""),
-                    document_version_id=(
-                        str(citation.get("document_version_id"))
-                        if citation.get("document_version_id")
-                        else None
-                    ),
-                    chunk_record_id=(
-                        str(citation.get("chunk_record_id"))
-                        if citation.get("chunk_record_id")
-                        else None
-                    ),
-                    verified=bool(citation.get("verified", False)),
-                ))
+            session.add_all(citation_records)
 
     def record_audit_event(
         self,
@@ -1654,14 +2058,322 @@ class SqlAlchemyTenantRepository:
             ))
 
 
-def _safe_retrieval_record(raw_retrieval, raw_evidence_validation=None) -> dict:
-    retrieval = dict(raw_retrieval or {})
-    contexts = list(retrieval.pop("contexts", []) or [])
-    retrieval["context_ids"] = [
-        str(context.get("id") or "")
-        for context in contexts
-        if isinstance(context, dict)
+def _citation_lineage(citations: Iterable[CitationRecord]) -> list[dict]:
+    entries = [
+        {
+            "rank": int(citation.rank),
+            "document_version_id": str(citation.document_version_id or ""),
+            "chunk_record_id": str(citation.chunk_record_id or ""),
+            "chunk_id": str(citation.chunk_id or ""),
+            "content_sha256": str(citation.content_sha256 or ""),
+            "page": str(citation.page or ""),
+            "verified": bool(citation.verified),
+        }
+        for citation in citations
     ]
+    return sorted(entries, key=lambda entry: (
+        entry["rank"],
+        entry["document_version_id"],
+        entry["chunk_record_id"],
+        entry["chunk_id"],
+        entry["content_sha256"],
+        entry["page"],
+        entry["verified"],
+    ))
+
+
+def _citation_lineage_intact(
+    retrieval_json: dict,
+    citations: Iterable[CitationRecord],
+    pipeline_version: str = "",
+) -> bool:
+    if not isinstance(retrieval_json, dict) or _CITATION_LINEAGE_KEY not in retrieval_json:
+        return not _lineage_required(pipeline_version)
+    return retrieval_json[_CITATION_LINEAGE_KEY] == _citation_lineage(citations)
+
+
+def _lineage_required(pipeline_version: str) -> bool:
+    version = re.fullmatch(r"canonical-v(\d+)", str(pipeline_version or ""))
+    return bool(version and int(version.group(1)) >= 2)
+
+
+def _history_dependency_status(
+    retrieval_json: dict,
+    pipeline_version: str,
+    run_id: str,
+) -> tuple[bool, tuple[str, ...]]:
+    required = _lineage_required(pipeline_version)
+    if not isinstance(retrieval_json, dict) or _HISTORY_DEPENDENCY_KEY not in retrieval_json:
+        return not required, ()  # Older runs cannot prove their history dependencies.
+    manifest = retrieval_json[_HISTORY_DEPENDENCY_KEY]
+    if not isinstance(manifest, dict) or manifest.get("complete") is not True:
+        return False, ()
+    run_ids = manifest.get("run_ids")
+    if not isinstance(run_ids, list) or len(run_ids) > 10:
+        return False, ()
+    if any(
+        not isinstance(dependency_id, str)
+        or not dependency_id
+        or dependency_id != dependency_id.strip()
+        or dependency_id == run_id
+        for dependency_id in run_ids
+    ) or len(set(run_ids)) != len(run_ids):
+        return False, ()
+    return True, tuple(run_ids)
+
+
+def _context_lineage_for_result(raw_retrieval) -> dict:
+    if not isinstance(raw_retrieval, dict):
+        raise InvalidServiceStateError("retrieval metadata is missing")
+    needed = bool(raw_retrieval.get("needed"))
+    contexts = raw_retrieval.get("contexts")
+    if not isinstance(contexts, list):
+        raise InvalidServiceStateError("final context list is missing")
+    if contexts and not needed:
+        raise InvalidServiceStateError("non-retrieval answer has final contexts")
+    raw_contexts = raw_retrieval.get("raw_contexts")
+    raw_by_id: dict[str, list[dict[str, str]]] = {}
+    if isinstance(raw_contexts, list):
+        for raw_context in raw_contexts:
+            if not isinstance(raw_context, dict):
+                continue
+            raw_id = str(raw_context.get("id") or "").strip()
+            if raw_id:
+                raw_by_id.setdefault(raw_id, []).append(
+                    {
+                        "document_version_id": str(
+                            raw_context.get("documentVersionId") or ""
+                        ).strip(),
+                        "chunk_record_id": str(
+                            raw_context.get("chunkRecordId") or ""
+                        ).strip(),
+                        "content_sha256": str(
+                            raw_context.get("contentSha256") or ""
+                        ).strip().lower(),
+                    }
+                )
+    entries = []
+    for context in contexts:
+        if not isinstance(context, dict):
+            raise InvalidServiceStateError("final context is malformed")
+        context_id = str(context.get("id") or "").strip()
+        if not context_id:
+            raise InvalidServiceStateError("final context identifier is missing")
+        version_id = str(context.get("documentVersionId") or "").strip()
+        chunk_record_id = str(context.get("chunkRecordId") or "").strip()
+        content_sha256 = str(context.get("contentSha256") or "").strip().lower()
+        raw_candidates = []
+        raw_id = re.sub(r"::(?:focus|fine-evidence)-[1-9]\d*$", "", context_id)
+        raw_candidates = raw_by_id.get(raw_id, [])
+        if not version_id:
+            raw_versions = {
+                candidate["document_version_id"]
+                for candidate in raw_candidates
+                if candidate["document_version_id"]
+            }
+            if len(raw_versions) != 1:
+                raise InvalidServiceStateError(
+                    "final context document version cannot be resolved uniquely"
+                )
+            version_id = next(iter(raw_versions))
+        if not chunk_record_id:
+            raw_chunk_ids = {
+                candidate["chunk_record_id"]
+                for candidate in raw_candidates
+                if candidate["chunk_record_id"]
+            }
+            if len(raw_chunk_ids) == 1:
+                chunk_record_id = next(iter(raw_chunk_ids))
+        if not content_sha256:
+            raw_hashes = {
+                candidate["content_sha256"]
+                for candidate in raw_candidates
+                if candidate["content_sha256"]
+            }
+            if len(raw_hashes) == 1:
+                content_sha256 = next(iter(raw_hashes))
+        if not content_sha256:
+            content = str(context.get("content") or "")
+            if content:
+                content_sha256 = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        entries.append({
+            "context_id": context_id,
+            "document_version_id": version_id,
+            "chunk_record_id": chunk_record_id,
+            "content_sha256": content_sha256,
+        })
+    return {
+        "chunk_lineage": _CONTEXT_CHUNK_LINEAGE_VERSION,
+        "state": (
+            "retrieved_contexts" if entries
+            else "retrieval_no_context" if needed
+            else "no_retrieval"
+        ),
+        "contexts": entries,
+    }
+
+
+def _context_lineage_status(
+    retrieval_json: dict,
+    retrieval_needed: bool,
+    pipeline_version: str = "",
+) -> tuple[bool, set[str]]:
+    if not isinstance(retrieval_json, dict) or _CONTEXT_LINEAGE_KEY not in retrieval_json:
+        return not _lineage_required(pipeline_version), set()
+    lineage = retrieval_json[_CONTEXT_LINEAGE_KEY]
+    if not isinstance(lineage, dict) or not isinstance(lineage.get("contexts"), list):
+        return False, set()
+    entries = lineage["contexts"]
+    expected_state = (
+        "retrieved_contexts" if entries
+        else "retrieval_no_context" if retrieval_needed
+        else "no_retrieval"
+    )
+    if (
+        lineage.get("state") != expected_state
+        or (entries and not retrieval_needed)
+        or retrieval_json.get("needed") is not retrieval_needed
+        or not isinstance(retrieval_json.get("context_ids"), list)
+    ):
+        return False, set()
+    context_ids = []
+    version_ids = set()
+    chunk_lineage_version = lineage.get("chunk_lineage")
+    if _lineage_required(pipeline_version) and chunk_lineage_version not in (
+        None,
+        _CONTEXT_CHUNK_LINEAGE_VERSION,
+    ):
+        return False, set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            return False, set()
+        context_id = entry.get("context_id")
+        version_id = entry.get("document_version_id")
+        if (
+            not isinstance(context_id, str) or not context_id.strip()
+            or not isinstance(version_id, str) or not version_id.strip()
+        ):
+            return False, set()
+        if (
+            _lineage_required(pipeline_version)
+            and chunk_lineage_version == _CONTEXT_CHUNK_LINEAGE_VERSION
+        ):
+            chunk_record_id = entry.get("chunk_record_id")
+            content_sha256 = entry.get("content_sha256")
+            if (
+                not isinstance(chunk_record_id, str)
+                or not chunk_record_id.strip()
+                or not isinstance(content_sha256, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", content_sha256.lower())
+            ):
+                return False, set()
+        context_ids.append(context_id)
+        version_ids.add(version_id)
+    if retrieval_json["context_ids"] != context_ids:
+        return False, set()
+    return True, version_ids
+
+
+def _context_lineage_chunks_intact(
+    session,
+    *,
+    tenant_id: str,
+    knowledge_base_id: str,
+    index_version_id: str,
+    retrieval_json: dict,
+    pipeline_version: str,
+) -> bool:
+    """Verify the chunks that supplied new answer Contexts still exist unchanged."""
+    if not _lineage_required(pipeline_version):
+        return True
+    if not isinstance(retrieval_json, dict):
+        return False
+    lineage = retrieval_json.get(_CONTEXT_LINEAGE_KEY)
+    if not isinstance(lineage, dict):
+        return False
+    chunk_lineage_version = lineage.get("chunk_lineage")
+    if chunk_lineage_version is None:
+        # Runs written before chunk-level Context lineage remain readable under
+        # the documented compatibility limit; they cannot prove chunk state.
+        return True
+    if chunk_lineage_version != _CONTEXT_CHUNK_LINEAGE_VERSION:
+        return False
+    entries = lineage.get("contexts")
+    if not isinstance(entries, list):
+        return False
+    if not entries:
+        return True
+    clean_ids = {
+        str(entry.get("chunk_record_id") or "").strip()
+        for entry in entries
+        if isinstance(entry, dict)
+    }
+    if not index_version_id or not clean_ids or "" in clean_ids:
+        return False
+    rows = list(session.scalars(
+        select(ChunkRecord).where(
+            ChunkRecord.id.in_(clean_ids),
+            ChunkRecord.tenant_id == tenant_id,
+            ChunkRecord.knowledge_base_id == knowledge_base_id,
+            ChunkRecord.index_version_id == index_version_id,
+        )
+    ))
+    chunks_by_id = {row.id: row for row in rows}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            return False
+        chunk_id = str(entry.get("chunk_record_id") or "").strip()
+        version_id = str(entry.get("document_version_id") or "").strip()
+        content_sha256 = str(entry.get("content_sha256") or "").strip().lower()
+        chunk = chunks_by_id.get(chunk_id)
+        if (
+            chunk is None
+            or chunk.document_version_id != version_id
+            or str(chunk.content_sha256 or "").strip().lower() != content_sha256
+        ):
+            return False
+    return True
+
+
+def _available_context_version_ids(
+    session,
+    *,
+    tenant_id: str,
+    knowledge_base_id: str,
+    version_ids: set[str],
+) -> set[str]:
+    if not version_ids:
+        return set()
+    return set(session.scalars(
+        select(DocumentVersionRecord.id)
+        .join(
+            DocumentRecord,
+            and_(
+                DocumentRecord.id == DocumentVersionRecord.document_id,
+                DocumentRecord.tenant_id == tenant_id,
+                DocumentRecord.knowledge_base_id == knowledge_base_id,
+                DocumentRecord.deleted_at.is_(None),
+                DocumentRecord.status != "deleted",
+            ),
+        )
+        .where(
+            DocumentVersionRecord.id.in_(version_ids),
+            DocumentVersionRecord.tenant_id == tenant_id,
+        )
+    ))
+
+
+def _safe_retrieval_record(raw_retrieval, raw_evidence_validation=None) -> dict:
+    raw = raw_retrieval if isinstance(raw_retrieval, dict) else {}
+    contexts = raw.get("contexts") if isinstance(raw.get("contexts"), list) else []
+    retrieval = {
+        "needed": bool(raw.get("needed")),
+        "context_ids": [
+            str(context.get("id") or "")
+            for context in contexts
+            if isinstance(context, dict)
+        ],
+    }
     if isinstance(raw_evidence_validation, dict):
         retrieval["evidence_validation"] = {
             "sufficient": bool(raw_evidence_validation.get("sufficient")),
@@ -1679,6 +2391,11 @@ def _safe_retrieval_record(raw_retrieval, raw_evidence_validation=None) -> dict:
             "uncited_claims": [
                 str(claim)[:500]
                 for claim in raw_evidence_validation.get("uncited_claims") or []
+                if str(claim).strip()
+            ][:20],
+            "unsupported_claims": [
+                str(claim)[:500]
+                for claim in raw_evidence_validation.get("unsupported_claims") or []
                 if str(claim).strip()
             ][:20],
             "reason": str(raw_evidence_validation.get("reason") or ""),

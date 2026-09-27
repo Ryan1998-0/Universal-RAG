@@ -57,6 +57,7 @@ class ConcurrentPublishError(RuntimeError):
 _WITHDRAWN_ANSWER_TEXT = "此歷史回答的來源無法確認或已失效，因此不再顯示。"
 _CITATION_LINEAGE_KEY = "citation_lineage_v1"
 _CONTEXT_LINEAGE_KEY = "context_lineage_v1"
+_CONTEXT_CHUNK_LINEAGE_VERSION = "chunk_record_v1"
 _HISTORY_DEPENDENCY_KEY = "history_dependency_v1"
 LOGGER = logging.getLogger("rag_demo.production.repository")
 
@@ -2202,6 +2203,7 @@ def _context_lineage_for_result(raw_retrieval) -> dict:
             "content_sha256": content_sha256,
         })
     return {
+        "chunk_lineage": _CONTEXT_CHUNK_LINEAGE_VERSION,
         "state": (
             "retrieved_contexts" if entries
             else "retrieval_no_context" if needed
@@ -2236,6 +2238,12 @@ def _context_lineage_status(
         return False, set()
     context_ids = []
     version_ids = set()
+    chunk_lineage_version = lineage.get("chunk_lineage")
+    if _lineage_required(pipeline_version) and chunk_lineage_version not in (
+        None,
+        _CONTEXT_CHUNK_LINEAGE_VERSION,
+    ):
+        return False, set()
     for entry in entries:
         if not isinstance(entry, dict):
             return False, set()
@@ -2246,7 +2254,10 @@ def _context_lineage_status(
             or not isinstance(version_id, str) or not version_id.strip()
         ):
             return False, set()
-        if _lineage_required(pipeline_version):
+        if (
+            _lineage_required(pipeline_version)
+            and chunk_lineage_version == _CONTEXT_CHUNK_LINEAGE_VERSION
+        ):
             chunk_record_id = entry.get("chunk_record_id")
             content_sha256 = entry.get("content_sha256")
             if (
@@ -2279,6 +2290,13 @@ def _context_lineage_chunks_intact(
         return False
     lineage = retrieval_json.get(_CONTEXT_LINEAGE_KEY)
     if not isinstance(lineage, dict):
+        return False
+    chunk_lineage_version = lineage.get("chunk_lineage")
+    if chunk_lineage_version is None:
+        # Runs written before chunk-level Context lineage remain readable under
+        # the documented compatibility limit; they cannot prove chunk state.
+        return True
+    if chunk_lineage_version != _CONTEXT_CHUNK_LINEAGE_VERSION:
         return False
     entries = lineage.get("contexts")
     if not isinstance(entries, list):

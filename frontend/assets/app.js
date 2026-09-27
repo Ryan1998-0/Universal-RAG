@@ -608,7 +608,9 @@ function renderRunDetails(run) {
     }
     title.textContent = `[${citation.rank}] ${citation.document_name || citation.title || "來源"}${citation.page ? ` · p.${citation.page}` : ""}`;
     const content = document.createElement("p");
-    content.textContent = citation.content || "";
+    content.textContent = citation.available === true && citation.snippet_available === false
+      ? "引用片段目前無法驗證，請查看原始文件"
+      : citation.content || "";
     item.append(title, content);
     if (citation.source_url) {
       const source = document.createElement("a");

@@ -17,7 +17,11 @@
 
 `POST /v1/ask` 回傳 `request_id`、`run_id`、`answer`、`citations`、`confidence`、`grounding_warnings`、`evidence_validation`、`model`、`retrieval` 與 `timings`。完整執行紀錄可由 `GET /v1/answer-runs/{run_id}` 讀取。
 
-文件刪除會先使原件下載與歷史引用片段不可用，再由背景工作移除物件與向量。新建 AnswerRun 在 `retrieval_json.citation_lineage_v1` 保存預期的引用 rank、文件版本 ID、Chunk ID、頁碼、驗證旗標與內容 SHA-256（不含全文），讀取時會與目前的 CitationRecord 清單核對。若引用部分遺失或被替換、任一引用文件已刪除或遺失，或需要檢索卻沒有任何 CitationRecord，`GET /v1/answer-runs/{run_id}` 會回傳 `answer_withdrawn: true`、固定撤回文字與 `evidence_validation: null`；引用清單比對失敗時也不顯示剩餘片段。舊 AnswerRun 沒有 `citation_lineage_v1` 時沿用原有的來源狀態與零引用檢查，無法偵測部分引用遺失。此清單只涵蓋答案明列的引用，無法證明模型沒有使用未引用的 Context；若刪除政策須涵蓋所有提供給模型的文件，仍需另存完整 Context 來源鏈。對話中的助理訊息如缺少有效的 AnswerRun 關聯，或其 AnswerRun 已撤回，也會顯示撤回文字。後續問答的近期語境會排除撤回回答及同輪使用者問題；語境先按上限讀取，再過濾，故實際訊息數可能較少。歷史對話中的使用者訊息仍會顯示。這是讀取時遮罩，不代表已清除資料庫中的回答、對話、Chunk 或舊備份；其保留與清除期限仍須另訂。
+文件刪除會先使原件下載與歷史引用片段不可用，再由背景工作移除物件與向量。新建 AnswerRun 在 `retrieval_json.citation_lineage_v1` 保存預期的引用 rank、文件版本 ID、Chunk ID、頁碼、驗證旗標與內容 SHA-256（不含全文），讀取時會與目前的 CitationRecord 清單核對；`context_lineage_v1` 另保存最終 `retrieval.contexts` 每筆 Context ID 與文件版本 ID（不含全文）。後者包含經證據聚焦或品質回退後的最終 Context，是可能提供給生成階段的保守來源上界；證據不足時即使清單非空，模型也可能沒有被呼叫。未進入最終清單的 `raw_contexts` 候選不納入來源鏈。來源鏈用 `no_retrieval`、`retrieval_no_context`、`retrieved_contexts` 區分沒有檢索、檢索但沒有 Context，以及有最終 Context 的執行。新建 run 若任一最終 Context 無法唯一對應有效的文件版本，`POST /v1/ask` 會拒絕保存結果並回 `503 RESULT_NOT_PERSISTED`；無檢索且無 Context 的一般回答仍可保存。新 run 的 `retrieval_json` 只保留必要的檢索狀態、Context ID、兩種來源鏈與證據驗證摘要，不保存 `contexts`、`raw_contexts` 或其他可能含原文的檢索診斷欄位。
+
+若引用部分遺失或被替換、任一引用或最終 Context 的文件已刪除或遺失、Context 來源鏈不完整，或需要檢索卻沒有任何 CitationRecord，`GET /v1/answer-runs/{run_id}` 會回傳 `answer_withdrawn: true`、固定撤回文字與 `evidence_validation: null`；來源鏈失效時也不顯示剩餘引用片段。對話中的助理訊息如缺少有效的 AnswerRun 關聯，或其 AnswerRun 已撤回，也會顯示撤回文字。後續問答的近期語境會排除撤回回答及同輪使用者問題；語境先按上限讀取，再過濾，故實際訊息數可能較少。舊 AnswerRun 沒有 `context_lineage_v1` 時仍沿用原有引用檢查，無法以未引用 Context 的文件刪除事件撤回；更舊的 AnswerRun 若也沒有 `citation_lineage_v1`，則無法偵測部分引用遺失。歷史對話中的使用者訊息仍會顯示。這是讀取時遮罩，不代表已清除資料庫中的回答、對話、Chunk 或舊備份；其保留與清除期限仍須另訂。
+
+歷史引用的 `available` 表示來源文件仍有效；`snippet_available` 表示對應的 ChunkRecord 仍存在，且其內容符合該紀錄的 SHA-256。若 `available: true`、`snippet_available: false`，API 隱藏無法驗證的片段文字，但保留原件連結供使用者查看。`verified` 只表示生成時引用 rank 的檢查結果，不代表目前片段仍可驗證。
 
 `evidence_validation` 會逐句檢查來源 rank，並列出 `uncited_claims` 與 `unsupported_claims`。後者表示主張與所引用片段缺少可檢查的數值或詞彙支持；此確定性檢查無法取代人工或端到端語意評估。
 

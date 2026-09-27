@@ -1,6 +1,9 @@
 from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+import hashlib
+import logging
+import re
 from typing import Iterable, List, Optional, Sequence
 
 from sqlalchemy import and_, func, select, text
@@ -50,6 +53,8 @@ class ConcurrentPublishError(RuntimeError):
 
 _WITHDRAWN_ANSWER_TEXT = "此歷史回答的來源無法確認或已失效，因此不再顯示。"
 _CITATION_LINEAGE_KEY = "citation_lineage_v1"
+_CONTEXT_LINEAGE_KEY = "context_lineage_v1"
+LOGGER = logging.getLogger("rag_demo.production.repository")
 
 
 @dataclass(frozen=True)
@@ -740,12 +745,29 @@ class SqlAlchemyTenantRepository:
                 or status == "deleted"
             ):
                 withdrawn.add(citation.answer_run_id)
+        context_versions_by_run = {}
+        all_context_versions = set()
         for run_id, run in answer_runs.items():
             citations = citations_by_run[run_id]
+            context_lineage_intact, context_versions = _context_lineage_status(
+                run.retrieval_json, run.retrieval_needed,
+            )
+            context_versions_by_run[run_id] = context_versions
+            all_context_versions.update(context_versions)
             if (
                 (run.retrieval_needed and not citations)
                 or not _citation_lineage_intact(run.retrieval_json, citations)
+                or not context_lineage_intact
             ):
+                withdrawn.add(run_id)
+        available_context_versions = _available_context_version_ids(
+            session,
+            tenant_id=tenant_id,
+            knowledge_base_id=knowledge_base_id,
+            version_ids=all_context_versions,
+        )
+        for run_id, version_ids in context_versions_by_run.items():
+            if not version_ids.issubset(available_context_versions):
                 withdrawn.add(run_id)
         return withdrawn
 
@@ -800,7 +822,20 @@ class SqlAlchemyTenantRepository:
                 )
                 .order_by(CitationRecord.rank, CitationRecord.id)
             ))
-            lineage_intact = _citation_lineage_intact(run.retrieval_json, citations)
+            context_lineage_intact, context_versions = _context_lineage_status(
+                run.retrieval_json, run.retrieval_needed,
+            )
+            available_context_versions = _available_context_version_ids(
+                session,
+                tenant_id=principal.tenant_id,
+                knowledge_base_id=run.knowledge_base_id,
+                version_ids=context_versions,
+            )
+            lineage_intact = (
+                _citation_lineage_intact(run.retrieval_json, citations)
+                and context_lineage_intact
+                and context_versions.issubset(available_context_versions)
+            )
             evidence = []
             answer_withdrawn = bool(
                 not lineage_intact or (run.retrieval_needed and not citations)
@@ -850,6 +885,12 @@ class SqlAlchemyTenantRepository:
                     answer_withdrawn = True
                     evidence.append({"rank": citation.rank, "available": False})
                     continue
+                snippet_available = bool(
+                    chunk is not None
+                    and chunk.content
+                    and hashlib.sha256(chunk.content.encode("utf-8")).hexdigest()
+                    == chunk.content_sha256
+                )
                 evidence.append({
                     "rank": citation.rank,
                     "available": True,
@@ -862,8 +903,9 @@ class SqlAlchemyTenantRepository:
                     "page": citation.page,
                     "verified": citation.verified,
                     "content_sha256": citation.content_sha256,
-                    "title": chunk.title if chunk is not None else "",
-                    "content": chunk.content if chunk is not None else "",
+                    "snippet_available": snippet_available,
+                    "title": chunk.title if snippet_available else "",
+                    "content": chunk.content if snippet_available else "",
                 })
             return {
                 "id": run.id,
@@ -1764,6 +1806,28 @@ class SqlAlchemyTenantRepository:
             retrieval_record[_CITATION_LINEAGE_KEY] = _citation_lineage(
                 citation_records
             )
+            try:
+                context_lineage = _context_lineage_for_result(result.get("retrieval"))
+                context_versions = {
+                    entry["document_version_id"]
+                    for entry in context_lineage["contexts"]
+                }
+                available_context_versions = _available_context_version_ids(
+                    session,
+                    tenant_id=principal.tenant_id,
+                    knowledge_base_id=authorized.id,
+                    version_ids=context_versions,
+                )
+                if not context_versions.issubset(available_context_versions):
+                    raise InvalidServiceStateError("final context document version is unavailable")
+            except InvalidServiceStateError as exc:
+                LOGGER.warning(
+                    "answer_run.context_lineage_incomplete run_id=%s reason=%s",
+                    str(result.get("run_id") or ""),
+                    str(exc),
+                )
+                raise
+            retrieval_record[_CONTEXT_LINEAGE_KEY] = context_lineage
             run = AnswerRunRecord(
                 id=str(result["run_id"]),
                 tenant_id=principal.tenant_id,
@@ -1876,14 +1940,138 @@ def _citation_lineage_intact(
     return retrieval_json[_CITATION_LINEAGE_KEY] == _citation_lineage(citations)
 
 
+def _context_lineage_for_result(raw_retrieval) -> dict:
+    if not isinstance(raw_retrieval, dict):
+        raise InvalidServiceStateError("retrieval metadata is missing")
+    needed = bool(raw_retrieval.get("needed"))
+    contexts = raw_retrieval.get("contexts")
+    if not isinstance(contexts, list):
+        raise InvalidServiceStateError("final context list is missing")
+    if contexts and not needed:
+        raise InvalidServiceStateError("non-retrieval answer has final contexts")
+    raw_contexts = raw_retrieval.get("raw_contexts")
+    raw_by_id: dict[str, list[str]] = {}
+    if isinstance(raw_contexts, list):
+        for raw_context in raw_contexts:
+            if not isinstance(raw_context, dict):
+                continue
+            raw_id = str(raw_context.get("id") or "").strip()
+            if raw_id:
+                raw_by_id.setdefault(raw_id, []).append(
+                    str(raw_context.get("documentVersionId") or "").strip()
+                )
+    entries = []
+    for context in contexts:
+        if not isinstance(context, dict):
+            raise InvalidServiceStateError("final context is malformed")
+        context_id = str(context.get("id") or "").strip()
+        if not context_id:
+            raise InvalidServiceStateError("final context identifier is missing")
+        version_id = str(context.get("documentVersionId") or "").strip()
+        if not version_id:
+            raw_id = re.sub(
+                r"::(?:focus|fine-evidence)-[1-9]\d*$", "", context_id,
+            )
+            raw_versions = raw_by_id.get(raw_id, [])
+            if not raw_versions or "" in raw_versions or len(set(raw_versions)) != 1:
+                raise InvalidServiceStateError(
+                    "final context document version cannot be resolved uniquely"
+                )
+            version_id = raw_versions[0]
+        entries.append({
+            "context_id": context_id,
+            "document_version_id": version_id,
+        })
+    return {
+        "state": (
+            "retrieved_contexts" if entries
+            else "retrieval_no_context" if needed
+            else "no_retrieval"
+        ),
+        "contexts": entries,
+    }
+
+
+def _context_lineage_status(
+    retrieval_json: dict,
+    retrieval_needed: bool,
+) -> tuple[bool, set[str]]:
+    if not isinstance(retrieval_json, dict) or _CONTEXT_LINEAGE_KEY not in retrieval_json:
+        return True, set()  # Older runs retain citation-only checks.
+    lineage = retrieval_json[_CONTEXT_LINEAGE_KEY]
+    if not isinstance(lineage, dict) or not isinstance(lineage.get("contexts"), list):
+        return False, set()
+    entries = lineage["contexts"]
+    expected_state = (
+        "retrieved_contexts" if entries
+        else "retrieval_no_context" if retrieval_needed
+        else "no_retrieval"
+    )
+    if (
+        lineage.get("state") != expected_state
+        or (entries and not retrieval_needed)
+        or retrieval_json.get("needed") is not retrieval_needed
+        or not isinstance(retrieval_json.get("context_ids"), list)
+    ):
+        return False, set()
+    context_ids = []
+    version_ids = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            return False, set()
+        context_id = entry.get("context_id")
+        version_id = entry.get("document_version_id")
+        if (
+            not isinstance(context_id, str) or not context_id.strip()
+            or not isinstance(version_id, str) or not version_id.strip()
+        ):
+            return False, set()
+        context_ids.append(context_id)
+        version_ids.add(version_id)
+    if retrieval_json["context_ids"] != context_ids:
+        return False, set()
+    return True, version_ids
+
+
+def _available_context_version_ids(
+    session,
+    *,
+    tenant_id: str,
+    knowledge_base_id: str,
+    version_ids: set[str],
+) -> set[str]:
+    if not version_ids:
+        return set()
+    return set(session.scalars(
+        select(DocumentVersionRecord.id)
+        .join(
+            DocumentRecord,
+            and_(
+                DocumentRecord.id == DocumentVersionRecord.document_id,
+                DocumentRecord.tenant_id == tenant_id,
+                DocumentRecord.knowledge_base_id == knowledge_base_id,
+                DocumentRecord.deleted_at.is_(None),
+                DocumentRecord.status != "deleted",
+            ),
+        )
+        .where(
+            DocumentVersionRecord.id.in_(version_ids),
+            DocumentVersionRecord.tenant_id == tenant_id,
+        )
+    ))
+
+
 def _safe_retrieval_record(raw_retrieval, raw_evidence_validation=None) -> dict:
-    retrieval = dict(raw_retrieval or {})
-    contexts = list(retrieval.pop("contexts", []) or [])
-    retrieval["context_ids"] = [
-        str(context.get("id") or "")
-        for context in contexts
-        if isinstance(context, dict)
-    ]
+    raw = raw_retrieval if isinstance(raw_retrieval, dict) else {}
+    contexts = raw.get("contexts") if isinstance(raw.get("contexts"), list) else []
+    retrieval = {
+        "needed": bool(raw.get("needed")),
+        "context_ids": [
+            str(context.get("id") or "")
+            for context in contexts
+            if isinstance(context, dict)
+        ],
+    }
     if isinstance(raw_evidence_validation, dict):
         retrieval["evidence_validation"] = {
             "sufficient": bool(raw_evidence_validation.get("sufficient")),

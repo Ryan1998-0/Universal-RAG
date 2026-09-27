@@ -113,6 +113,8 @@ export RAG_SMOKE_QUESTION='今天是星期幾？'
 
 Token 不可放進 Shell History、CI Log 或版本控制；正式自動化應由 Secret Store 注入。
 
+目前 `smoke_production.py` 未設定 `RAG_SMOKE_KNOWLEDGE_BASE_ID` 時只檢查健康狀態與受保護的查詢 API；設定後的預設日期題也可能不經檢索。這份腳本回報 `passed` 不能單獨作為業務流程或 Production GO 的證據。發版與還原驗收仍須在對外 HTTPS 端點，以已知內容的測試知識庫和明確需要檢索的問題實際呼叫 `/v1/ask`，人工核對答案、`retrieval.needed`、引用來源與文件下載，並確認憑證、OIDC 身分及跨租戶拒絕行為。記錄測試時間、版本、`run_id` 與結果；證據中不得保存 Token 或文件全文。
+
 ## 6. 正式文件流程
 
 1. 使用者在右側面板選擇資料夾並上傳文件。
@@ -192,6 +194,19 @@ export RAG_LOAD_CONCURRENCY=5
 ./scripts/cold-backup.sh /mnt/encrypted-backups/$(date -u +%Y%m%dT%H%M%SZ)
 ```
 
+空白主機還原的前置順序：先取得與備份相容的專案 Commit、容器映像或可重建映像的來源、`.env.production` 與密鑰，接好備份目錄及推論服務，建立第 3 節的主機維護鎖路徑，然後檢查 Compose 設定及備份 `metadata.json` 的 `compose_project` 是否一致。`cold-restore.sh` 會在停止服務前檢查四個資料 Volume 已存在；全新主機可先建立空 Volume，再執行下方的還原命令，不要先啟動會寫入這些 Volume 的服務：
+
+```bash
+docker compose --env-file .env.production config --quiet
+rag_compose_project=$(docker compose --env-file .env.production config --format json \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["name"])')
+for volume in postgres-data redis-data qdrant-data object-data; do
+  docker volume create "${rag_compose_project}_${volume}" >/dev/null
+done
+```
+
+以上只建立空 Volume，不代表備份可用。還原腳本會在清空目標 Volume 前檢查四份封存、雜湊、專案名稱及封存可讀性；空白主機仍須完成實際還原與 RPO/RTO 演練。
+
 還原會刪除目前四個 Volume 的內容，必須明確確認：
 
 ```bash
@@ -202,7 +217,7 @@ export RAG_LOAD_CONCURRENCY=5
 
 1. `docker compose --env-file .env.production ps`
 2. `/health/ready`
-3. `scripts/smoke_production.py`
+3. `scripts/smoke_production.py`，並依第 5 節完成對外 HTTPS 的實際檢索問答與引用人工驗收。
 4. 隨機抽查文件下載、引用內容與 Active Index。
 
 備份不是完成的證據；Staging 必須實際還原到空白主機並記錄 RPO/RTO。
@@ -226,6 +241,8 @@ export RAG_LOAD_CONCURRENCY=5
 '
 ./scripts/smoke_production.py
 ```
+
+此腳本的 `passed` 僅證明它實際執行的檢查項目；發版仍須完成第 5 節的業務 Smoke，並保存可審查的檢索、引用、下載與權限驗收結果。
 
 應用回滾時，在已完成冷備份後指定上一個已驗證 Tag；checkout 切換、建置和啟動必須由同一把鎖涵蓋：
 

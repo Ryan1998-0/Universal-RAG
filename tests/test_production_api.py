@@ -80,7 +80,11 @@ class FakePipeline:
                 "needed": True,
                 "reason": "需要文件證據",
                 "query": request.question,
-                "contexts": [{"content": "不得公開的完整內部內容"}],
+                "contexts": [{
+                    "id": "chunk-a-1",
+                    "documentVersionId": "version-a",
+                    "content": "不得公開的完整內部內容",
+                }],
                 "evidence_evaluation": {
                     "sufficient": True,
                     "confidence": "high",

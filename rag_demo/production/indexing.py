@@ -428,7 +428,7 @@ class SqlAlchemyIndexingRepository:
 
     def reset_candidate(self, *, work: IndexBuildWorkItem, worker_id: str) -> None:
         with self.session_factory.begin() as session:
-            self._require_lease(session, work.job_id, worker_id)
+            self._require_lease(session, work.job_id, worker_id, work.attempt)
             session.execute(delete(ChunkRecord).where(
                 ChunkRecord.tenant_id == work.tenant_id,
                 ChunkRecord.knowledge_base_id == work.knowledge_base_id,
@@ -470,7 +470,7 @@ class SqlAlchemyIndexingRepository:
         if len(chunks) != len(point_ids):
             raise ValueError("chunk and point counts must match")
         with self.session_factory.begin() as session:
-            self._require_lease(session, work.job_id, worker_id)
+            self._require_lease(session, work.job_id, worker_id, work.attempt)
             for chunk, point_id in zip(chunks, point_ids):
                 content = str(chunk["content"])
                 metadata = {
@@ -508,7 +508,7 @@ class SqlAlchemyIndexingRepository:
         manifest_object_key: str,
     ) -> None:
         with self.session_factory.begin() as session:
-            self._require_lease(session, work.job_id, worker_id)
+            self._require_lease(session, work.job_id, worker_id, work.attempt)
             memberships = list(session.scalars(select(IndexDocumentRecord).where(
                 IndexDocumentRecord.tenant_id == work.tenant_id,
                 IndexDocumentRecord.knowledge_base_id == work.knowledge_base_id,
@@ -560,7 +560,7 @@ class SqlAlchemyIndexingRepository:
         # order through publication so a reclaimed worker cannot reset an
         # index that another worker has just made active.
         with self.session_factory.begin() as session:
-            job = self._require_lease(session, work.job_id, worker_id)
+            job = self._require_lease(session, work.job_id, worker_id, work.attempt)
             tenant_repository.publish_index_version(
                 tenant_id=work.tenant_id,
                 knowledge_base_id=work.knowledge_base_id,
@@ -657,7 +657,12 @@ class SqlAlchemyIndexingRepository:
             }
 
     @staticmethod
-    def _require_lease(session, job_id: str, worker_id: str):
+    def _require_lease(
+        session,
+        job_id: str,
+        worker_id: str,
+        expected_attempt: Optional[int] = None,
+    ):
         job = session.scalar(
             select(IndexBuildJobRecord)
             .where(
@@ -671,6 +676,10 @@ class SqlAlchemyIndexingRepository:
             job is None
             or job.lease_expires_at is None
             or _as_utc(job.lease_expires_at) <= utc_now()
+            or (
+                expected_attempt is not None
+                and job.attempt != int(expected_attempt)
+            )
         ):
             raise RuntimeError("index build lease was lost")
         return job
@@ -895,6 +904,9 @@ class IndexingService:
                     lease_seconds=self.lease_seconds,
                 )
                 self.tenant_repository.validate_index_version(
+                    job_id=work.job_id,
+                    worker_id=worker_id,
+                    attempt=work.attempt,
                     tenant_id=work.tenant_id,
                     knowledge_base_id=work.knowledge_base_id,
                     index_version_id=work.index_version_id,

@@ -20,6 +20,7 @@ from rag_demo.production.database import (
     DocumentRecord,
     DocumentVersionRecord,
     FolderRecord,
+    IndexBuildJobRecord,
     IndexDocumentRecord,
     IndexActivationEventRecord,
     IndexVersionRecord,
@@ -1561,6 +1562,9 @@ class SqlAlchemyTenantRepository:
     def validate_index_version(
         self,
         *,
+        job_id: str,
+        worker_id: str,
+        attempt: int,
         tenant_id: str,
         knowledge_base_id: str,
         index_version_id: str,
@@ -1585,6 +1589,28 @@ class SqlAlchemyTenantRepository:
             "qdrant_entries_sha256",
         )
         with self.session_factory.begin() as session:
+            now = utc_now()
+            job = session.scalar(
+                select(IndexBuildJobRecord)
+                .where(
+                    IndexBuildJobRecord.id == job_id,
+                    IndexBuildJobRecord.tenant_id == tenant_id,
+                    IndexBuildJobRecord.knowledge_base_id == knowledge_base_id,
+                    IndexBuildJobRecord.index_version_id == index_version_id,
+                    IndexBuildJobRecord.status == "running",
+                    IndexBuildJobRecord.lease_owner == worker_id,
+                )
+                .with_for_update()
+            )
+            if (
+                job is None
+                or job.lease_expires_at is None
+                or _as_utc(job.lease_expires_at) <= now
+                or job.attempt != int(attempt)
+            ):
+                raise InvalidServiceStateError(
+                    "index build lease or attempt was lost before validation"
+                )
             target = session.scalar(
                 select(IndexVersionRecord)
                 .where(
@@ -1597,6 +1623,14 @@ class SqlAlchemyTenantRepository:
             )
             if target is None:
                 raise InvalidServiceStateError("index is not in a validatable state")
+            # Legacy candidates keep artifact_attempt=0 while the old writer
+            # is enabled. A phase-2 writer must persist its positive attempt
+            # and match it to the durable job attempt before this method can
+            # be used for that format.
+            if target.artifact_attempt > 0 and target.artifact_attempt != int(attempt):
+                raise InvalidServiceStateError(
+                    "index artifact attempt does not match the build attempt"
+                )
             if target.manifest_sha256 and target.manifest_sha256 != clean_manifest:
                 raise InvalidServiceStateError("index manifest digest changed before validation")
             if (

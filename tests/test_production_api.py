@@ -17,6 +17,7 @@ from rag_demo.production.database import (
     ChunkRecord,
     DocumentRecord,
     DocumentVersionRecord,
+    IndexBuildJobRecord,
     IndexDocumentRecord,
     IndexActivationEventRecord,
     IndexVersionRecord,
@@ -843,6 +844,22 @@ class ProductionApiTests(unittest.TestCase):
                 status="ready",
                 chunk_count=1,
             ))
+            session.add(IndexBuildJobRecord(
+                id="job-a-2",
+                tenant_id="tenant-a",
+                knowledge_base_id="kb-a",
+                index_version_id="index-a-2",
+                created_by_user_id="user-a",
+                expected_active_index_id="index-a",
+                expected_generation=0,
+                idempotency_key="index-validation-job-a-2",
+                selected_document_hash="d" * 64,
+                status="running",
+                stage="validating",
+                attempt=1,
+                lease_owner="test-index-worker",
+                lease_expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+            ))
             candidate_content = "candidate evidence"
             candidate_content_sha256 = hashlib.sha256(
                 candidate_content.encode("utf-8")
@@ -871,6 +888,9 @@ class ProductionApiTests(unittest.TestCase):
             "content_sha256": candidate_content_sha256,
         }])
         self.repository.validate_index_version(
+            job_id="job-a-2",
+            worker_id="test-index-worker",
+            attempt=1,
             tenant_id="tenant-a",
             knowledge_base_id="kb-a",
             index_version_id="index-a-2",

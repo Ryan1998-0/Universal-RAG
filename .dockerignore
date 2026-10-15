@@ -12,6 +12,7 @@ __pycache__
 !.env.production.example
 dist
 build
+backups
 evals
 tests
 profiles/*/source_pdfs

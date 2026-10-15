@@ -33,10 +33,17 @@ COPY profiles ./profiles
 COPY scripts ./scripts
 RUN python -m pip install --no-deps . \
     && chmod 0555 /app/scripts/docker-entrypoint.sh \
-    && mkdir -p /var/lib/rag/huggingface \
+    && mkdir -p /var/lib/rag/huggingface /var/lib/rag/logs \
     && chown -R rag:rag /var/lib/rag
 
+ENV RAG_LOG_DIR=/var/lib/rag/logs
+
 USER 10001:10001
+
+# Exercise API imports and log creation as the actual runtime user. This is
+# offline and does not need database, identity-provider or model credentials.
+RUN python /app/scripts/export_openapi.py --output /tmp/rag-openapi.json \
+    && rm /tmp/rag-openapi.json /var/lib/rag/logs/rag.log
 
 EXPOSE 8080
 

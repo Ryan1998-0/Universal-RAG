@@ -35,6 +35,14 @@ x-app-environment: &app-environment
   RAG_CORS_ORIGINS: ${RAG_CORS_ORIGINS:?set RAG_CORS_ORIGINS}
   RAG_MODEL: ${RAG_MODEL:-ollama:qwen2.5:7b}
   RAG_ALLOWED_MODELS: ${RAG_ALLOWED_MODELS:-ollama:qwen2.5:7b}
+  RAG_MODEL_GENERATION: ${RAG_MODEL_GENERATION:-}
+  RAG_MODEL_QUERY_REWRITE: ${RAG_MODEL_QUERY_REWRITE:-}
+  RAG_MODEL_KEYWORD_EXTRACTION: ${RAG_MODEL_KEYWORD_EXTRACTION:-}
+  RAG_MODEL_QUESTION_EXTRACTION: ${RAG_MODEL_QUESTION_EXTRACTION:-}
+  RAG_MODEL_EVIDENCE_EXTRACTION: ${RAG_MODEL_EVIDENCE_EXTRACTION:-}
+  RAG_MODEL_CONTEXT_SUMMARY: ${RAG_MODEL_CONTEXT_SUMMARY:-}
+  RAG_MODEL_EVALUATION: ${RAG_MODEL_EVALUATION:-}
+  RAG_VLM_MODEL: ${RAG_VLM_MODEL:-}
   RAG_OLLAMA_URL: ${RAG_OLLAMA_URL:?set RAG_OLLAMA_URL}
   RAG_ENABLE_API_DOCS: "false"
   RAG_ENABLE_METRICS: "true"
@@ -42,6 +50,8 @@ x-app-environment: &app-environment
   RAG_REQUEST_TIMEOUT_SECONDS: ${RAG_REQUEST_TIMEOUT_SECONDS:-180}
   RAG_GENERATION_QUEUE_TIMEOUT_SECONDS: ${RAG_GENERATION_QUEUE_TIMEOUT_SECONDS:-30}
   RAG_MAX_UPLOAD_BYTES: ${RAG_MAX_UPLOAD_BYTES:-52428800}
+  RAG_MAX_REQUEST_BODY_BYTES: ${RAG_MAX_REQUEST_BODY_BYTES:-57671680}
+  RAG_ASK_RATE_LIMIT_PER_MINUTE: ${RAG_ASK_RATE_LIMIT_PER_MINUTE:-30}
   RAG_UPLOAD_SESSION_TTL_SECONDS: ${RAG_UPLOAD_SESSION_TTL_SECONDS:-900}
   RAG_UPLOAD_MODE: ${RAG_UPLOAD_MODE:-proxy}
   RAG_PARSER_VERSION: ${RAG_PARSER_VERSION:-canonical-v1}
@@ -55,6 +65,12 @@ x-app-environment: &app-environment
   RAG_PROMPT_INJECTION_POLICY: ${RAG_PROMPT_INJECTION_POLICY:-quarantine}
   RAG_BACKGROUND_HEARTBEAT_TTL_SECONDS: ${RAG_BACKGROUND_HEARTBEAT_TTL_SECONDS:-90}
   RAG_RUN_MIGRATIONS: "false"
+
+x-app-security: &app-security
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
 
 services:
   postgres:
@@ -123,6 +139,7 @@ services:
       start_period: 90s
 
   migrate:
+    <<: *app-security
     build:
       context: .
     image: universal-rag:${RAG_SERVICE_VERSION:-0.2.0}
@@ -134,6 +151,7 @@ services:
         condition: service_healthy
 
   bootstrap:
+    <<: *app-security
     image: universal-rag:${RAG_SERVICE_VERSION:-0.2.0}
     restart: "no"
     environment: *app-environment
@@ -151,6 +169,7 @@ services:
         condition: service_healthy
 
   provision:
+    <<: *app-security
     image: universal-rag:${RAG_SERVICE_VERSION:-0.2.0}
     profiles: ["admin"]
     restart: "no"
@@ -170,6 +189,7 @@ services:
         condition: service_completed_successfully
 
   api:
+    <<: *app-security
     build:
       context: .
     image: universal-rag:${RAG_SERVICE_VERSION:-0.2.0}
@@ -198,6 +218,7 @@ services:
       start_period: 60s
 
   worker:
+    <<: *app-security
     image: universal-rag:${RAG_SERVICE_VERSION:-0.2.0}
     restart: unless-stopped
     environment: *app-environment
@@ -221,6 +242,7 @@ services:
         condition: service_healthy
 
   beat:
+    <<: *app-security
     image: universal-rag:${RAG_SERVICE_VERSION:-0.2.0}
     restart: unless-stopped
     environment: *app-environment

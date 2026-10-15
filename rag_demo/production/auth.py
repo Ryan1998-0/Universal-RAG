@@ -56,11 +56,14 @@ class OidcTokenVerifier:
         tenant_claim: str,
         roles_claim: str,
     ):
-        self.issuer = issuer.rstrip("/")
+        # OIDC issuer comparison is exact, including a provider's trailing slash.
+        self.issuer = issuer
         self.audience = audience
         self.tenant_claim = tenant_claim
         self.roles_claim = roles_claim
-        self.jwks_client = PyJWKClient(jwks_url, cache_keys=True)
+        # Refresh the JWKS set periodically so removed/revoked keys are not
+        # retained forever by the independent signing-key LRU cache.
+        self.jwks_client = PyJWKClient(jwks_url, cache_keys=False, lifespan=300, timeout=5)
 
     def verify(self, token: str) -> Principal:
         try:

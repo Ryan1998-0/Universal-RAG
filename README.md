@@ -2,6 +2,23 @@
 
 本機優先的多格式 RAG 系統。文件、知識庫、Embedding、重排模型與回答模型都可以替換，適合用來做企業文件問答與檢索實驗。
 
+## 正式部署與串接
+
+正式入口為 `rag_demo.production.api:create_app`，搭配 PostgreSQL、Redis、Qdrant、S3、Celery 與 Caddy。部署前請依 [部署與維運手冊](docs/production-runbook.md) 設定 OIDC、網域及推論服務。
+
+- [API 串接指南](docs/api-integration.md)：驗證方式、上傳／索引／問答流程、錯誤碼與重試規則。
+- [OpenAPI 契約](docs/openapi.json)：可匯入 Postman 或 API 工具；不必對外開啟 Swagger。
+- [安全政策](SECURITY.md) 與 [本次升級驗證紀錄](docs/deployment-security-upgrade-2026-10-15.md)。
+
+```bash
+cp .env.production.example .env.production
+# 編輯網域、OIDC、推論位址，並替換所有示例密鑰。
+python -m rag_demo.production.preflight --env-file .env.production
+docker compose --env-file .env.production up -d --build
+```
+
+部署前檢查需要已安裝本專案依賴、Docker CLI 與 Compose v2。只做靜態設定檢查可加 `--skip-docker`；該模式不代表容器可啟動。正式上線仍須通過手冊列出的 Staging、OIDC、備份還原與負載驗收。
+
 目前示範預設使用勞動部《勞動基準法》官方最新頁面（民國 113 年 7 月 31 日修正），資料源設定為 `RAG_PROFILE=labor_standards_act`；引擎程式以 GitHub `main` 分支為準，所有問題皆啟用 Cross-Encoder 重排。
 
 ## 核心功能

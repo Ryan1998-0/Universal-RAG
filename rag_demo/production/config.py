@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import List, Literal, Optional
+from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -257,18 +258,46 @@ class ProductionSettings(BaseSettings):
             if missing:
                 raise ValueError("OIDC configuration is incomplete: " + ", ".join(missing))
         for field_name, value in (
+            ("RAG_OIDC_ISSUER", self.oidc_issuer),
+            ("RAG_OIDC_JWKS_URL", self.oidc_jwks_url),
             ("RAG_OIDC_AUTHORIZATION_URL", self.oidc_authorization_url),
             ("RAG_OIDC_TOKEN_URL", self.oidc_token_url),
             ("RAG_PUBLIC_BASE_URL", self.public_base_url),
         ):
-            if value and not str(value).startswith("https://"):
-                if not (
+            if value:
+                parsed = urlsplit(value)
+                local_http = (
                     self.environment in {"development", "test"}
-                    and str(value).startswith("http://127.0.0.1")
+                    and parsed.scheme == "http"
+                    and parsed.hostname == "127.0.0.1"
+                )
+                if (
+                    not parsed.hostname or parsed.username is not None
+                    or parsed.password is not None or parsed.fragment
+                    or (parsed.scheme != "https" and not local_http)
                 ):
-                    raise ValueError(f"{field_name} must use HTTPS")
+                    raise ValueError(f"{field_name} must be a valid HTTPS URL without credentials or fragments")
+                try:
+                    parsed.port
+                except ValueError:
+                    raise ValueError(f"{field_name} has an invalid port") from None
+                if field_name in {"RAG_OIDC_ISSUER", "RAG_PUBLIC_BASE_URL"} and parsed.query:
+                    raise ValueError(f"{field_name} must not contain a query")
+                if field_name == "RAG_PUBLIC_BASE_URL" and parsed.path not in {"", "/"}:
+                    raise ValueError("RAG_PUBLIC_BASE_URL must be an origin without a path")
         if self.public_base_url:
             self.public_base_url = str(self.public_base_url).rstrip("/")
+        for origin in self.cors_origins:
+            parsed = urlsplit(origin)
+            if (
+                not parsed.hostname or parsed.username is not None
+                or parsed.password is not None or parsed.query or parsed.fragment
+                or parsed.path or parsed.scheme not in {"http", "https"}
+                or (self.environment in {"staging", "production"} and parsed.scheme != "https")
+            ):
+                raise ValueError("RAG_CORS_ORIGINS must contain explicit HTTP(S) origins; staging and production require HTTPS")
+        if self.upload_mode == "proxy" and self.max_upload_bytes > self.max_request_body_bytes:
+            raise ValueError("RAG_MAX_UPLOAD_BYTES must not exceed RAG_MAX_REQUEST_BODY_BYTES in proxy mode")
         scopes = " ".join(str(self.oidc_scopes or "").split())
         if "openid" not in scopes.split():
             raise ValueError("RAG_OIDC_SCOPES must include openid")

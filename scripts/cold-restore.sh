@@ -15,6 +15,11 @@ docker compose version >/dev/null
 
 backup_root=$(cd "$2" && pwd)
 project_name=${COMPOSE_PROJECT_NAME:-universal-rag}
+repo_root=$(cd "$(dirname "$0")/.." && pwd)
+env_file=${RAG_COMPOSE_ENV_FILE:-"${repo_root}/.env.production"}
+test -f "$env_file" || { echo "Compose environment file is missing" >&2; exit 1; }
+compose=(docker compose --project-directory "$repo_root" --env-file "$env_file" -f "${repo_root}/compose.yaml" -p "$project_name")
+"${compose[@]}" config --quiet
 helper_image=${BACKUP_HELPER_IMAGE:-python:3.12.13-slim-bookworm}
 volumes=(postgres-data redis-data qdrant-data object-data)
 services=(caddy api worker beat postgres redis qdrant object-storage)
@@ -33,7 +38,7 @@ else
 fi
 
 echo "Stopping services before destructive restore..."
-docker compose stop "${services[@]}"
+"${compose[@]}" stop "${services[@]}"
 
 for volume in "${volumes[@]}"; do
   docker volume inspect "${project_name}_${volume}" >/dev/null
@@ -46,5 +51,5 @@ for volume in "${volumes[@]}"; do
 done
 
 echo "Starting restored stack..."
-docker compose up -d
+"${compose[@]}" start "${services[@]}"
 echo "Restore complete. Verify /health/ready and run the smoke test before reopening traffic."

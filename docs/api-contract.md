@@ -1,6 +1,6 @@
 # RAG 介面與可觀測性契約
 
-這份文件定義目前服務預留的資料輸入、輸出、模型替換與節點計時介面。正式 API 啟用時會依環境設定開關驗證與文件頁面。
+這份文件定義正式服務的資料輸入、輸出、模型替換與節點計時介面。完整驗證、上傳／索引流程及錯誤處理請見 [API 串接指南](api-integration.md)，可匯入工具的契約見 [OpenAPI](openapi.json)。正式環境預設關閉公開文件頁面。
 
 ## 資料輸入
 
@@ -54,7 +54,7 @@
 
 ### 執行期替換
 
-具 `owner` 或 `admin` 角色的使用者可呼叫：
+在 Development／Test，具 `owner` 或 `admin` 角色的使用者可呼叫：
 
 ```http
 PUT /v1/models/generation
@@ -64,6 +64,8 @@ Content-Type: application/json
 ```
 
 替換只作用於目前 API process，重啟後回到環境設定；`DELETE /v1/models/{node}` 可清除執行期覆寫。請求層級的 `model` 欄位仍可作為單次呼叫覆寫，但必須通過 allowlist。
+
+Staging／Production 的 PUT／DELETE 一律回 `409 MODEL_BINDINGS_READ_ONLY`。Process 級覆寫會影響其他租戶，且多 Worker 間無法保持一致；正式環境請以部署環境變數設定模型並重建 API 容器。查詢／驗證模型及 Allowlist 內的單次模型選擇仍可使用。
 
 可用環境變數：
 

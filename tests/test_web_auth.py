@@ -71,13 +71,13 @@ class WebAuthTests(unittest.TestCase):
         return {"access_token": self._token(), "token_type": "Bearer", "expires_in": 900}
 
     def test_pkce_state_is_single_use_and_session_resolves_principal(self):
-        location = self.web_auth.begin_login()
+        location = self.web_auth.begin_login("test-browser-binding")
         query = parse_qs(urlparse(location).query)
         self.assertEqual(query["client_id"], ["rag-web"])
         self.assertEqual(query["code_challenge_method"], ["S256"])
         self.assertNotIn("code_verifier", query)
 
-        completed = self.web_auth.complete_login(state=query["state"][0], code="auth-code")
+        completed = self.web_auth.complete_login(state=query["state"][0], code="auth-code", browser_binding="test-browser-binding")
         self.assertEqual(completed.principal.subject, "subject-a")
         self.assertEqual(completed.max_age_seconds, 900)
         self.assertEqual(
@@ -89,18 +89,18 @@ class WebAuthTests(unittest.TestCase):
             query["code_challenge"][0],
         )
         with self.assertRaises(WebAuthenticationError):
-            self.web_auth.complete_login(state=query["state"][0], code="replay")
+            self.web_auth.complete_login(state=query["state"][0], code="replay", browser_binding="test-browser-binding")
 
     def test_expired_login_state_and_session_are_rejected(self):
-        location = self.web_auth.begin_login()
+        location = self.web_auth.begin_login("test-browser-binding")
         state = parse_qs(urlparse(location).query)["state"][0]
         self.clock.value += 121
         with self.assertRaises(WebAuthenticationError):
-            self.web_auth.complete_login(state=state, code="too-late")
+            self.web_auth.complete_login(state=state, code="too-late", browser_binding="test-browser-binding")
 
-        location = self.web_auth.begin_login()
+        location = self.web_auth.begin_login("test-browser-binding")
         state = parse_qs(urlparse(location).query)["state"][0]
-        completed = self.web_auth.complete_login(state=state, code="fresh")
+        completed = self.web_auth.complete_login(state=state, code="fresh", browser_binding="test-browser-binding")
         self.clock.value += 901
         self.assertIsNone(self.web_auth.principal_for_session(completed.session_id))
 

@@ -175,14 +175,20 @@ class OidcWebAuth:
         self.store = store
         self.token_exchange = token_exchange or self._exchange_token
 
-    def begin_login(self) -> str:
+    def begin_login(self, browser_binding: str) -> str:
+        if not browser_binding:
+            raise WebAuthenticationError("browser login binding is required")
         state = secrets.token_urlsafe(32)
         verifier = secrets.token_urlsafe(64)
         challenge = _pkce_challenge(verifier)
         redirect_uri = f"{self.settings.public_base_url}/auth/callback"
         self.store.put_login_state(
             state,
-            {"code_verifier": verifier, "redirect_uri": redirect_uri},
+            {
+                "code_verifier": verifier,
+                "redirect_uri": redirect_uri,
+                "browser_binding_sha256": hashlib.sha256(browser_binding.encode()).hexdigest(),
+            },
             self.settings.web_login_state_ttl_seconds,
         )
         parameters = {
@@ -196,14 +202,19 @@ class OidcWebAuth:
         }
         return _append_query(str(self.settings.oidc_authorization_url), parameters)
 
-    def complete_login(self, *, state: str, code: str) -> CompletedWebLogin:
+    def complete_login(self, *, state: str, code: str, browser_binding: str) -> CompletedWebLogin:
         clean_state = str(state or "").strip()
         clean_code = str(code or "").strip()
-        if not clean_state or not clean_code:
+        if not clean_state or not clean_code or not browser_binding:
             raise WebAuthenticationError("authorization response is incomplete")
         login_state = self.store.pop_login_state(clean_state)
         if not login_state:
             raise WebAuthenticationError("authorization state is invalid or expired")
+        if not secrets.compare_digest(
+            str(login_state.get("browser_binding_sha256") or ""),
+            hashlib.sha256(browser_binding.encode()).hexdigest(),
+        ):
+            raise WebAuthenticationError("authorization state belongs to another browser")
         token_request = {
             "grant_type": "authorization_code",
             "client_id": self.settings.oidc_client_id,

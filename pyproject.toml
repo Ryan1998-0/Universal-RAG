@@ -15,8 +15,8 @@ dependencies = [
   "numpy==2.5.1",
   "psycopg[binary]==3.3.4",
   "pydantic-settings==2.14.2",
-  "PyJWT[crypto]==2.13.0",
-  "pypdf==6.14.2",
+  "PyJWT[crypto]==2.15.1",
+  "pypdf==6.19.0",
   "qdrant-client==1.18.0",
   "sentence-transformers==5.6.1",
   "uvicorn[standard]==0.51.0",
@@ -35,7 +35,7 @@ production = [
   "fastembed==0.8.0",
   "prometheus-client==0.23.1",
   "python-json-logger==4.0.0",
-  "python-multipart==0.0.22",
+  "python-multipart==0.0.31",
 ]
 test = [
   "httpx==0.28.1",
@@ -52,3 +52,11 @@ include = ["rag_demo*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+# Minimum patched transitive versions; preserved when regenerating the lock.
+[tool.uv]
+constraint-dependencies = [
+  "cryptography>=50.0.0",
+  "h2>=4.4.1",
+  "urllib3>=2.8.0",
+]

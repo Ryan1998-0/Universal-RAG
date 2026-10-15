@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import re
+import secrets
 import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -12,11 +13,13 @@ from urllib.parse import quote
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Header, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from rag_demo.production.auth import (
     AuthenticationError,
@@ -25,6 +28,7 @@ from rag_demo.production.auth import (
     build_token_verifier,
 )
 from rag_demo.production.background_health import RedisBackgroundHealth
+from rag_demo.production.body_limit import RequestBodyLimitMiddleware
 from rag_demo.production.config import ProductionSettings, get_production_settings
 from rag_demo.production.database import create_database_engine, create_session_factory
 from rag_demo.production.deletion import SqlAlchemyDeletionRepository
@@ -73,6 +77,16 @@ from rag_demo.retrieval_scope import RetrievalScope
 LOGGER = logging.getLogger("rag_demo.production.api")
 PIPELINE_VERSION = "canonical-v1"
 _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
+
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
+    request_id: str
 
 
 class AskRequest(BaseModel):
@@ -394,6 +408,17 @@ def create_app(
         redoc_url=None,
         openapi_url=openapi_url,
         lifespan=lifespan,
+        responses={
+            status: {"model": ErrorResponse, "description": description}
+            for status, description in (
+                (400, "Invalid request"), (401, "Authentication required"),
+                (403, "Access denied"), (404, "Resource not found"),
+                (409, "Conflicting resource state"), (413, "Request too large"),
+                (422, "Request validation failed"), (429, "Rate limited"),
+                (500, "Internal server error"), (503, "Dependency unavailable"),
+                (504, "Model timeout"),
+            )
+        },
     )
     app.state.settings = resolved_settings
     app.state.repository = repository
@@ -424,8 +449,13 @@ def create_app(
                 "Idempotency-Key",
                 "X-Request-ID",
             ],
-            expose_headers=["X-Request-ID"],
+            expose_headers=["X-Request-ID", "Retry-After"],
         )
+
+    app.add_middleware(
+        RequestBodyLimitMiddleware,
+        max_bytes=resolved_settings.max_request_body_bytes,
+    )
 
     @app.middleware("http")
     async def request_context(request: Request, call_next):
@@ -484,7 +514,17 @@ def create_app(
                 route=route_label(request.scope),
             ).observe(perf_counter() - started_at)
             metrics.http_inflight.dec()
-            raise
+            metrics.api_errors.labels(code="INTERNAL_ERROR").inc()
+            response = JSONResponse(
+                status_code=500,
+                content={
+                    "error": {"code": "INTERNAL_ERROR", "message": "An internal server error occurred."},
+                    "request_id": request_id,
+                },
+                headers={"X-Request-ID": request_id},
+            )
+            _apply_security_headers(response)
+            return response
         response.headers["X-Request-ID"] = request_id
         _apply_security_headers(response)
         _log_event(
@@ -523,6 +563,25 @@ def create_app(
             },
         )
 
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(request: Request, exc: RequestValidationError):
+        # Pydantic's default response echoes invalid inputs, which may be secrets.
+        del exc
+        return await api_error_handler(
+            request, ApiError(422, "VALIDATION_ERROR", "The request does not match the API schema.")
+        )
+
+    @app.exception_handler(StarletteHTTPException)
+    async def http_error_handler(request: Request, exc: StarletteHTTPException):
+        code, message = {
+            404: ("NOT_FOUND", "The requested resource was not found."),
+            405: ("METHOD_NOT_ALLOWED", "The HTTP method is not allowed."),
+            413: ("REQUEST_TOO_LARGE", "The request body is too large."),
+        }.get(exc.status_code, ("HTTP_ERROR", "The HTTP request could not be processed."))
+        return await api_error_handler(
+            request, ApiError(exc.status_code, code, message, headers=exc.headers)
+        )
+
     security = HTTPBearer(auto_error=False, scheme_name="oidcBearer")
 
     async def current_principal(
@@ -531,7 +590,7 @@ def create_app(
     ) -> Principal:
         if credentials is not None and credentials.scheme.lower() == "bearer":
             try:
-                return token_verifier.verify(credentials.credentials)
+                return await run_in_threadpool(token_verifier.verify, credentials.credentials)
             except AuthenticationError:
                 raise ApiError(401, "INVALID_TOKEN", "The access token is invalid or expired.")
         session_id = request.cookies.get(resolved_settings.web_session_cookie_name, "")
@@ -545,6 +604,8 @@ def create_app(
                     "The login session service is temporarily unavailable.",
                 )
             if principal is not None:
+                if request.method not in {"GET", "HEAD", "OPTIONS"}:
+                    _require_session_origin(request, resolved_settings)
                 return principal
         raise ApiError(401, "AUTH_REQUIRED", "A valid login session is required.")
 
@@ -574,17 +635,29 @@ def create_app(
         if web_auth is None:
             raise ApiError(404, "WEB_LOGIN_DISABLED", "Browser login is not configured.")
         try:
-            location = await run_in_threadpool(web_auth.begin_login)
+            browser_binding = secrets.token_urlsafe(32)
+            location = await run_in_threadpool(web_auth.begin_login, browser_binding)
         except WebSessionUnavailable:
             raise ApiError(
                 503,
                 "SESSION_UNAVAILABLE",
                 "The login session service is temporarily unavailable.",
             )
-        return RedirectResponse(location, status_code=303, headers={"Cache-Control": "no-store"})
+        response = RedirectResponse(location, status_code=303, headers={"Cache-Control": "no-store"})
+        response.set_cookie(
+            resolved_settings.web_session_cookie_name + "_login",
+            browser_binding,
+            max_age=resolved_settings.web_login_state_ttl_seconds,
+            path="/auth/callback",
+            secure=production_environment,
+            httponly=True,
+            samesite="lax",
+        )
+        return response
 
     @app.get("/auth/callback", include_in_schema=False)
     async def web_auth_callback(
+        request: Request,
         state: str = "",
         code: str = "",
         error: str = "",
@@ -598,6 +671,9 @@ def create_app(
                 web_auth.complete_login,
                 state=state,
                 code=code,
+                browser_binding=request.cookies.get(
+                    resolved_settings.web_session_cookie_name + "_login", ""
+                ),
             )
         except WebAuthenticationError:
             raise ApiError(400, "OIDC_LOGIN_FAILED", "Identity provider login failed.")
@@ -608,6 +684,11 @@ def create_app(
                 "The login session service is temporarily unavailable.",
             )
         response = RedirectResponse("/", status_code=303, headers={"Cache-Control": "no-store"})
+        response.delete_cookie(
+            resolved_settings.web_session_cookie_name + "_login",
+            path="/auth/callback", secure=production_environment,
+            httponly=True, samesite="lax",
+        )
         response.set_cookie(
             resolved_settings.web_session_cookie_name,
             completed.session_id,
@@ -621,10 +702,7 @@ def create_app(
 
     @app.post("/auth/logout", include_in_schema=False)
     async def web_auth_logout(request: Request):
-        configured_origin = str(resolved_settings.public_base_url or "").rstrip("/")
-        request_origin = str(request.headers.get("Origin") or "").rstrip("/")
-        if configured_origin and request_origin and request_origin != configured_origin:
-            raise ApiError(403, "ORIGIN_DENIED", "The request origin is not allowed.")
+        _require_session_origin(request, resolved_settings)
         session_id = request.cookies.get(resolved_settings.web_session_cookie_name, "")
         if web_auth is not None and session_id:
             try:
@@ -823,6 +901,11 @@ def create_app(
     def require_model_admin(principal: Principal) -> None:
         if not ({"owner", "admin"} & set(principal.roles)):
             raise ApiError(403, "MODEL_MANAGEMENT_FORBIDDEN", "Model replacement requires owner or admin role.")
+        if production_environment:
+            raise ApiError(
+                409, "MODEL_BINDINGS_READ_ONLY",
+                "Deploy model configuration changes through the environment in staging and production.",
+            )
 
     @app.put("/v1/models/{node}")
     async def override_model_binding(
@@ -1870,10 +1953,23 @@ async def _record_audit_safely(
 
 
 def _apply_security_headers(response) -> None:
+    response.headers.setdefault("Cache-Control", "no-store")
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+
+
+def _require_session_origin(request: Request, settings: ProductionSettings) -> None:
+    configured = str(settings.public_base_url or "")
+    origin = request.headers.get("Origin")
+    if (
+        not configured
+        or (origin is not None and origin != configured)
+        or (origin is None and request.headers.get("Sec-Fetch-Site") != "same-origin")
+        or request.headers.get("Sec-Fetch-Site") == "cross-site"
+    ):
+        raise ApiError(403, "ORIGIN_DENIED", "The request origin is not allowed.")
 
 
 def _no_store_json(content: dict, status_code: int = 200) -> JSONResponse:

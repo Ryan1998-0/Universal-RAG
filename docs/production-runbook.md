@@ -1,6 +1,6 @@
 # 正式部署與維運手冊
 
-日期：2026-07-26
+更新日期：2026-10-15
 適用版本：`0.2.x`
 部署模式：單一 Linux VM + Docker Compose + 外部 OIDC + 外部推論服務
 
@@ -30,10 +30,14 @@ Provider 必須支援 Authorization Code Flow + PKCE，並設定：
 
 瀏覽器 Cookie 只保存隨機 Session ID；Access Token 保存在 Redis，Cookie 使用 `HttpOnly`、`Secure`、`SameSite=Lax`。登入 State 為一次性資料，重播會失敗。
 
+`RAG_OIDC_ISSUER` 必須與 Provider 公布及 Token 內的 `iss` **完全相同**，包含結尾 `/`。Issuer、JWKS、Authorization、Token URL 正式環境全部必須使用 HTTPS。`RAG_PUBLIC_BASE_URL` 是純 Origin，不支援子路徑。
+
+登入時會另設短效 HttpOnly Cookie，綁定發起登入的瀏覽器；直接在另一個瀏覽器貼上 Callback 不能建立 Session。同一瀏覽器請完成目前登入後再開始下一次登入。
+
 ## 3. 第一次部署
 
 ```bash
-git clone <repository-url> Universal-RAG
+git clone https://github.com/Ryan1998-0/Universal-RAG.git Universal-RAG
 cd Universal-RAG
 cp .env.production.example .env.production
 chmod 600 .env.production
@@ -48,9 +52,24 @@ chmod 600 .env.production
 5. 填入容器可連線的 `RAG_OLLAMA_URL`。
 6. 確認 Embedding 維度與選用模型一致；正式索引建立後不要直接修改維度。
 
+PostgreSQL 與 Redis 密碼會放進連線 URI，請各自使用至少 24 字元的 URL-safe 隨機值，例如每次執行 `openssl rand -hex 32` 產生獨立密碼。不要重複使用同一組密鑰。範例設定中的 `replace-with-*`、`example.com` 都必須換成真實設定。
+
+此 Compose 只公開 Caddy 的 `80/443`，API、資料庫、Redis、Qdrant 與 S3 均不應另設主機 Port。內部網路屬於信任邊界，請勿將不受信任的容器接入。預設為 Proxy Upload；Presigned Upload 尚需外部 S3 入口、CORS 與 Compose 變數配置，預檢會拒絕直接切換。
+
+若主機要執行預檢與 Smoke Script，可建立工具環境：
+
+```bash
+python3.12 -m venv .venv
+. .venv/bin/activate
+python -m pip install --requirement requirements.lock
+```
+
+目前鎖定檔包含模型及評估依賴，安裝與映像建置需要充足磁碟空間；Linux PyTorch 依賴也可能包含 CUDA 套件。這不表示推論模型已部署，`RAG_OLLAMA_URL` 仍需另行準備。
+
 檢查設定與建置：
 
 ```bash
+python -m rag_demo.production.preflight --env-file .env.production
 docker compose --env-file .env.production config --quiet
 docker compose --env-file .env.production build
 docker compose --env-file .env.production up -d
@@ -58,6 +77,10 @@ docker compose --env-file .env.production ps
 ```
 
 `migrate` 會先執行 Alembic，`bootstrap` 會建立 Object Storage Bucket 與 Qdrant Collection；兩者成功後 API、Worker、Beat 與 Caddy 才會啟動。
+
+預檢是唯讀操作，會拒絕示例值、短密碼、重複密鑰及錯誤設定，並透過 Compose 渲染驗證實際傳入 API 的環境。輸出只含欄位名稱與錯誤碼，不列出密鑰。`--skip-docker` 僅驗證本機環境欄位，不驗證 Compose 或 API Settings，也不代表服務已可上線。請勿將 `docker compose config` 的完整輸出貼到公開紀錄，裡面含有密鑰。
+
+容器初次啟動會下載 Embedding／重排模型及 ClamAV 病毒碼，健康檢查可能需數分鐘。若 API 一直不 Ready，先查 Worker／Beat Heartbeat、推論服務與 ClamAV Log。
 
 ## 4. 建立第一個租戶與使用者
 
@@ -173,6 +196,8 @@ export RAG_LOAD_CONCURRENCY=5
 ```bash
 ./scripts/cold-restore.sh --confirm-destroy-existing /mnt/encrypted-backups/<timestamp>
 ```
+
+兩支腳本預設使用專案根目錄的 `.env.production`，包含停止與重新啟動服務的命令。使用其他環境檔時，先設定 `RAG_COMPOSE_ENV_FILE=/absolute/path/to/deploy.env`；自訂專案名稱時設定與部署一致的 `COMPOSE_PROJECT_NAME`。腳本重啟既有容器，不會順便執行新版本 Migration。
 
 還原後依序執行：
 

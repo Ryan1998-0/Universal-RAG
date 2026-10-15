@@ -20,6 +20,7 @@
 | 依賴漏洞 | 6 個套件合計 47 筆掃描告警（38 個不重複公告 ID） | 更新修補版本、重建鎖定檔、加入 CI 掃描 |
 | 跨平台建置 | Windows 產生的 Lock 含無條件 pywin32，Linux 缺必要平台依賴 | 使用 `--universal` 鎖定，保留 Windows／Linux Marker |
 | Compose 設定 | 部分限制及模型節點變數未傳入容器 | 補齊模型節點、Request Body 與 Rate Limit 設定，應用容器移除 Linux Capabilities 並禁止提高權限 |
+| 非 root 容器啟動 | 預設 Log 目錄為 root 擁有的 `/app/logs`，API 啟動會因無寫入權限而失敗 | 指定 `/var/lib/rag/logs` 並預建正確權限；建置時以實際 Runtime User 離線匯出 API Schema，驗證匯入與 Log 建立 |
 | 部署預檢 | 只有 Compose 語法檢查，示例值仍可能被使用 | 新增唯讀 CLI，檢查示例值、短密碼、重複密鑰、URI-safe 密碼、正式 API Settings；輸出遮罩 |
 | 備份還原 | 腳本沒有沿用 `.env.production`，重啟會重新執行整個 Compose 啟動流程 | 全程使用相同環境檔及 Project Name，重啟既有容器，補上假 Docker 整合測試 |
 | API 串接文件 | 首次部署、驗證、輪詢及重試資訊分散 | 新增串接指南、離線 OpenAPI 匯出與 CI 同步檢查、安全政策及更新維運手冊 |

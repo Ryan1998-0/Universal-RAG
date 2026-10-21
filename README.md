@@ -4,6 +4,29 @@
 
 目前示範預設使用勞動部《勞動基準法》官方最新頁面（民國 113 年 7 月 31 日修正），資料源設定為 `RAG_PROFILE=labor_standards_act`；引擎程式以 GitHub `main` 分支為準，所有問題皆啟用 Cross-Encoder 重排。
 
+## 本機 Chainlit 工作台
+
+聊天介面已改用 [Chainlit](https://github.com/Chainlit/chainlit)，原本的本機靜態聊天介面已移除。GitHub Pages 僅保留啟動說明與架構管理頁。
+
+需要 Python 3.12 與 Ollama。安裝依賴並啟動：
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.lock
+ollama pull qwen2.5:7b
+python -m rag_demo.web_app
+```
+
+開啟 [http://127.0.0.1:8765/](http://127.0.0.1:8765/)，使用附件按鈕上傳文件。設定面板可切換知識庫、模型、檢索片段數、測試身分、上傳資料夾與查詢文件；文件選擇留空時搜尋全部授權文件。
+
+- `/文件`：列出授權文件與 ID。
+- `/紀錄`：列出 SQLite 中的歷史對話。
+- `/載入 對話ID`：接續舊對話。
+- `/新增資料夾 名稱`：建立上傳資料夾。
+
+本機入口預設綁定 `127.0.0.1`，沿用測試身分與文件 ACL。Docker Compose 的正式部署前端與 OIDC API 維持獨立部署。架構管理頁位於 [architecture.html](http://127.0.0.1:8765/architecture.html)。
+
 ## 核心功能
 
 - 多格式匯入：PDF、掃描 PDF、圖片、DOCX、TXT、Markdown、JSON，支援 OCR。

@@ -38,3 +38,6 @@ evals/document_folders/setup-results.json
 # locally; only the completed compact report/results are versioned.
 evals/multihop_rag_retrieval_full/checkpoints/
 evals/multihop_rag_retrieval_full/smoke*/
+# Chainlit runtime uploads and generated translations
+.files/
+.chainlit/translations/

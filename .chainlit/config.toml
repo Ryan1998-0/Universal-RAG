@@ -1,0 +1,23 @@
+[project]
+enable_telemetry = false
+user_env = []
+
+[features]
+unsafe_allow_html = false
+latex = false
+
+[features.spontaneous_file_upload]
+enabled = true
+accept = ["application/pdf", "image/*", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "text/markdown", "application/json"]
+max_files = 10
+max_size_mb = 50
+
+[UI]
+name = "泛用 RAG 工作台"
+language = "zh-TW"
+default_theme = "light"
+show_readme_as_default = false
+cot = "tool_call"
+
+[meta]
+generated_by = "2.12.0"
